@@ -12,7 +12,7 @@ describe('transcribeStageDescription', () => {
     assert.equal(transcribeStageDescription('request'), 'Открываю портал')
     assert.equal(transcribeStageDescription('download'), 'Скачиваю звонок')
     assert.equal(transcribeStageDescription('send'), 'Отправляю на сервер')
-    assert.equal(transcribeStageDescription('model'), 'Подключаю LLM')
+    assert.equal(transcribeStageDescription('model'), 'Подключаю LLM ')
     assert.equal(transcribeStageDescription('waiting', 0), 'Жду ответ')
     assert.equal(transcribeStageDescription('saving'), 'Сохраняю результат')
   })

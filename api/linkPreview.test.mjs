@@ -27,6 +27,7 @@ describe('parsePreviewPath', () => {
     assert.equal(parsePreviewPath('/api/public/links/abc123xyz/preview.jpeg'), 'abc123xyz')
     assert.equal(parsePreviewPath('/k7m2n9q'), null)
     assert.equal(parsePreviewPath('/app/preview.jpg'), null)
+    assert.equal(parsePreviewPath('/login/preview.jpg'), null)
   })
 })
 

@@ -116,6 +116,15 @@ cd web && npm install && npm run dev
 
 Сброс пароля: `/forgot`. На почту уходит **код из 4 цифр** с `support@2wel.ru` (SMTP SpaceWeb). Затем `/reset`. Регистрация тоже подтверждается кодом. Без пароля ящика код пишется в лог API.
 
+## CI
+
+На каждый push / PR в `main` GitHub Actions гоняет:
+
+- `api`: `npm ci` → `npm test`
+- `web`: `npm ci` → `npm test` → `tsc -b`
+
+См. [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
 ## Секреты
 
 - Боевые пароли и ключи — только в `.env` (и `*/.env` на VDS), никогда в `.env.example`.

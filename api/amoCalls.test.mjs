@@ -132,7 +132,7 @@ describe('recording probe heuristics', () => {
 
 describe('AMO_WEBHOOK_SETTINGS', () => {
   it('подписывается на note_lead и note_contact', () => {
-    assert.deepEqual(AMO_WEBHOOK_SETTINGS, ['note_lead', 'note_contact'])
+    assert.deepEqual(AMO_WEBHOOK_SETTINGS, ['note_lead', 'note_contact', 'status_lead'])
   })
 })
 

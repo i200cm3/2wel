@@ -18,13 +18,25 @@ const LANDSCAPE_ASPECT = 16 / 9
 const IMAGE_RE = /\.(jpe?g|png|webp)$/i
 const VIDEO_RE = /\.(mp4|webm|mov|m4v)$/i
 const PREVIEW_PATH_RE = /^\/(?:api\/public\/links\/)?([a-z0-9]{3,16})\/preview\.jpe?g$/i
-
-const TITLE_COLOR = '#e8dfd0'
-const BAR_COLOR = '#0a100e'
+const RESERVED_PREVIEW_IDS = new Set([
+  'app',
+  'api',
+  'login',
+  'logout',
+  'register',
+  'forgot',
+  'reset',
+  'editor',
+  'media',
+  'health',
+])
 
 export function parsePreviewPath(url) {
   const match = String(url ?? '').match(PREVIEW_PATH_RE)
-  return match ? match[1] : null
+  if (!match) return null
+  const id = match[1]
+  if (RESERVED_PREVIEW_IDS.has(id.toLowerCase())) return null
+  return id
 }
 
 export function fillPreviewTitle(template, guestName) {
