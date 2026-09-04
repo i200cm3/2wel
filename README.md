@@ -1,6 +1,12 @@
-# Промо санатория «Джинал»
+# 2wel
 
-Продакшен: **https://2wel.ru** (кабинет), гостевые ссылки **https://djinal.2wel.ru/xxxx**.
+Персональные презентации для санаториев, отелей и спа.
+
+Гостю — своя страница (9:16) с именем и контентом объекта. Объекту — кабинет, конструктор, CRM API, amoCRM, озвучка и аналитика.
+
+Продакшен: **https://2wel.ru** (кабинет). Гостевые ссылки: **https://`{code}`.2wel.ru/`{id}`** (пример: [djinal.2wel.ru](https://djinal.2wel.ru) — санаторий «Джинал»).
+
+Репозиторий: https://github.com/i200cm3/2wel · подробная модель данных и API — [`SPEC.md`](SPEC.md).
 
 ## Деплой на сервер
 
@@ -21,10 +27,10 @@
 cd /home/vitaliy/promo
 [ -f .env ] || cp .env.example .env
 # в .env: DOMAIN=2wel.ru, GUEST_BASE_DOMAIN=2wel.ru, PUBLIC_ORIGIN=https://2wel.ru
-#         ENSURE_GUEST_SSL=1, LETSENCRYPT_EMAIL=vitaliy@djinal.ru
+#         ENSURE_GUEST_SSL=1, LETSENCRYPT_EMAIL=…
 chmod +x init-letsencrypt.sh deploy.sh nginx-router-update.sh
 sudo ./nginx-router-update.sh
-./init-letsencrypt.sh vitaliy@djinal.ru 2wel.ru
+./init-letsencrypt.sh <email> 2wel.ru
 sudo ./nginx-router-update.sh
 ./deploy.sh
 ```
@@ -64,12 +70,12 @@ docker volume create certbot-www
 docker compose up --build -d
 ```
 
-Откройте http://localhost:8086 — на проде кабинет: `https://2wel.ru`, гость: `https://djinal.2wel.ru/<shareId>`.
+Откройте http://localhost:8086 — на проде кабинет: `https://2wel.ru`, гость: `https://{code}.2wel.ru/<shareId>`.
 
-Поддомены стартового тарифа (`plaza.2wel.ru`) не требуют правок nginx. Нужна одна wildcard-запись DNS `*.2wel.ru`. SSL для нового кода дописывается при создании объекта или ссылки.
+Поддомены тарифа «Старт» (`{code}.2wel.ru`) не требуют правок nginx. Нужна одна wildcard-запись DNS `*.2wel.ru`. SSL для нового кода дописывается при создании объекта или ссылки.
 
-- **web** — React-плеер + кабинет `/app` + конструктор шаблона + nginx (прокси `/api` → API)
-- **api** — проекты, шаблоны, ссылки, ключ API, загрузка фото, TTS, аналитика; при старте — миграции Postgres и seed проекта Джинал
+- **web** — лендинг, React-плеер, кабинет `/app`, конструкторы (v1/v2 по тарифу), nginx (прокси `/api` → API)
+- **api** — проекты, шаблоны, ссылки, ключ API, медиа, TTS, amo, аналитика; при старте — миграции Postgres и seed демо-объекта
 - **db** — Postgres (пользователи, проекты, шаблоны, ссылки, события)
 
 ## Локальная разработка без Docker
@@ -82,11 +88,11 @@ cd web && npm install && npm run dev
 
 Плеер по короткой ссылке: `http://localhost:5173/<shareId>`  
 Кабинет: `http://localhost:5173/login` · логин `admin` / `changeme`  
-Конструктор: `/app/projects/<code>/templates/<category>/edit`
+Конструктор: `/app/projects/<code>/templates/<category>/edit` (Старт) или `…/edit-v2` (Про)
 
 Только API вручную: `docker compose up db -d`, затем `cd api && npm start`.
 
-Кабинет `/app`: шаблоны (код = category в CRM), ссылки с `externalId`, озвучка, ключ API, документация выдачи, аналитика.
+Кабинет `/app`: шаблоны (код = category в CRM), ссылки с `externalId`, озвучка, ключ API, документация выдачи, аналитика, тариф.
 
 Медиа проекта: `/media/projects/{code}/` (фото, TTS, музыка).
 
@@ -94,16 +100,18 @@ cd web && npm install && npm run dev
 
 Раздел кабинета «Озвучка» (`/app/projects/{code}/voice`) задаёт, кто читает титры. Выбор хранится у объекта (`projects.tts_provider`, `projects.tts_voice`) и применяется ко всем новым генерациям.
 
-- **ElevenLabs (eleven_v3)** — основной сервис. Десять голосов в `ELEVENLABS_VOICES`. Если с 2wel.ru API ElevenLabs недоступен — поднимите прокси на VDS: [`elevenlabs-proxy/README.md`](elevenlabs-proxy/README.md), задайте `ELEVENLABS_PROXY_URL` и `ELEVENLABS_PROXY_SECRET` (ключ API только на VDS).
+- **ElevenLabs (eleven_v3)** — основной сервис. Голоса в `ELEVENLABS_VOICES`. Если с 2wel.ru API ElevenLabs недоступен — прокси на VDS: [`elevenlabs-proxy/README.md`](elevenlabs-proxy/README.md), `ELEVENLABS_PROXY_URL` и `ELEVENLABS_PROXY_SECRET` (ключ API только на VDS).
 - **Демо голосов в кабинете** — фраза в `elevenlabs-proxy/voice-demo.json`, MP3 в `web/public/media/tts/demos/elevenlabs/`. Перегенерация: `./scripts/generate-elevenlabs-demos-on-vds.sh`.
 - **SaluteSpeech (Сбер)** — запасной вариант при `TTS_PROVIDER=sber` и ключах SaluteSpeech.
 
 Готовые файлы **не отдаются на скачивание**: путь `/media/**/tts/**` закрыт в nginx, кабинет играет их через `/api/projects/:code/tts/file/:name` по сессии, а гостю в конфиге приходит подписанная ссылка `/api/public/tts/:token` со сроком `TTS_LINK_TTL_HOURS`. Генерация ограничена по частоте на объект и по длине текста — озвучка титров, а не студия синтеза.
 
-Регистрация задаётся `AUTH_REGISTRATION` в `.env`:
+## Регистрация и почта
+
+`AUTH_REGISTRATION` в `.env`:
 
 - `open` — любой может завести аккаунт
-- `invite` — только по ссылке администратора (владелец проекта Джинал / `EDITOR_LOGIN`). Приглашённый не может звать других.
+- `invite` — только по ссылке администратора (`EDITOR_LOGIN` / владелец). Приглашённый не может звать других.
 - `closed` — только вручную: `cd api && npm run user -- --email a@b.c --password 'secret12'`
 
 Сброс пароля: `/forgot`. На почту уходит **код из 4 цифр** с `support@2wel.ru` (SMTP SpaceWeb). Затем `/reset`. Регистрация тоже подтверждается кодом. Без пароля ящика код пишется в лог API.
@@ -111,9 +119,6 @@ cd web && npm install && npm run dev
 ## Секреты
 
 - Боевые пароли и ключи — только в `.env` (и `*/.env` на VDS), никогда в `.env.example`.
-- `sync-to-server.sh` копирует корневой `.env` на 2wel, но **не** копирует `gemini-transcribe/.env` и `elevenlabs-proxy/.env` (ключи API остаются на VDS).
+- `sync-to-server.sh` копирует корневой `.env` на сервер 2wel, но **не** копирует `gemini-transcribe/.env` и `elevenlabs-proxy/.env` (ключи API остаются на VDS).
 - API не стартует, если `SMTP_PASS` из списка ранее утёкших (был в example). После смены пароля в SpaceWeb обновите `.env` и перезапустите.
 - VDS-прокси слушают HTTP: на VDS задайте `*_ALLOW_IPS` под IP сервера 2wel и длинный общий `*_SECRET`.
-
-#@sanatorium-template сделай черновик шаблона по https://…
-#проект: {code}, шаблон: default

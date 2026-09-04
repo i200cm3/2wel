@@ -1,32 +1,25 @@
-# React + TypeScript + Vite
+# web — фронтенд 2wel
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React 19 + Vite + TypeScript: лендинг, кабинет `/app`, конструкторы шаблонов (v1/v2), гостевой плеер 9:16.
 
-Currently, two official plugins are available:
+## Разработка
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Из корня репозитория или из этой папки:
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+`npm run dev` поднимает Postgres (docker), API на `:3000` и Vite на `:5173`.
+
+| URL | Что |
+|-----|-----|
+| http://localhost:5173/ | Лендинг 2wel |
+| http://localhost:5173/login | Вход в кабинет |
+| http://localhost:5173/app | Кабинет |
+| http://localhost:5173/`{shareId}` | Гостевой плеер |
+
+Сборка образа для Docker — из корня: `docker compose build web` (см. корневой [`README.md`](../README.md)).
+
+Модель данных и API: [`SPEC.md`](../SPEC.md).

@@ -1,4 +1,4 @@
-# ElevenLabs proxy (VDS-прослойка)
+# ElevenLabs proxy (VDS-прослойка для 2wel)
 
 2wel.ru → **этот сервер** → api.elevenlabs.io → MP3 обратно на 2wel.
 
@@ -7,7 +7,7 @@
 Домены и nginx **не нужны**: 2wel стучится на `http://156.229.27.67:3099` и `:3100`.
 
 ```
-2wel (promo-api)  --POST /v1/synthesize + Bearer secret-->
+2wel (api)  --POST /v1/synthesize + Bearer secret-->
 156.229.27.67:3099  --host network-->  sing-box TUN
   *.elevenlabs.io → WARP (локальный SOCKS 127.0.0.1:38182)
   остальное → direct

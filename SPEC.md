@@ -1,8 +1,9 @@
-# Платформа промо-презентаций
+# 2wel — платформа персональных презентаций
 
-Модель: **проект → категории (шаблоны) → API → персональная ссылка**.
+Для санаториев, отелей и спа. Модель: **проект → категории (шаблоны) → API → персональная ссылка**.
 
 Кабинет и конструктор пишут в Postgres. Плеер открывается только по короткой ссылке.
+Гостевой URL: `https://{code}.2wel.ru/{publicId}` (кабинет: `https://2wel.ru`).
 
 ## Роли URL
 
@@ -34,7 +35,7 @@ POST /api/v1/projects/{code}/links
 → { "ok": true, "reused": false, "url": "https://…/x7k2m9q", "publicId": "x7k2m9q" }
 
 POST /api/v1/amocrm/webhook/{pk_live_…}
-→ id сделки → OAuth → имя + status_id → ссылка (+ снимок/история CRM) → { "ok": true, "url": "https://djinal.2wel.ru/…" }
+→ id сделки → OAuth → имя + status_id → ссылка (+ снимок/история CRM) → { "ok": true, "url": "https://{code}.2wel.ru/…" }
 ```
 
 Документация с curl, amo-URL и полями — в кабинете, страница API.
@@ -93,7 +94,7 @@ POST /api/projects/{code}/plan   { "plan": "flow" }
 | TTS | `/media/projects/{code}/tts/…` |
 | Музыка | `/media/projects/{code}/music/ambient.mp3` |
 
-Общие `/media/tts/` и `/media/music/` — наследие Джинала; новые файлы туда не пишутся. Для проекта `djinal` seed копирует старые TTS и музыку в папку проекта.
+Общие `/media/tts/` и `/media/music/` — legacy одного раннего объекта; новые файлы туда не пишутся. Seed при необходимости копирует старые TTS и музыку в `/media/projects/{code}/`.
 
 ## Озвучка
 

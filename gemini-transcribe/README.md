@@ -1,4 +1,4 @@
-# Gemini proxy (VDS-прослойка)
+# Gemini proxy (VDS-прослойка для 2wel)
 
 Транскрибация аудио и текстовый generate через Gemini API.
 
