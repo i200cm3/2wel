@@ -9,7 +9,8 @@ import {
   setSessionCookie,
   clearSessionCookie,
 } from './auth.mjs'
-import { createProjectForUser, handleCabinetApi } from './cabinet.mjs'
+import { createProjectForUser, handleCabinetApi, projectForUser } from './cabinet.mjs'
+import { adminSetProjectPlan } from './plans.mjs'
 import { parseProjectCode } from './projectCode.mjs'
 import { query } from './db.mjs'
 import { clientIp, consumeRateLimit, rateLimited } from './rateLimit.mjs'
@@ -724,6 +725,34 @@ const server = http.createServer(async (req, res) => {
         const days = Number.isFinite(daysRaw) ? daysRaw : 0
         const overview = await getAdminTtsUsageOverview({ days })
         json(res, 200, { ok: true, ...overview })
+        return
+      }
+      const adminPlanMatch = url.match(/^\/api\/admin\/projects\/([^/]+)\/plan\/?$/)
+      if (adminPlanMatch) {
+        if (req.method !== 'POST') {
+          json(res, 405, { error: 'method not allowed' })
+          return
+        }
+        const projectCode = decodeURIComponent(adminPlanMatch[1])
+        const project = await projectForUser(session.userId, projectCode)
+        if (!project) {
+          json(res, 404, { error: 'project not found' })
+          return
+        }
+        const raw = await readBuffer(req, MAX_JSON_BYTES)
+        let payload = {}
+        try {
+          payload = JSON.parse(raw.toString('utf8') || '{}')
+        } catch {
+          json(res, 400, { error: 'invalid json' })
+          return
+        }
+        const changed = await adminSetProjectPlan(project, session.userId, payload?.plan)
+        if (changed.error) {
+          json(res, changed.status, { error: changed.error })
+          return
+        }
+        json(res, 200, { ok: true, ...changed.plan })
         return
       }
       json(res, 404, { error: 'not found' })

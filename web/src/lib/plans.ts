@@ -75,6 +75,20 @@ export function planTier(id: string | null | undefined): PlanTier {
   return BY_ID.get(normalizePlanId(id)) ?? PLAN_TIERS[0]
 }
 
+export function constructorForPlan(id: string | null | undefined): PlanConstructor {
+  return planTier(id).constructor
+}
+
+/** Путь конструктора по тарифу: Старт → v1, Про → v2. */
+export function editorPathForPlan(
+  planId: string | null | undefined,
+  projectCode: string,
+  templateCode: string,
+): string {
+  const base = `/app/projects/${projectCode}/templates/${templateCode}`
+  return constructorForPlan(planId) === 'v2' ? `${base}/edit-v2` : `${base}/edit`
+}
+
 export function isPlanUpgrade(fromId: string, toId: string): boolean {
   return planTier(toId).price > planTier(fromId).price
 }

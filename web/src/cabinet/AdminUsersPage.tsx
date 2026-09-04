@@ -22,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import {
+  adminSetProjectPlan,
   deleteAdminUser,
   fetchAdminUser,
   searchAdminUsers,
@@ -29,6 +30,7 @@ import {
   type AdminUser,
   type AdminUserWorkspace,
 } from '@/lib/api'
+import { editorPathForPlan, PLAN_TIERS, planTier } from '@/lib/plans'
 import { EllipsisVerticalIcon, SearchIcon } from 'lucide-react'
 
 function formatDt(value: string | null | undefined) {
@@ -265,6 +267,13 @@ function AdminUsersSearch({ currentUserId }: { currentUserId: string }) {
 function AdminUserDetail({ userId }: { userId: string }) {
   const [workspace, setWorkspace] = useState<AdminUserWorkspace | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [planBusy, setPlanBusy] = useState<string | null>(null)
+
+  const reload = () =>
+    fetchAdminUser(userId).then((data) => {
+      setWorkspace(data)
+      setError(null)
+    })
 
   useEffect(() => {
     let cancelled = false
@@ -281,6 +290,19 @@ function AdminUserDetail({ userId }: { userId: string }) {
       cancelled = true
     }
   }, [userId])
+
+  const setPlan = async (projectCode: string, plan: string) => {
+    setPlanBusy(projectCode)
+    try {
+      await adminSetProjectPlan(projectCode, plan)
+      await reload()
+      toast.success(`Тариф «${planTier(plan).name}» включён`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось сменить тариф')
+    } finally {
+      setPlanBusy(null)
+    }
+  }
 
   const title = useMemo(() => {
     if (!workspace) return 'Пользователь'
@@ -327,116 +349,119 @@ function AdminUserDetail({ userId }: { userId: string }) {
         <p className="text-muted-foreground text-sm">У пользователя пока нет проектов.</p>
       ) : (
         <div className="flex flex-col gap-4">
-          {projects.map((project) => (
-            <Card key={project.id}>
-              <CardHeader className="pb-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <CardTitle className="text-base">
-                      <Link
-                        to={`/app/projects/${project.code}`}
-                        className="hover:underline underline-offset-4"
+          {projects.map((project) => {
+            const currentPlan = planTier(project.plan?.id)
+            return (
+              <Card key={project.id}>
+                <CardHeader className="pb-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <CardTitle className="text-base">
+                        <Link
+                          to={`/app/projects/${project.code}`}
+                          className="hover:underline underline-offset-4"
+                        >
+                          {project.name}
+                        </Link>
+                      </CardTitle>
+                      <CardDescription>
+                        <code className="text-xs">{project.code}</code>
+                        {' · '}
+                        {project.stats.templates} шабл. · {project.stats.links} ссылок ·{' '}
+                        {project.stats.opens} открытий
+                      </CardDescription>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant={currentPlan.id === 'pro' ? 'default' : 'secondary'}>
+                        {currentPlan.name} · {currentPlan.constructor === 'v2' ? 'V2' : 'V1'}
+                      </Badge>
+                      {PLAN_TIERS.map((tier) => (
+                        <Button
+                          key={tier.id}
+                          variant={tier.id === currentPlan.id ? 'default' : 'outline'}
+                          size="sm"
+                          disabled={planBusy === project.code || tier.id === currentPlan.id}
+                          onClick={() => void setPlan(project.code, tier.id)}
+                        >
+                          {tier.id === currentPlan.id ? `Тариф «${tier.name}»` : `Включить «${tier.name}»`}
+                        </Button>
+                      ))}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        nativeButton={false}
+                        render={<Link to={`/app/projects/${project.code}`} />}
                       >
-                        {project.name}
-                      </Link>
-                    </CardTitle>
-                    <CardDescription>
-                      <code className="text-xs">{project.code}</code>
-                      {' · '}
-                      {project.stats.templates} шабл. · {project.stats.links} ссылок ·{' '}
-                      {project.stats.opens} открытий
-                    </CardDescription>
+                        Аналитика
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        nativeButton={false}
+                        render={<Link to={`/app/projects/${project.code}/templates`} />}
+                      >
+                        Шаблоны
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      nativeButton={false}
-                      render={<Link to={`/app/projects/${project.code}`} />}
-                    >
-                      Аналитика
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      nativeButton={false}
-                      render={<Link to={`/app/projects/${project.code}/templates`} />}
-                    >
-                      Шаблоны
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {project.templates.length === 0 ? (
-                  <p className="text-muted-foreground text-sm">Нет шаблонов</p>
-                ) : (
-                  <div className="overflow-hidden rounded-lg border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Шаблон</TableHead>
-                          <TableHead>Статус</TableHead>
-                          <TableHead className="text-right">Действие</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {project.templates.map((tpl) => (
-                          <TableRow key={tpl.id}>
-                            <TableCell>
-                              <div className="font-medium">{tpl.name}</div>
-                              <code className="text-muted-foreground text-xs">{tpl.code}</code>
-                              {tpl.isDefault ? (
-                                <Badge variant="secondary" className="ml-2">
-                                  по умолчанию
-                                </Badge>
-                              ) : null}
-                              {tpl.hasDraft ? (
-                                <Badge variant="outline" className="ml-2">
-                                  черновик
-                                </Badge>
-                              ) : null}
-                            </TableCell>
-                            <TableCell className="text-muted-foreground text-sm">
-                              {tpl.status === 'published' ? 'опубликован' : 'черновик'}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  nativeButton={false}
-                                  render={
-                                    <Link
-                                      to={`/app/projects/${project.code}/templates/${tpl.code}/edit`}
-                                    />
-                                  }
-                                >
-                                  V1
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  nativeButton={false}
-                                  render={
-                                    <Link
-                                      to={`/app/projects/${project.code}/templates/${tpl.code}/edit-v2`}
-                                    />
-                                  }
-                                >
-                                  V2
-                                </Button>
-                              </div>
-                            </TableCell>
+                </CardHeader>
+                <CardContent>
+                  {project.templates.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">Нет шаблонов</p>
+                  ) : (
+                    <div className="overflow-hidden rounded-lg border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Шаблон</TableHead>
+                            <TableHead>Статус</TableHead>
+                            <TableHead className="text-right">Действие</TableHead>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                        </TableHeader>
+                        <TableBody>
+                          {project.templates.map((tpl) => (
+                            <TableRow key={tpl.id}>
+                              <TableCell>
+                                <div className="font-medium">{tpl.name}</div>
+                                <code className="text-muted-foreground text-xs">{tpl.code}</code>
+                                {tpl.isDefault ? (
+                                  <Badge variant="secondary" className="ml-2">
+                                    по умолчанию
+                                  </Badge>
+                                ) : null}
+                                {tpl.hasDraft ? (
+                                  <Badge variant="outline" className="ml-2">
+                                    черновик
+                                  </Badge>
+                                ) : null}
+                              </TableCell>
+                              <TableCell className="text-muted-foreground text-sm">
+                                {tpl.status === 'published' ? 'опубликован' : 'черновик'}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  nativeButton={false}
+                                  render={
+                                    <Link
+                                      to={editorPathForPlan(project.plan?.id, project.code, tpl.code)}
+                                    />
+                                  }
+                                >
+                                  {currentPlan.constructor === 'v2' ? 'V2' : 'V1'}
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )
+          })}
         </div>
       )}
     </div>

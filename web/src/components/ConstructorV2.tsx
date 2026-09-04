@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
 import { EllipsisVertical, GripVertical, Play, Plus, Settings } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -845,9 +844,6 @@ export function ConstructorV2({
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {hasDraft ? <Badge variant="outline">Черновик</Badge> : <Badge variant="secondary">В эфире</Badge>}
-          <Button variant="outline" size="sm" nativeButton={false} render={<Link to={`/app/projects/${projectCode}/templates/${templateCode}/edit`} />}>
-            V1
-          </Button>
           <Button variant="outline" size="sm" onClick={onReset}>
             Сбросить черновик
           </Button>
@@ -1746,14 +1742,6 @@ export function ConstructorV2({
                           Применить mock-сборку к flow
                         </Button>
                       ) : null}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        nativeButton={false}
-                        render={<Link to={`/app/projects/${projectCode}/templates/${templateCode}/edit`} />}
-                      >
-                        Открыть полный runtime preview в V1
-                      </Button>
                     </div>
                   </div>
                 </CardContent>

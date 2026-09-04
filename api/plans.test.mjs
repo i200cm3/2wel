@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   addMonths,
+  constructorForPlan,
   currentPeriod,
   isPlanUpgrade,
   normalizePlanId,
@@ -85,5 +86,11 @@ describe('catalog', () => {
   it('повышение — по цене продукта', () => {
     assert.equal(isPlanUpgrade('start', 'pro'), true)
     assert.equal(isPlanUpgrade('pro', 'start'), false)
+  })
+
+  it('конструктор: Старт → v1, Про → v2', () => {
+    assert.equal(constructorForPlan('start'), 'v1')
+    assert.equal(constructorForPlan('pro'), 'v2')
+    assert.equal(constructorForPlan('flow'), 'v2')
   })
 })

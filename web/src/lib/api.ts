@@ -190,6 +190,13 @@ export function changeProjectPlan(projectCode: string, plan: string) {
   })
 }
 
+/** Админ: мгновенно Старт / Про (пока без оплаты). */
+export function adminSetProjectPlan(projectCode: string, plan: string) {
+  return apiSend<ProjectPlan>(`/api/admin/projects/${encodeURIComponent(projectCode)}/plan`, 'POST', {
+    plan,
+  })
+}
+
 export type Template = {
   id: string
   code: string

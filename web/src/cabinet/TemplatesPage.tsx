@@ -41,6 +41,7 @@ import {
 import { EllipsisVerticalIcon, Loader2Icon, PlusIcon } from 'lucide-react'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
+import { editorPathForPlan, planTier } from '@/lib/plans'
 
 function copyTemplateName(source: Template, templates: Template[]) {
   const used = new Set(templates.map((item) => item.name))
@@ -63,7 +64,7 @@ function ruFiles(n: number) {
 
 export function TemplatesPage() {
   const { code } = useParams()
-  const { user } = useOutletContext<CabinetOutlet>()
+  const { project } = useOutletContext<CabinetOutlet>()
   const [templates, setTemplates] = useState<Template[] | null>(() =>
     code ? peekTemplates(code) : null,
   )
@@ -240,35 +241,20 @@ export function TemplatesPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
-                      {user.isAdmin ? (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            nativeButton={false}
-                            render={<Link to={`/app/projects/${code}/templates/${tpl.code}/edit`} />}
-                          >
-                            V1
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            nativeButton={false}
-                            render={<Link to={`/app/projects/${code}/templates/${tpl.code}/edit-v2`} />}
-                          >
-                            V2
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          nativeButton={false}
-                          render={<Link to={`/app/projects/${code}/templates/${tpl.code}/edit`} />}
-                        >
-                          Конструктор шаблона
-                        </Button>
-                      )}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        nativeButton={false}
+                        render={
+                          <Link
+                            to={editorPathForPlan(project?.plan?.id, code ?? '', tpl.code)}
+                          />
+                        }
+                      >
+                        {planTier(project?.plan?.id).constructor === 'v2'
+                          ? 'Конструктор V2'
+                          : 'Конструктор шаблона'}
+                      </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger
                           render={<Button variant="ghost" size="icon-sm" disabled={busyCode === tpl.code} />}

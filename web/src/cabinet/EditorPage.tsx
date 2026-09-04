@@ -1,17 +1,19 @@
 import { useEffect } from 'react'
-import { Link, useOutletContext, useParams } from 'react-router-dom'
+import { Link, Navigate, useOutletContext, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import type { CabinetOutlet } from '@/cabinet/CabinetLayout'
 import { TimelineEditor } from '@/components/TimelineEditor'
 import { Button } from '@/components/ui/button'
 import { fetchTemplates } from '@/lib/api'
 import { useTemplateEditor } from '@/hooks/useTemplateEditor'
+import { constructorForPlan, editorPathForPlan } from '@/lib/plans'
 
 export function EditorPage() {
-  const { user } = useOutletContext<CabinetOutlet>()
+  const { user, project } = useOutletContext<CabinetOutlet>()
   const { code, templateCode } = useParams()
   const projectCode = code?.trim() ?? ''
   const tplCode = templateCode?.trim() ?? ''
+  const planId = project?.plan?.id
   const {
     config,
     ready,
@@ -40,6 +42,10 @@ export function EditorPage() {
     if (!projectCode) return
     void fetchTemplates(projectCode).catch(() => undefined)
   }, [projectCode])
+
+  if (project && projectCode && tplCode && constructorForPlan(planId) === 'v2') {
+    return <Navigate to={editorPathForPlan(planId, projectCode, tplCode)} replace />
+  }
 
   if (!projectCode || !tplCode) {
     return (

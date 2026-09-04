@@ -252,10 +252,21 @@ export async function loadProjectPlan(projectId) {
 }
 
 /**
- * Переход инициирует клиент. Повышение включается сразу,
- * понижение — с конца оплаченного периода.
+ * Переход инициирует клиент. Пока оплаты нет — смена тарифа только через
+ * adminSetProjectPlan (панель пользователей). Этот путь оставлен на будущее.
  */
 export async function changeProjectPlan(project, userId, requestedId) {
+  return {
+    error: 'Смена тарифа пока только через администратора 2wel',
+    status: 403,
+  }
+}
+
+/**
+ * Админ включает Старт / Про сразу (пилот без оплаты).
+ * В истории kind = upgrade|downgrade (constraint миграции 011).
+ */
+export async function adminSetProjectPlan(project, adminUserId, requestedId) {
   await applyDuePlanChanges()
   const row = await planRow(project.id)
   if (!row) return { error: 'project not found', status: 404 }
@@ -267,54 +278,30 @@ export async function changeProjectPlan(project, userId, requestedId) {
 
   const current = planById(row.plan)
   const next = planById(wanted)
-  const period = currentPeriod(row.plan_period_start)
 
-  if (next.id === current.id) {
-    if (!row.pending_plan) {
-      return { error: 'plan already active', status: 400 }
-    }
-    await query(
-      `UPDATE projects
-       SET pending_plan = NULL, pending_effective_at = NULL, updated_at = now()
-       WHERE id = $1`,
-      [project.id],
-    )
-    await query(
-      `INSERT INTO plan_changes (project_id, user_id, from_plan, to_plan, kind, effective_at)
-       VALUES ($1, $2, $3, $4, 'cancelled', now())`,
-      [project.id, userId ?? null, normalizePlanId(row.pending_plan), current.id],
-    )
-    return { ok: true, plan: await loadProjectPlan(project.id) }
+  if (next.id === current.id && !row.pending_plan) {
+    return { error: 'plan already active', status: 400 }
   }
 
-  if (isPlanUpgrade(current.id, next.id)) {
-    await query(
-      `UPDATE projects
-       SET plan = $2,
-           pending_plan = NULL,
-           pending_effective_at = NULL,
-           updated_at = now()
-       WHERE id = $1`,
-      [project.id, next.id],
-    )
-    await query(
-      `INSERT INTO plan_changes (project_id, user_id, from_plan, to_plan, kind, effective_at)
-       VALUES ($1, $2, $3, $4, 'upgrade', $5)`,
-      [project.id, userId ?? null, current.id, next.id, period.start.toISOString()],
-    )
-    return { ok: true, plan: await loadProjectPlan(project.id) }
-  }
+  const kind = next.id === current.id ? 'cancelled' : isPlanUpgrade(current.id, next.id) ? 'upgrade' : 'downgrade'
 
   await query(
     `UPDATE projects
-     SET pending_plan = $2, pending_effective_at = $3, updated_at = now()
+     SET plan = $2,
+         pending_plan = NULL,
+         pending_effective_at = NULL,
+         updated_at = now()
      WHERE id = $1`,
-    [project.id, next.id, period.end.toISOString()],
+    [project.id, next.id],
   )
   await query(
     `INSERT INTO plan_changes (project_id, user_id, from_plan, to_plan, kind, effective_at)
-     VALUES ($1, $2, $3, $4, 'downgrade', $5)`,
-    [project.id, userId ?? null, current.id, next.id, period.end.toISOString()],
+     VALUES ($1, $2, $3, $4, $5, now())`,
+    [project.id, adminUserId ?? null, current.id, next.id, kind],
   )
   return { ok: true, plan: await loadProjectPlan(project.id) }
+}
+
+export function constructorForPlan(planId) {
+  return planById(planId).constructor
 }

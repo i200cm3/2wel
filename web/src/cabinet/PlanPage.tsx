@@ -1,18 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useOutletContext, useParams } from 'react-router-dom'
-import { toast } from 'sonner'
 import { CheckIcon } from 'lucide-react'
 import type { CabinetOutlet } from '@/cabinet/CabinetLayout'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -24,12 +13,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { changeProjectPlan, fetchProjectPlan, type ProjectPlan } from '@/lib/api'
+import { fetchProjectPlan, type ProjectPlan } from '@/lib/api'
 import {
   formatDay,
   formatPeriod,
   formatPriceFrom,
-  isPlanUpgrade,
   planTier,
   pluralLinks,
 } from '@/lib/plans'
@@ -52,12 +40,10 @@ function formatDt(value: string) {
 
 export function PlanPage() {
   const { code } = useParams()
-  const { project, reloadProjects } = useOutletContext<CabinetOutlet>()
+  const { project } = useOutletContext<CabinetOutlet>()
   const projectCode = code || project?.code || ''
   const [data, setData] = useState<ProjectPlan | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [target, setTarget] = useState<string | null>(null)
-  const [pending, setPending] = useState(false)
 
   useEffect(() => {
     if (!projectCode) return
@@ -79,33 +65,8 @@ export function PlanPage() {
   if (error && !data) return <p className="text-destructive p-6">{error}</p>
   if (!data) return <p className="text-muted-foreground p-6">Загрузка…</p>
 
-  const { plan, usage, period, pending: scheduled } = data
-  const targetPlan = target ? data.plans.find((item) => item.id === target) : null
-  const upgrading = target ? isPlanUpgrade(plan.id, target) : false
-
-  const apply = async (planId: string) => {
-    const wasActive = plan.id
-    setPending(true)
-    try {
-      const next = await changeProjectPlan(projectCode, planId)
-      setData(next)
-      setTarget(null)
-      await reloadProjects()
-      if (next.pending?.plan === planId) {
-        toast.success(
-          `Переход на «${next.pending.name}» запланирован на ${formatDay(next.pending.effectiveAt)}`,
-        )
-      } else if (planId === wasActive) {
-        toast.success(`Остаётесь на тарифе «${next.plan.name}»`)
-      } else {
-        toast.success(`Тариф «${next.plan.name}» подключён`)
-      }
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Не удалось сменить тариф')
-    } finally {
-      setPending(false)
-    }
-  }
+  const { plan, usage, period } = data
+  const tier = planTier(plan.id)
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
@@ -113,8 +74,8 @@ export function PlanPage() {
         <CardHeader>
           <CardTitle className="font-sans">Тариф «{plan.name}»</CardTitle>
           <CardDescription>
-            {planTier(plan.id).tagline} · период {formatPeriod(period.start, period.end)}.
-            Следующий расчётный день — {formatDay(period.end)}.
+            {tier.tagline} · конструктор {plan.constructor === 'v2' ? 'V2' : 'V1'} · период{' '}
+            {formatPeriod(period.start, period.end)}.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -136,31 +97,22 @@ export function PlanPage() {
           </dl>
 
           <p className="text-muted-foreground text-sm">
-            Ссылки не тарифицируются отдельно — в подписку входит продукт целиком.
+            Пока оплата не подключена, тариф «Про» включает администратор 2wel.
+            Напишите в поддержку, если нужен конструктор после разговора (V2).
           </p>
-
-          {scheduled ? (
-            <div className="flex flex-col gap-3 rounded-lg border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm">
-                С {formatDay(scheduled.effectiveAt)} тариф сменится на «{scheduled.name}».
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pending}
-                onClick={() => void apply(plan.id)}
-              >
-                Оставить «{plan.name}»
-              </Button>
-            </div>
-          ) : null}
+          <Button
+            variant="outline"
+            size="sm"
+            render={<a href={supportMailHref(`Тариф Про — ${project?.name ?? projectCode}`)} />}
+          >
+            Написать в поддержку
+          </Button>
         </CardContent>
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         {data.plans.map((item) => {
-          const higher = isPlanUpgrade(plan.id, item.id)
-          const tier = planTier(item.id)
+          const itemTier = planTier(item.id)
           return (
             <Card key={item.id} className={cn(item.current && 'border-primary')}>
               <CardHeader>
@@ -168,7 +120,7 @@ export function PlanPage() {
                   <CardTitle className="font-sans">{item.name}</CardTitle>
                   {item.current ? <Badge>Текущий</Badge> : null}
                 </div>
-                <CardDescription>{tier.tagline}</CardDescription>
+                <CardDescription>{itemTier.tagline}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p>
@@ -178,41 +130,21 @@ export function PlanPage() {
                   <span className="text-muted-foreground text-sm"> ₽ / мес</span>
                 </p>
                 <ul className="text-muted-foreground space-y-1.5 text-sm">
-                  {tier.features.slice(0, 3).map((feature) => (
+                  {itemTier.features.slice(0, 4).map((feature) => (
                     <li key={feature} className="flex gap-2">
                       <CheckIcon className="text-primary mt-0.5 size-4 shrink-0" />
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
-
                 {item.current ? (
                   <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
                     <CheckIcon className="text-primary size-4" />
                     Подключён
                   </p>
                 ) : (
-                  <p className="text-muted-foreground text-sm">
-                    {higher
-                      ? 'Включится сразу после подтверждения'
-                      : `Включится ${formatDay(period.end)}, с конца оплаченного периода`}
-                  </p>
+                  <p className="text-muted-foreground text-sm">Включение через администратора</p>
                 )}
-
-                <Button
-                  className="w-full"
-                  variant={higher ? 'default' : 'outline'}
-                  disabled={item.current || pending || scheduled?.plan === item.id}
-                  onClick={() => setTarget(item.id)}
-                >
-                  {item.current
-                    ? 'Текущий тариф'
-                    : scheduled?.plan === item.id
-                      ? 'Уже запланирован'
-                      : higher
-                        ? 'Перейти сейчас'
-                        : 'Перейти с конца периода'}
-                </Button>
               </CardContent>
             </Card>
           )
@@ -273,34 +205,6 @@ export function PlanPage() {
           </CardContent>
         </Card>
       ) : null}
-
-      <AlertDialog
-        open={Boolean(target)}
-        onOpenChange={(open) => {
-          if (!open) setTarget(null)
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {upgrading
-                ? `Перейти на «${targetPlan?.name}»?`
-                : `Понизить до «${targetPlan?.name}»?`}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {upgrading
-                ? `Тариф включится сразу: «${targetPlan?.name}» — ${planTier(targetPlan?.id).tagline}, ${formatPriceFrom(targetPlan?.price ?? 0)} ₽ / мес. Число гостей не ограничено.`
-                : `Текущий тариф доработает до ${formatDay(period.end)}, после чего включится «${targetPlan?.name}» — ${planTier(targetPlan?.id).tagline}, ${formatPriceFrom(targetPlan?.price ?? 0)} ₽ / мес.`}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={pending}>Отмена</AlertDialogCancel>
-            <AlertDialogAction disabled={pending} onClick={() => target && void apply(target)}>
-              {upgrading ? 'Перейти сейчас' : 'Запланировать'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   )
 }

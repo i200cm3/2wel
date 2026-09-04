@@ -21,6 +21,7 @@ import {
 } from '@/lib/api'
 import { defaultStatsRange, formatRangeLabel, parseDay, type DayRange } from '@/lib/statsRange'
 import { guestShareUrl } from '@/lib/utils'
+import { editorPathForPlan, planTier } from '@/lib/plans'
 
 function rangeFromSearch(params: URLSearchParams): DayRange {
   const from = parseDay(params.get('from'))
@@ -47,7 +48,7 @@ export function AppIndex() {
 
 export function OverviewPage() {
   const { code } = useParams()
-  const { project, user } = useOutletContext<CabinetOutlet>()
+  const { project } = useOutletContext<CabinetOutlet>()
   const [params, setParams] = useSearchParams()
   const range = useMemo(() => rangeFromSearch(params), [params])
   const periodLabel = formatRangeLabel(range.from, range.to)
@@ -94,7 +95,9 @@ export function OverviewPage() {
   return (
     <div className="@container/main flex flex-1 flex-col gap-2">
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-        {code ? <SetupCard code={code} stats={stats} isAdmin={user.isAdmin} /> : null}
+        {code ? (
+          <SetupCard code={code} stats={stats} planId={project?.plan?.id} />
+        ) : null}
         <div className="px-4 lg:px-6 empty:hidden">
           <PlanUsageBanner plan={project.plan} projectCode={project.code} />
         </div>
@@ -124,7 +127,15 @@ export function OverviewPage() {
   )
 }
 
-function SetupCard({ code, stats, isAdmin }: { code: string; stats: ProjectStats; isAdmin: boolean }) {
+function SetupCard({
+  code,
+  stats,
+  planId,
+}: {
+  code: string
+  stats: ProjectStats
+  planId?: string
+}) {
   const [templates, setTemplates] = useState<Template[] | null>(null)
   const [whatsApp, setWhatsApp] = useState<string | null>(null)
   const [pendingLink, setPendingLink] = useState(false)
@@ -159,10 +170,12 @@ function SetupCard({ code, stats, isAdmin }: { code: string; stats: ProjectStats
 
   const published = templates.filter((item) => item.status === 'published')
   const def = templates.find((item) => item.isDefault) ?? templates[0]
-  const editorTo = def ? `/app/projects/${code}/templates/${def.code}/edit` : `/app/projects/${code}/templates`
-  const editorToV2 = def ? `/app/projects/${code}/templates/${def.code}/edit-v2` : `/app/projects/${code}/templates`
+  const editorTo = def
+    ? editorPathForPlan(planId, code, def.code)
+    : `/app/projects/${code}/templates`
   const templatesTo = `/app/projects/${code}/templates`
   const linksTo = `/app/projects/${code}/links`
+  const ctorLabel = planTier(planId).constructor === 'v2' ? 'Конструктор V2' : 'Конструктор шаблона'
 
   const steps: { id: string; text: string; to?: string; action?: 'test-link' }[] = []
   if (templates.length === 0 || published.length === 0) {
@@ -230,20 +243,9 @@ function SetupCard({ code, stats, isAdmin }: { code: string; stats: ProjectStats
           </ol>
           <div className="flex flex-wrap gap-2">
             {def ? (
-              isAdmin ? (
-                <>
-                  <Button variant="outline" size="sm" nativeButton={false} render={<Link to={editorTo} />}>
-                    Конструктор V1
-                  </Button>
-                  <Button variant="outline" size="sm" nativeButton={false} render={<Link to={editorToV2} />}>
-                    Конструктор V2
-                  </Button>
-                </>
-              ) : (
-                <Button variant="outline" size="sm" nativeButton={false} render={<Link to={editorTo} />}>
-                  Конструктор шаблона
-                </Button>
-              )
+              <Button variant="outline" size="sm" nativeButton={false} render={<Link to={editorTo} />}>
+                {ctorLabel}
+              </Button>
             ) : null}
             {stats.links === 0 ? (
               <Button size="sm" disabled={pendingLink || published.length === 0} onClick={issueTestLink}>

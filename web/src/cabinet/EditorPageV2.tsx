@@ -1,15 +1,19 @@
 import { useEffect } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useOutletContext, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
+import type { CabinetOutlet } from '@/cabinet/CabinetLayout'
 import { ConstructorV2 } from '@/components/ConstructorV2'
 import { Button } from '@/components/ui/button'
 import { fetchTemplates } from '@/lib/api'
 import { useTemplateEditor } from '@/hooks/useTemplateEditor'
+import { constructorForPlan, editorPathForPlan } from '@/lib/plans'
 
 export function EditorPageV2() {
+  const { project } = useOutletContext<CabinetOutlet>()
   const { code, templateCode } = useParams()
   const projectCode = code?.trim() ?? ''
   const tplCode = templateCode?.trim() ?? ''
+  const planId = project?.plan?.id
   const {
     config,
     ready,
@@ -32,11 +36,14 @@ export function EditorPageV2() {
     return () => document.documentElement.classList.remove('cabinet-editor')
   }, [])
 
-  // Прогреть кэш списка шаблонов, пока открыт редактор — возврат без «Загрузка…».
   useEffect(() => {
     if (!projectCode) return
     void fetchTemplates(projectCode).catch(() => undefined)
   }, [projectCode])
+
+  if (project && projectCode && tplCode && constructorForPlan(planId) !== 'v2') {
+    return <Navigate to={editorPathForPlan(planId, projectCode, tplCode)} replace />
+  }
 
   if (!projectCode || !tplCode) {
     return (
