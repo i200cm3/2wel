@@ -1,0 +1,14 @@
+services:
+  elevenlabs-proxy:
+    build: .
+    container_name: pclip-elevenlabs-proxy
+    restart: unless-stopped
+    # bridge часто не выходит в интернет (IPv6/DNS) — host network для исходящих к ElevenLabs
+    network_mode: host
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3099/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 3

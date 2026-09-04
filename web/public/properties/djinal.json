@@ -1,0 +1,1126 @@
+{
+  "id": "djinal",
+  "brand": {
+    "name": "Джинал",
+    "fullName": "Санаторий «Джинал»",
+    "city": "Кисловодск",
+    "address": "ул. Пятигорская, 4",
+    "phoneDisplay": "8 800 500-6775",
+    "phoneTel": "+78005006775",
+    "site": "https://www.djinal.ru/",
+    "whatsAppNumber": ""
+  },
+  "defaultGuestName": "Анатолий",
+  "greetingSubtitle": "Рады видеть вас среди гостей",
+  "flow": [
+    "intro",
+    "greeting",
+    "about"
+  ],
+  "branches": [
+    {
+      "id": "treatment",
+      "label": "Лечение",
+      "sequenceId": "treatment"
+    },
+    {
+      "id": "food",
+      "label": "Питание",
+      "sequenceId": "food"
+    },
+    {
+      "id": "leisure",
+      "label": "Отдых",
+      "sequenceId": "leisure"
+    },
+    {
+      "id": "park",
+      "label": "Кисловодск и парк",
+      "sequenceId": "park"
+    }
+  ],
+  "mediaLibrary": [
+    {
+      "folder": "intro",
+      "count": 6
+    },
+    {
+      "folder": "about",
+      "count": 6
+    },
+    {
+      "folder": "rooms",
+      "count": 8
+    },
+    {
+      "folder": "treatment",
+      "count": 8
+    },
+    {
+      "folder": "leisure",
+      "count": 8
+    },
+    {
+      "folder": "park",
+      "count": 8
+    },
+    {
+      "folder": "food",
+      "count": 0
+    }
+  ],
+  "sequences": {
+    "intro": {
+      "id": "intro",
+      "label": "Intro",
+      "title": "",
+      "subtitle": "",
+      "clips": [
+        {
+          "id": "intro-eqozrfv",
+          "src": "/media/projects/djinal/library/gallery/01-territoriya-sanatoriya-letom/f0f2d44042f4fd5c39aff0fc27241037.jpg",
+          "motion": "custom",
+          "durationSec": 4,
+          "from": {
+            "x": 0.4385964912280702,
+            "y": 0.5039618461076271,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.5614035087719298,
+            "y": 0.4385964912280702,
+            "scale": 1.14
+          },
+          "easing": "linear",
+          "animSec": 4,
+          "transition": "cut"
+        }
+      ],
+      "cues": []
+    },
+    "greeting": {
+      "id": "greeting",
+      "label": "Приветствие",
+      "title": "Здравствуйте, {name}!",
+      "lines": [
+        "",
+        "Совсем скоро мы будем рады приветствовать вас в санатории «Джинал».",
+        "Мы подготовили для вас небольшое знакомство с санаторием и Кисловодском — расскажем, где вы будете жить, как организовано лечение и питание, чем можно заняться в свободное время и куда отправиться на прогулку."
+      ],
+      "speech": "Здравствуйте, {name}! Совсем скоро мы будем рады приветствовать вас в санатории «Джинал». Мы подготовили для вас небольшое знакомство с санаторием и Кисловодском — расскажем, где вы будете жить, как организовано лечение и питание, чем можно заняться в свободное время и куда отправиться на прогулку.",
+      "clips": [
+        {
+          "id": "greeting-u8l7yxz",
+          "src": "/media/projects/djinal/library/gallery/11-territoriya-sanatoriya/1a85606b4b0898cc367c97dccabaa45f.jpg",
+          "motion": "custom",
+          "durationSec": 2.887,
+          "from": {
+            "x": 0.4570115755058761,
+            "y": 0.49019607843137253,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.4564151276840152,
+            "y": 0.49322076852409164,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "animSec": 2.887,
+          "transition": "cut",
+          "showTitle": true
+        },
+        {
+          "id": "greeting-hb3l8ea",
+          "src": "/media/projects/djinal/library/gallery/08-registratura/93da6502ea2a1d71aff1461cb6739a02.jpg",
+          "motion": "none",
+          "durationSec": 3.296,
+          "animSec": 3.296,
+          "from": {
+            "x": 0.5465407387935459,
+            "y": 0.6124031007751938,
+            "scale": 1.29
+          },
+          "to": {
+            "x": 0.5465407387935459,
+            "y": 0.6124031007751938,
+            "scale": 1.29
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "greeting-s0ykm7z",
+          "src": "/media/projects/djinal/library/gallery/about/04.jpg",
+          "motion": "custom",
+          "durationSec": 3.412,
+          "animSec": 3.412,
+          "from": {
+            "x": 0.4987544907181394,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "greeting-sxjc5iv",
+          "src": "/media/projects/djinal/library/gallery/about/05.jpg",
+          "motion": "none",
+          "durationSec": 4.047,
+          "animSec": 4.047,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "greeting-g8jhbx7",
+          "src": "/media/projects/djinal/library/gallery/03-bar/44df94374576ed6ea29817e8b7709bfb.jpg",
+          "motion": "none",
+          "durationSec": 4.107,
+          "animSec": 4.107,
+          "from": {
+            "x": 0.26354770110728165,
+            "y": 0.5098039215686274,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.26354770110728165,
+            "y": 0.5098039215686274,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        }
+      ],
+      "showTitle": false,
+      "cues": [
+        {
+          "id": "cue-ujir265",
+          "startSec": 0,
+          "durationSec": 2.921,
+          "text": "",
+          "ttsText": "Здравствуйте, Анатолий!",
+          "ttsSrc": "/media/projects/djinal/tts/1-1.wav"
+        },
+        {
+          "id": "cue-p1ez19k",
+          "startSec": 2.921,
+          "durationSec": 3.262,
+          "text": "Совсем скоро мы будем рады приветствовать вас в санатории «Джинал».",
+          "ttsText": "Совсем скоро мы будем рады приветствовать вас в санатории «ДжинАл».",
+          "ttsSrc": "/media/projects/djinal/tts/1-2.wav"
+        },
+        {
+          "id": "cue-psc4g79",
+          "startSec": 6.183,
+          "durationSec": 11.566,
+          "text": "Мы подготовили для вас небольшое знакомство с санаторием и Кисловодском — расскажем, где вы будете жить, как организовано лечение и питание, чем можно заняться в свободное время и куда отправиться на прогулку.",
+          "ttsSrc": "/media/projects/djinal/tts/1-3.wav"
+        }
+      ]
+    },
+    "about": {
+      "id": "about",
+      "label": "О санатории",
+      "title": "Ваше пребывание в «Джинале»",
+      "lines": [
+        "«Джинал» расположен в Кисловодске, у подножия Джинальского хребта, недалеко от Курортного парка.",
+        "Здесь санаторно-курортное лечение сочетается с возможностью спокойно отдохнуть и познакомиться с Кисловодском.",
+        "Во время пребывания у вас будет время для процедур, отдыха, прогулок и новых впечатлений."
+      ],
+      "speech": "«Джинал» расположен в Кисловодске, у подножия Джинальского хребта, недалеко от Курортного парка. Здесь санаторно-курортное лечение сочетается с возможностью спокойно отдохнуть и познакомиться с Кисловодском. Во время пребывания у вас будет время для процедур, отдыха, прогулок и новых впечатлений.",
+      "clips": [
+        {
+          "id": "about-cj2wgcw",
+          "src": "/media/projects/djinal/library/gallery/intro/04.jpg",
+          "motion": "none",
+          "durationSec": 6.41,
+          "animSec": 6.41,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "about-ee0vbwj",
+          "src": "/media/projects/djinal/library/gallery/about/02.jpg",
+          "motion": "none",
+          "durationSec": 5.42,
+          "animSec": 5.42,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "about-cc6rm7k",
+          "src": "/media/projects/djinal/library/gallery/about/06.jpg",
+          "motion": "none",
+          "durationSec": 5.868,
+          "animSec": 5.868,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment",
+          "label": "Лечение",
+          "target": {
+            "kind": "sequence",
+            "sequenceId": "treatment"
+          }
+        },
+        {
+          "id": "btn-food",
+          "label": "Питание",
+          "target": {
+            "kind": "sequence",
+            "sequenceId": "food"
+          }
+        },
+        {
+          "id": "btn-leisure",
+          "label": "Отдых",
+          "target": {
+            "kind": "sequence",
+            "sequenceId": "leisure"
+          }
+        },
+        {
+          "id": "btn-park",
+          "label": "Кисловодск и парк",
+          "target": {
+            "kind": "sequence",
+            "sequenceId": "park"
+          }
+        },
+        {
+          "id": "btn-contact",
+          "label": "Связаться с санаторием",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ],
+      "showTitle": false,
+      "cues": [
+        {
+          "id": "cue-2m1yw9l",
+          "startSec": 0,
+          "durationSec": 6.41,
+          "text": "«Джинал» расположен в городе-курорте Кисловодск, у подножия Джинальского хребта, недалеко от Курортного парка.",
+          "ttsSrc": "/media/projects/djinal/tts/2-1+.mp3"
+        },
+        {
+          "id": "cue-lg0f2dw",
+          "startSec": 6.41,
+          "durationSec": 5.802,
+          "text": "Здесь санаторно-курортное лечение сочетается с возможностью спокойно отдохнуть и познакомиться с Кисловодском.",
+          "ttsSrc": "/media/projects/djinal/tts/2-2.mp3"
+        },
+        {
+          "id": "cue-souoi59",
+          "startSec": 12.212,
+          "durationSec": 5.485688,
+          "text": "Во время пребывания у вас будет время для процедур, отдыха, прогулок и новых впечатлений.",
+          "ttsSrc": "/media/projects/djinal/tts/2-3.mp3"
+        }
+      ]
+    },
+    "treatment": {
+      "id": "treatment",
+      "label": "Лечение",
+      "title": "Лечение и оздоровление",
+      "lines": [
+        "Лечение в санатории начинается с консультации врача.",
+        "В основе — выбранная вами лечебная программа, в которой определены предусмотренные процедуры и их количество.",
+        "Врач учитывает состояние вашего здоровья и индивидуальные особенности и формирует необходимые назначения в рамках программы.",
+        "После приёма в медицинской регистратуре специалисты составят для вас расписание процедур и выдадут лист назначений.",
+        "В нём будет указано, какие процедуры вам назначены, когда и где они проходят.",
+        "Так с первых дней вы будете точно знать свой распорядок и сможете спокойно проходить все назначенные процедуры."
+      ],
+      "speech": "Лечение в санатории начинается с консультации врача. В основе — выбранная вами лечебная программа, в которой определены предусмотренные процедуры и их количество. Врач учитывает состояние вашего здоровья и индивидуальные особенности и формирует необходимые назначения в рамках программы. После приёма в медицинской регистратуре специалисты составят для вас расписание процедур и выдадут лист назначений. В нём будет указано, какие процедуры вам назначены, когда и где они проходят. Так с первых дней вы будете точно знать свой распорядок и сможете спокойно проходить все назначенные процедуры.",
+      "clips": [
+        {
+          "id": "treatment-5esvb1h",
+          "src": "/media/projects/djinal/library/gallery/07-procedury/vrach.jpg",
+          "motion": "custom",
+          "durationSec": 3.004,
+          "from": {
+            "x": 0.4610387171880281,
+            "y": 0.5,
+            "scale": 1
+          },
+          "to": {
+            "x": 0.5719954435640342,
+            "y": 0.5,
+            "scale": 1
+          },
+          "easing": "ease-in-out",
+          "animSec": 3.004,
+          "transition": "cut"
+        },
+        {
+          "id": "treatment-c61y1qh",
+          "src": "/media/projects/djinal/library/gallery/07-procedury/0e35c98beeffb60f3d8ce5fc8a6ae4d0.jpg",
+          "motion": "none",
+          "durationSec": 6.348,
+          "from": {
+            "x": 0.3665820441954404,
+            "y": 0.5,
+            "scale": 1
+          },
+          "to": {
+            "x": 0.3665820441954404,
+            "y": 0.5,
+            "scale": 1
+          },
+          "easing": "ease-in-out",
+          "animSec": 6.348,
+          "transition": "cut"
+        },
+        {
+          "id": "treatment-ne6446c",
+          "src": "/media/projects/djinal/library/gallery/07-procedury/47caf78a2e66318eb04592f39a9407a9.jpg",
+          "motion": "none",
+          "durationSec": 7.471,
+          "from": {
+            "x": 0.6545245158786787,
+            "y": 0.5,
+            "scale": 1
+          },
+          "to": {
+            "x": 0.6545245158786787,
+            "y": 0.5,
+            "scale": 1
+          },
+          "easing": "ease-in-out",
+          "animSec": 7.471,
+          "transition": "cut"
+        },
+        {
+          "id": "treatment-2zo5895",
+          "src": "/media/projects/djinal/library/gallery/07-procedury/med.jpg",
+          "motion": "none",
+          "durationSec": 6.531,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1
+          },
+          "easing": "ease-in-out",
+          "animSec": 6.531,
+          "transition": "cut"
+        },
+        {
+          "id": "treatment-96xp8sr",
+          "src": "/media/projects/djinal/library/gallery/uploads/image-9x16.jpg",
+          "motion": "none",
+          "durationSec": 4.519,
+          "animSec": 4.519,
+          "from": {
+            "x": 0.578125,
+            "y": 0.5,
+            "scale": 1
+          },
+          "to": {
+            "x": 0.578125,
+            "y": 0.5,
+            "scale": 1
+          },
+          "easing": "ease-in-out",
+          "transition": "cut"
+        },
+        {
+          "id": "treatment-68ubufk",
+          "src": "/media/projects/djinal/library/gallery/07-procedury/431f219c2119b57f9af5c2814ff0ad29.jpg",
+          "motion": "custom",
+          "durationSec": 6.191,
+          "animSec": 6.191,
+          "from": {
+            "x": 0.28125,
+            "y": 0.5,
+            "scale": 1
+          },
+          "to": {
+            "x": 0.71875,
+            "y": 0.5,
+            "scale": 1
+          },
+          "easing": "ease",
+          "transition": "cut"
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment-menu",
+          "label": "Вернуться к выбору",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-hohgv07",
+          "startSec": 0,
+          "durationSec": 3.004,
+          "text": "Лечение в санатории начинается с консультации врача.",
+          "ttsSrc": "/media/projects/djinal/tts/med-1.mp3"
+        },
+        {
+          "id": "cue-s2doqiq",
+          "startSec": 3.004,
+          "durationSec": 6.348,
+          "text": "В основе — выбранная вами лечебная программа, в которой определены предусмотренные процедуры и их количество.",
+          "ttsSrc": "/media/projects/djinal/tts/med-2.mp3"
+        },
+        {
+          "id": "cue-zdyj48g",
+          "startSec": 9.352,
+          "durationSec": 7.471,
+          "text": "Врач учитывает состояние вашего здоровья и индивидуальные особенности и формирует необходимые назначения в рамках программы.",
+          "ttsSrc": "/media/projects/djinal/tts/med-3.mp3"
+        },
+        {
+          "id": "cue-m26ueoe",
+          "startSec": 16.823,
+          "durationSec": 6.531,
+          "text": "После приёма в медицинской регистратуре специалисты составят для вас расписание процедур и выдадут лист назначений.",
+          "ttsSrc": "/media/projects/djinal/tts/med-4.mp3"
+        },
+        {
+          "id": "cue-50x5ax8",
+          "startSec": 23.354,
+          "durationSec": 4.519,
+          "text": "В нём будет указано, какие процедуры вам назначены, когда и где они проходят.",
+          "ttsSrc": "/media/projects/djinal/tts/med-5.mp3"
+        },
+        {
+          "id": "cue-dlsz1oa",
+          "startSec": 27.873,
+          "durationSec": 6.191,
+          "text": "Так с первых дней вы будете точно знать свой распорядок и сможете спокойно проходить все назначенные процедуры.",
+          "ttsSrc": "/media/projects/djinal/tts/med-6.mp3"
+        }
+      ]
+    },
+    "food": {
+      "id": "food",
+      "label": "Питание",
+      "title": "Питание",
+      "lines": [
+        "Питание — важная часть санаторно-курортного отдыха, поэтому об этом также позаботились заранее.",
+        "В зависимости от условий вашей путёвки питание организуется в столовой или ресторане санатория.",
+        "Режим питания учитывает распорядок дня и позволяет спокойно сочетать приёмы пищи с процедурами и отдыхом.",
+        "При заезде вам подскажут, когда и где состоится ваш первый приём пищи.",
+        "Так питание становится ещё одной частью вашего спокойного санаторного дня."
+      ],
+      "speech": "Питание — важная часть санаторно-курортного отдыха, поэтому об этом также позаботились заранее. В зависимости от условий вашей путёвки питание организуется в столовой или ресторане санатория. Режим питания учитывает распорядок дня и позволяет спокойно сочетать приёмы пищи с процедурами и отдыхом. При заезде вам подскажут, когда и где состоится ваш первый приём пищи. Так питание становится ещё одной частью вашего спокойного санаторного дня.",
+      "clips": [
+        {
+          "id": "food-kewac1o",
+          "src": "/media/projects/djinal/library/gallery/09-restoran/822fde2f2022cbc51adb765523d75d54.jpg",
+          "motion": "custom",
+          "durationSec": 5.956,
+          "animSec": 5.956,
+          "from": {
+            "x": 0.36148010990323737,
+            "y": 0.5726495726495726,
+            "scale": 1.17
+          },
+          "to": {
+            "x": 0.6388356267388524,
+            "y": 0.5726495726495726,
+            "scale": 1.17
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "food-fsjzdrb",
+          "src": "/media/projects/djinal/library/gallery/09-restoran/2038e0030c9b01755db5f465faf8a11a.jpg",
+          "motion": "none",
+          "durationSec": 5.329,
+          "animSec": 5.329,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "food-xf9qm57",
+          "src": "/media/projects/djinal/library/gallery/09-restoran/dc1568e3342bbf7f32a5e130e0546208.jpg",
+          "motion": "custom",
+          "durationSec": 6.609,
+          "animSec": 6.609,
+          "from": {
+            "x": 0.30780352247549664,
+            "y": 0.5614035087719298,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.689755529685681,
+            "y": 0.5614035087719298,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "food-01",
+          "src": "/media/projects/djinal/library/gallery/09-restoran/4ecff94afaa3c4b47587825225b92e86.jpg",
+          "motion": "none",
+          "durationSec": 7.314,
+          "from": {
+            "x": 0.5552342684041208,
+            "y": 0.5,
+            "scale": 1
+          },
+          "to": {
+            "x": 0.5552342684041208,
+            "y": 0.5,
+            "scale": 1
+          },
+          "easing": "ease-in-out",
+          "animSec": 7.314,
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "food-uxmoxch",
+          "src": "/media/projects/djinal/library/gallery/09-restoran/45659b70584396a5c05ab0f2339405a9.jpg",
+          "motion": "none",
+          "durationSec": 4.127,
+          "animSec": 4.127,
+          "from": {
+            "x": 0.4036013368883548,
+            "y": 0.5,
+            "scale": 1
+          },
+          "to": {
+            "x": 0.4036013368883548,
+            "y": 0.5,
+            "scale": 1
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-food-menu",
+          "label": "Вернуться к выбору",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-llhqrcc",
+          "startSec": 0,
+          "durationSec": 5.955916666666667,
+          "text": "Питание — важная часть санаторно-курортного отдыха, поэтому об этом также позаботились заранее.",
+          "ttsSrc": "/media/projects/djinal/tts/p-1.mp3"
+        },
+        {
+          "id": "cue-5mrhsnv",
+          "startSec": 5.956,
+          "durationSec": 5.328979166666667,
+          "text": "В зависимости от условий вашей путёвки питание организуется в столовой или ресторане санатория.",
+          "ttsSrc": "/media/projects/djinal/tts/p-2.mp3"
+        },
+        {
+          "id": "cue-96vnc9i",
+          "startSec": 11.285,
+          "durationSec": 6.609,
+          "text": "Режим питания учитывает распорядок дня и позволяет спокойно сочетать приёмы пищи с процедурами и отдыхом.",
+          "ttsSrc": "/media/projects/djinal/tts/p-3.mp3"
+        },
+        {
+          "id": "cue-t5u64vy",
+          "startSec": 17.894,
+          "durationSec": 7.314,
+          "text": "В санатории организовано заказное диетическое питание: рацион подбирается индивидуально и работает на ваше здоровье.",
+          "ttsSrc": "/media/projects/djinal/tts/p-4.mp3"
+        },
+        {
+          "id": "cue-9qseau8",
+          "startSec": 25.208,
+          "durationSec": 4.127,
+          "text": "Так питание входит в лечебный процесс и помогает вам восстановить силы.",
+          "ttsSrc": "/media/projects/djinal/tts/p-5.mp3"
+        }
+      ]
+    },
+    "leisure": {
+      "id": "leisure",
+      "label": "Отдых",
+      "title": "Отдых и свободное время",
+      "lines": [
+        "Санаторно-курортный отдых — это не только процедуры.",
+        "В свободное время можно прогуляться по территории, почитать, посетить музей или выбрать занятие по настроению.",
+        "В «Джинале» работают библиотека и культурно-информационный центр, проводятся мероприятия для гостей.",
+        "Можно выбрать спокойный отдых или посвятить свободное время прогулкам и знакомству с Кисловодском."
+      ],
+      "speech": "Санаторно-курортный отдых — это не только процедуры. В свободное время можно прогуляться по территории, почитать, посетить музей или выбрать занятие по настроению. В «Джинале» работают библиотека и культурно-информационный центр, проводятся мероприятия для гостей. Можно выбрать спокойный отдых или посвятить свободное время прогулкам и знакомству с Кисловодском.",
+      "clips": [
+        {
+          "id": "leisure-rn7p9h5",
+          "src": "/media/projects/djinal/library/gallery/13-chaepitie/00fbc02f3bcc3c1f31ee4d3a601debaf.jpg",
+          "motion": "none",
+          "durationSec": 3.082,
+          "animSec": 3.082,
+          "from": {
+            "x": 0.6772750604971768,
+            "y": 0.49019607843137253,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.6772750604971768,
+            "y": 0.49019607843137253,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "leisure-okc07ur",
+          "src": "/media/projects/djinal/library/gallery/11-territoriya-sanatoriya/eec42d4c2a617a59082489700927e271.jpg",
+          "motion": "none",
+          "durationSec": 3.191,
+          "animSec": 3.191,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut"
+        },
+        {
+          "id": "leisure-qgm5hmb",
+          "src": "/media/projects/djinal/library/gallery/05-bilyard/5c5981f1919065938ca3dc8e44c2e8b0.jpg",
+          "motion": "none",
+          "durationSec": 3.81,
+          "animSec": 3.81,
+          "from": {
+            "x": 0.3548373298134976,
+            "y": 0.5098039215686274,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.3548373298134976,
+            "y": 0.5098039215686274,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut"
+        },
+        {
+          "id": "leisure-01",
+          "src": "/media/projects/djinal/library/gallery/leisure/01.jpg",
+          "motion": "pan-left",
+          "durationSec": 4.802,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "animSec": 4.802,
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "leisure-t4nza38",
+          "src": "/media/projects/djinal/library/gallery/13-chaepitie/06b8217458478f8902573ff0ce4c9e4c.jpg",
+          "motion": "none",
+          "durationSec": 4.916,
+          "animSec": 4.916,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut"
+        },
+        {
+          "id": "leisure-teuoj0z",
+          "src": "/media/projects/djinal/library/gallery/arkhyz-skier-action.jpg",
+          "motion": "none",
+          "durationSec": 4.267,
+          "animSec": 4.267,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut"
+        },
+        {
+          "id": "leisure-9zaj20w",
+          "src": "/media/projects/djinal/library/gallery/12-trenazhernyj-i-gimnasticheskij-zal/0be0488c3369fe5d659f047fe4ba7257.jpg",
+          "motion": "none",
+          "durationSec": 4.092,
+          "animSec": 4.092,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut"
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-leisure-menu",
+          "label": "Вернуться к выбору",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-d4rkkzj",
+          "startSec": 0,
+          "durationSec": 3.082,
+          "text": "Санаторно-курортный отдых — это не только процедуры.",
+          "ttsSrc": "/media/projects/djinal/tts/o-1.mp3"
+        },
+        {
+          "id": "cue-np20o9r",
+          "startSec": 3.082,
+          "durationSec": 7.001,
+          "text": "В свободное время можно прогуляться по территории, посетить кинотеатр или дискотеку или выбрать занятие по настроению.",
+          "ttsSrc": "/media/projects/djinal/tts/o-2.mp3"
+        },
+        {
+          "id": "cue-iluj6gs",
+          "startSec": 10.083,
+          "durationSec": 9.718,
+          "text": "Кроме того, гостям санатория доступны библиотека и культурно-информационный центр, а также на территории регулярно проводятся развлекательные и познавательные мероприятия.",
+          "ttsSrc": "/media/projects/djinal/tts/o-3.mp3"
+        },
+        {
+          "id": "cue-ta103dh",
+          "startSec": 19.801,
+          "durationSec": 8.359,
+          "text": "Можно отправиться на экскурсии по Северному Кавказу или посвятить время прогулкам и знакомству с Кисловодском.",
+          "ttsSrc": "/media/projects/djinal/tts/o-4.mp3"
+        }
+      ]
+    },
+    "park": {
+      "id": "park",
+      "label": "Кисловодск и парк",
+      "title": "Кисловодск и Курортный парк",
+      "lines": [
+        "Кисловодск — один из известных курортных городов Кавказских Минеральных Вод.",
+        "Особое место здесь занимает Кисловодский Курортный парк — пространство для прогулок, отдыха и знакомства с природой Кавминвод.",
+        "До парка можно добраться на организованном транспорте санатория.",
+        "Также «Джинал» предлагает экскурсионные поездки по Кисловодску и окрестностям.",
+        "Подробнее о вашем пребывании — в разделах ниже."
+      ],
+      "speech": "Кисловодск — один из известных курортных городов Кавказских Минеральных Вод. Особое место здесь занимает Кисловодский Курортный парк — пространство для прогулок, отдыха и знакомства с природой Кавминвод. До парка можно добраться на организованном транспорте санатория. Также «Джинал» предлагает экскурсионные поездки по Кисловодску и окрестностям. Подробнее о вашем пребывании — в разделах ниже.",
+      "clips": [
+        {
+          "id": "park-0qvvvac",
+          "src": "/media/projects/djinal/library/gallery/kislovodsk/4a0efd853c2d471b77f7c3483f9d137b8d2270a2.jpg",
+          "motion": "none",
+          "durationSec": 5.486,
+          "animSec": 5.486,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "park-8cgfle8",
+          "src": "/media/projects/djinal/library/gallery/kislovodsk/XXXL.jpeg",
+          "motion": "none",
+          "durationSec": 6.844,
+          "animSec": 6.844,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "park-y90aekn",
+          "src": "/media/projects/djinal/library/gallery/kislovodsk/e1e5e2811836ee3bf827f0a4d0bd334233322da8.jpg",
+          "motion": "none",
+          "durationSec": 4.049,
+          "animSec": 4.049,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "park-ii35b2y",
+          "src": "/media/projects/djinal/library/gallery/kislovodsk/a43c09fe8f87e0386a964696c0770adff165b97e.jpg",
+          "motion": "none",
+          "durationSec": 4.989,
+          "animSec": 4.989,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "park-1nu7ps6",
+          "src": "/media/projects/djinal/library/gallery/kislovodsk/9fffc57bdab52be5802f8add4caf7f84ab220c6f.jpg",
+          "motion": "none",
+          "durationSec": 4.206,
+          "animSec": 4.206,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-park-menu",
+          "label": "Вернуться к выбору",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ],
+      "showTitle": false,
+      "cues": [
+        {
+          "id": "cue-l6zurc2",
+          "startSec": 0,
+          "durationSec": 5.486,
+          "text": "Кисловодск — один из известных курортных городов России, жемчужина Кавказских Минеральных Вод.",
+          "ttsSrc": "/media/projects/djinal/tts/k-1.mp3"
+        },
+        {
+          "id": "cue-2wag3vc",
+          "startSec": 5.486,
+          "durationSec": 6.8440625,
+          "text": "Особое место здесь занимает Кисловодский Курортный парк — пространство для прогулок, отдыха и знакомства с природой Кавминвод.",
+          "ttsSrc": "/media/projects/djinal/tts/k-2.mp3"
+        },
+        {
+          "id": "cue-pgv28vv",
+          "startSec": 12.33,
+          "durationSec": 4.048979166666666,
+          "text": "До парка и обратно можно добраться на организованном транспорте санатория.",
+          "ttsSrc": "/media/projects/djinal/tts/k-3.mp3"
+        },
+        {
+          "id": "cue-u8ynlyx",
+          "startSec": 16.379,
+          "durationSec": 4.989,
+          "text": "Также  в  санатории можно  купить экскурсионные поездки по Кисловодску и его окрестностям.",
+          "ttsSrc": "/media/projects/djinal/tts/k-4.mp3"
+        },
+        {
+          "id": "cue-woktzvl",
+          "startSec": 21.368,
+          "durationSec": 4.206,
+          "text": "Прогулки по парку и городу станут естественной частью вашего отдыха.",
+          "ttsSrc": "/media/projects/djinal/tts/k-5.mp3"
+        }
+      ]
+    },
+    "farewell": {
+      "id": "farewell",
+      "label": "До встречи",
+      "title": "До встречи в «Джинале»!",
+      "lines": [
+        "С нетерпением ждём вашего приезда, {name}!"
+      ],
+      "speech": "С нетерпением ждём вашего приезда, {name}!",
+      "clips": [
+        {
+          "id": "farewell-01",
+          "src": "/media/projects/djinal/library/gallery/11-territoriya-sanatoriya/1a85606b4b0898cc367c97dccabaa45f.jpg",
+          "motion": "zoom-in",
+          "durationSec": 4,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "animSec": 4,
+          "transition": "cut"
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-4hc49ob",
+          "startSec": 0,
+          "durationSec": 4,
+          "text": "С нетерпением ждём вашего приезда, {name}!"
+        }
+      ]
+    }
+  },
+  "theme": {
+    "orientation": "portrait",
+    "captionBarColor": "#0f0f0f",
+    "captionBarOpacity": 1,
+    "titleColor": "#e6e6e6",
+    "textColor": "#e9e8e8",
+    "titleFont": "cormorant",
+    "textFont": "manrope",
+    "titleFontSize": 22,
+    "textFontSize": 13,
+    "musicVolume": 0.22,
+    "ttsVolume": 1
+  },
+  "shareId": "4wb1fcrpf",
+  "menuTtsSrc": "/media/projects/djinal/tts/menu.mp3"
+}

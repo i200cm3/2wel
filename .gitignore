@@ -1,0 +1,44 @@
+# Secrets — never commit real env files (keep *.example)
+.env
+**/.env
+*.env.local
+.env.*.local
+!**/.env.example
+!.env.example
+
+# Keys / certs
+*.pem
+*.key
+id_rsa
+id_ed25519
+id_ed25519.pub
+
+node_modules
+api/node_modules
+web/node_modules
+web/dist
+
+# Runtime / prod-only media (живут на сервере)
+web/public/media/projects/
+web/public/s/
+web/public/media/tts/**
+!web/public/media/tts/demos/
+!web/public/media/tts/demos/**
+!web/public/media/tts/starter/
+!web/public/media/tts/starter/**
+
+.DS_Store
+**/.DS_Store
+*.log
+*.swp
+*.swo
+*~
+
+.venv
+__pycache__
+.pytest_cache
+.tmp*/
+.cursor/
+
+video-project.zip
+*.zip

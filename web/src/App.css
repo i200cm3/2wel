@@ -1,0 +1,790 @@
+:root {
+  --bg: #1a2420;
+  --bg-2: #24332c;
+  --sand: #e8dfd0;
+  --sand-dim: rgba(232, 223, 208, 0.72);
+  --accent: #c4a574;
+  --accent-2: #8f6b3f;
+  --ink: #14201b;
+  --card: rgba(20, 32, 27, 0.55);
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
+  color: var(--sand);
+  background: #0d1411;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+  height: 100%;
+  height: 100dvh;
+}
+
+body {
+  background:
+    radial-gradient(1200px 700px at 50% -10%, #2f463b 0%, transparent 55%),
+    linear-gradient(180deg, #101816, #0d1411 40%, #0a100e);
+  overscroll-behavior: none;
+}
+
+.app.boot {
+  display: grid;
+  place-items: center;
+  min-height: 100%;
+  height: 100dvh;
+  padding: 24px;
+  color: rgba(232, 223, 208, 0.8);
+  background: #0d1411;
+}
+
+.boot-progress {
+  width: min(16rem, calc(100% - 48px));
+}
+
+.boot-progress [data-slot='progress-label'] {
+  color: rgba(232, 223, 208, 0.92);
+}
+
+.boot-progress [data-slot='progress-value'] {
+  color: rgba(232, 223, 208, 0.55);
+}
+
+.boot-progress [data-slot='progress-track'] {
+  height: 4px;
+  background: rgba(232, 223, 208, 0.18);
+}
+
+.boot-progress [data-slot='progress-indicator'] {
+  background: #c4a574;
+}
+
+.boot-progress[data-indeterminate] [data-slot='progress-indicator'] {
+  width: 32%;
+  animation: boot-indeterminate 1.15s ease-in-out infinite;
+}
+
+@keyframes boot-indeterminate {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(350%);
+  }
+}
+
+.home-gate {
+  text-align: center;
+  gap: 8px;
+}
+
+.home-gate p {
+  margin: 0;
+}
+
+.home-gate-sub {
+  margin-top: 8px !important;
+  font-size: 13px;
+  color: rgba(232, 223, 208, 0.45);
+}
+
+.home-gate-sub a {
+  color: #c4a574;
+}
+
+/* ── Плеер: всегда на весь экран (любой телефон / десктоп) ── */
+html.is-player-presentation,
+html.is-player-presentation body,
+html.is-player-presentation #root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+.app.is-player {
+  position: fixed;
+  inset: 0;
+  top: var(--vv-top, 0px);
+  left: var(--vv-left, 0px);
+  width: var(--vvw, 100vw);
+  height: var(--vvh, 100dvh);
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  display: block;
+  overflow: hidden;
+  background: #000;
+  z-index: 1;
+}
+
+.app.is-player.is-embedded {
+  position: absolute;
+  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.app.is-player .phone {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.app.is-player .editor-link {
+  display: none;
+}
+
+.app:fullscreen,
+.app:-webkit-full-screen {
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  place-items: stretch;
+  background: #000;
+  overflow: hidden;
+}
+
+.app:fullscreen .phone,
+.app:-webkit-full-screen .phone {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.phone {
+  position: relative;
+  width: min(420px, 100%);
+  aspect-ratio: 9 / 16;
+  max-height: min(92vh, 860px);
+  border-radius: 28px;
+  overflow: hidden;
+  background: #000;
+  box-shadow:
+    0 0 0 1px rgba(232, 223, 208, 0.12),
+    0 30px 80px rgba(0, 0, 0, 0.45);
+}
+
+/*
+  Контент альбомный, а телефон держат вертикально —
+  поворачиваем слой, чтобы занять весь экран.
+*/
+@media (orientation: portrait) {
+  .app.is-player.is-landscape .phone {
+    top: 50%;
+    left: 50%;
+    right: auto;
+    bottom: auto;
+    width: var(--vvh, 100dvh);
+    height: var(--vvw, 100dvw);
+    transform: translate(-50%, -50%) rotate(90deg);
+    transform-origin: center center;
+  }
+
+  .app.is-player.is-landscape:fullscreen .phone,
+  .app.is-player.is-landscape:-webkit-full-screen .phone,
+  html.is-player-presentation.fs-active .app.is-player.is-landscape .phone {
+    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    transform: none;
+  }
+}
+
+/* На узком экране — те же safe-area отступы для текста */
+@media (max-width: 900px) {
+  .app.is-player .story-copy {
+    padding-bottom: max(24px, calc(14px + env(safe-area-inset-bottom, 0px)));
+    padding-left: max(22px, env(safe-area-inset-left, 0px));
+    padding-right: max(22px, env(safe-area-inset-right, 0px));
+  }
+
+  .app.is-player .end-buttons {
+    padding-bottom: calc(
+      var(--caption-bar-height, 0px) + max(12px, env(safe-area-inset-bottom, 0px))
+    );
+  }
+
+  .app.is-player .end-buttons-inner {
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
+  }
+}
+
+.story {
+  position: absolute;
+  inset: 0;
+  background: #000;
+}
+
+.story-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  /* Без чёрной заливки: иначе новый кадр перекрывает предыдущий,
+     пока <img> не нарисовался — чёрные вставки на cut. */
+  background: transparent;
+  z-index: 0;
+  /* Cut по умолчанию. Dissolve — через @keyframes, уходящий кадр
+     заморожен на финальном кропе (без motion-path), без прыжка зума. */
+  transition: none;
+}
+
+.story-viewport.is-done {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.story-viewport.is-active {
+  opacity: 1;
+  z-index: 2;
+}
+
+.story-viewport.is-exiting {
+  z-index: 1;
+  pointer-events: none;
+}
+
+.story-viewport.is-exiting.is-exit-dissolve {
+  animation: story-fade-out var(--dissolve-sec, 0.22s) ease-in-out forwards;
+}
+
+/* Cut: старый кадр остаётся СВЕРХУ, пока новый не нарисовался */
+.story-viewport.is-exiting.is-exit-hold {
+  opacity: 1;
+  z-index: 3;
+}
+
+.story-viewport.is-active.is-entering {
+  animation: story-fade-in var(--dissolve-sec, 0.22s) ease-in-out forwards;
+}
+
+@keyframes story-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes story-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.story-viewport.is-active .story-img.motion-path {
+  animation: ken-crop var(--ken-duration, 6s) var(--ken-easing, ease-in-out) forwards;
+}
+
+.story.is-paused .story-img.motion-path,
+.story.is-paused .story-viewport.is-exit-dissolve,
+.story.is-paused .story-viewport.is-entering {
+  animation-play-state: paused;
+}
+
+.story-img {
+  position: absolute;
+  max-width: none;
+  display: block;
+  will-change: left, top, width, height;
+}
+
+/* Видео без кроп-пути: на весь кадр плеера, лишнее обрезаем по бокам */
+.story-video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+}
+
+@keyframes ken-crop {
+  from {
+    left: var(--ken-l0);
+    top: var(--ken-t0);
+    width: var(--ken-w0);
+    height: var(--ken-h0);
+  }
+  to {
+    left: var(--ken-l1);
+    top: var(--ken-t1);
+    width: var(--ken-w1);
+    height: var(--ken-h1);
+  }
+}
+
+.story-copy {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  box-sizing: border-box;
+  padding: 16px 22px 24px;
+  border-radius: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 4px;
+  overflow: hidden;
+  background: rgba(10, 16, 14, 0.78);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: inset 0 1px 0 rgba(232, 223, 208, 0.12);
+}
+
+.story-copy-title {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-start;
+}
+
+.story-copy-title h1,
+.story-title-edit {
+  margin: 0;
+  width: 100%;
+  font-family: var(--story-title-font, 'Cormorant Garamond', Georgia, serif);
+  font-weight: 600;
+  font-size: var(--story-title-size, 28px);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  color: var(--story-title-color, var(--sand));
+  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.story-copy-captions {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 2px;
+}
+
+.story-line {
+  margin: 0;
+  max-width: none;
+  font-family: var(--story-text-font, 'Manrope', 'Segoe UI', sans-serif);
+  color: var(--story-text-color, var(--sand));
+  font-size: var(--story-text-size, 15px);
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.story-copy.is-editable {
+  pointer-events: auto;
+  z-index: 5;
+}
+
+.story-copy.is-editable .story-title-edit,
+.story-copy.is-editable .story-line {
+  cursor: text;
+  border-radius: 4px;
+  outline: 1px solid transparent;
+  transition: outline-color 0.15s ease, background 0.15s ease;
+}
+
+.story-copy.is-editable .story-title-edit:hover,
+.story-copy.is-editable .story-line:hover {
+  outline-color: rgba(232, 223, 208, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.story-copy.is-editable .is-placeholder {
+  opacity: 0.45;
+  font-style: italic;
+}
+
+.story-copy input.story-title-edit,
+.story-copy textarea.story-line {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 2px 4px;
+  border: none;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.35);
+  outline: 1px solid rgba(196, 165, 116, 0.7);
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-shadow: inherit;
+  resize: none;
+}
+
+.story-copy textarea.story-line {
+  min-height: 3.2em;
+}
+
+.menu {
+  position: absolute;
+  inset: 0;
+}
+
+.menu-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(13, 20, 17, 0.35), rgba(13, 20, 17, 0.88)),
+    url('/media/projects/djinal/library/gallery/about/01.jpg') center / cover;
+}
+
+.menu-inner {
+  position: absolute;
+  z-index: 1;
+  left: calc(var(--menu-box-x, 0.055) * 100%);
+  bottom: calc(var(--menu-box-y, 0.05) * 100%);
+  width: calc(var(--menu-box-w, 0.89) * 100%);
+  /* На широком экране плеер на весь viewport — не растягивать кнопки на всю ширину */
+  max-width: min(22rem, calc(100% - 2rem));
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Десктоп / широкий плеер: колонка кнопок по центру, как на телефоне */
+@media (min-width: 560px) {
+  .app.is-player:not(.is-embedded) .menu-inner {
+    left: 50%;
+    width: min(22rem, calc(100% - 3rem));
+    max-width: 22rem;
+    transform: translateX(-50%);
+  }
+
+  .app.is-player:not(.is-embedded) .menu.is-editable .menu-inner {
+    /* в редакторе позиция задаётся вручную — не центрируем */
+    left: calc(var(--menu-box-x, 0.055) * 100%);
+    transform: none;
+    width: calc(var(--menu-box-w, 0.89) * 100%);
+    max-width: min(22rem, calc(100% - 2rem));
+  }
+}
+
+.menu.is-editable .menu-inner {
+  cursor: grab;
+  outline: 1px dashed color-mix(in srgb, var(--menu-title-color, #e8dfd0) 45%, transparent);
+  outline-offset: 8px;
+  border-radius: 4px;
+}
+
+.menu.is-editable .menu-inner.is-dragging {
+  cursor: grabbing;
+}
+
+.menu-box-handle {
+  position: absolute;
+  right: -7px;
+  bottom: -7px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 2px solid #1a140c;
+  background: #e8dfd0;
+  cursor: nwse-resize;
+  z-index: 4;
+  touch-action: none;
+}
+
+.menu-kicker {
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-family: var(--menu-text-font, 'Manrope', 'Segoe UI', sans-serif);
+  font-size: var(--menu-kicker-size, 11px);
+  color: var(--menu-kicker-color, var(--accent));
+}
+
+.menu-inner h2 {
+  margin: 0;
+  font-family: var(--menu-title-font, 'Cormorant Garamond', Georgia, serif);
+  font-size: var(--menu-title-size, 36px);
+  font-weight: 600;
+  line-height: 1.05;
+  color: var(--menu-title-color, var(--sand));
+  /* Пока грузится веб-шрифт — невидимый, без скачка с Manrope/Georgia */
+  visibility: hidden;
+}
+
+.menu.is-fonts-ready .menu-inner h2 {
+  visibility: visible;
+}
+
+.menu-hint {
+  margin: 10px 0 18px;
+  font-family: var(--menu-text-font, 'Manrope', 'Segoe UI', sans-serif);
+  font-size: var(--menu-text-size, 14px);
+  color: color-mix(in srgb, var(--menu-text-color, var(--sand)) 72%, transparent);
+}
+
+.menu-kicker + .menu-grid,
+.menu-inner h2 + .menu-grid {
+  margin-top: 18px;
+}
+
+.menu-grid {
+  display: grid;
+  gap: var(--menu-btn-gap, 10px);
+}
+
+.menu-grid:empty {
+  display: none;
+}
+
+.menu-links {
+  display: grid;
+  gap: var(--menu-btn-gap, 10px);
+  margin-top: 14px;
+}
+
+.menu-grid:empty + .menu-links {
+  margin-top: 18px;
+}
+
+.menu-btn,
+.menu-contact {
+  appearance: none;
+  border: 0;
+  border-radius: var(--menu-btn-radius, 14px);
+  padding: var(--menu-btn-pad-y, 14px) 16px;
+  font: inherit;
+  font-size: var(--menu-btn-font, 16px);
+  cursor: pointer;
+  touch-action: none;
+}
+
+.menu-btn {
+  background: rgba(232, 223, 208, 0.94);
+  color: var(--ink);
+  text-align: left;
+  font-weight: 600;
+}
+
+.menu .menu-btn {
+  background: var(--menu-btn-bg, rgba(232, 223, 208, 0.94));
+  color: var(--menu-btn-color, var(--ink));
+}
+
+.menu-btn:active {
+  transform: scale(0.985);
+}
+
+.menu.is-editable .menu-btn:active,
+.menu.is-editable .menu-contact:active {
+  transform: none;
+}
+
+.menu.is-editable .menu-btn,
+.menu.is-editable .menu-contact {
+  cursor: grab;
+}
+
+.menu-contact {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #1a140c;
+  font-weight: 700;
+}
+
+.menu-links .menu-contact {
+  margin-top: 0;
+}
+
+.menu .menu-link-btn {
+  width: 100%;
+  font-weight: 700;
+  background: var(--menu-btn-bg, rgba(232, 223, 208, 0.94));
+  color: var(--menu-btn-color, var(--ink));
+}
+
+.menu .menu-contact {
+  background: linear-gradient(
+    135deg,
+    var(--menu-contact-bg, var(--accent)),
+    color-mix(in srgb, var(--menu-contact-bg, var(--accent)) 62%, #3a2410)
+  );
+  color: var(--menu-contact-color, #1a140c);
+}
+
+.end-buttons {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: end center;
+  padding-bottom: calc(var(--caption-bar-height, 0px) + 12px);
+  background: linear-gradient(
+    180deg,
+    transparent 20%,
+    rgba(10, 16, 14, 0.45) 55%,
+    rgba(10, 16, 14, 0.72) 100%
+  );
+  pointer-events: auto;
+  box-sizing: border-box;
+}
+
+.end-buttons-inner {
+  width: 100%;
+  max-width: min(22rem, 100%);
+  margin-inline: auto;
+  padding: 16px 20px 8px;
+  display: grid;
+  gap: 10px;
+  box-sizing: border-box;
+}
+
+.end-buttons-inner .menu-contact {
+  margin-top: 4px;
+}
+
+.sound-hint {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: var(--sand);
+  font-size: 12px;
+  white-space: nowrap;
+  backdrop-filter: blur(8px);
+}
+
+.start-gate {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-content: center;
+  background: rgba(8, 12, 10, 0.28);
+}
+
+.start-gate-message {
+  margin: 0 24px;
+  max-width: 16rem;
+  color: rgba(232, 223, 208, 0.92);
+  font-size: 15px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.start-gate-icon-btn {
+  width: 84px;
+  height: 84px;
+  margin: 0;
+  padding: 0;
+  border: 2px solid rgba(232, 223, 208, 0.92);
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(232, 223, 208, 0.96);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55));
+}
+
+.start-gate-icon-btn:disabled {
+  cursor: default;
+}
+
+.start-gate-icon-btn:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.player-corner-actions {
+  position: absolute;
+  top: max(12px, env(safe-area-inset-top, 0px));
+  right: max(12px, env(safe-area-inset-right, 0px));
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.player-corner-btn {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: 2px solid rgba(232, 223, 208, 0.92);
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(232, 223, 208, 0.96);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55));
+  pointer-events: auto;
+}
+
+.player-corner-btn:active {
+  transform: scale(0.96);
+}
+
+.playback-tap-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.editor-link {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(20, 32, 27, 0.9);
+  border: 1px solid rgba(232, 223, 208, 0.2);
+  color: var(--sand);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(8px);
+}
+
+.boot {
+  color: var(--sand);
+  font-size: 15px;
+}

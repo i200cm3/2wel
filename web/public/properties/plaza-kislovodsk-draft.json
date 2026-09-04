@@ -1,0 +1,1365 @@
+{
+  "id": "plaza-kislovodsk",
+  "brand": {
+    "name": "Плаза СПА",
+    "fullName": "Санаторий «Плаза СПА»",
+    "city": "Кисловодск",
+    "address": "проспект Ленина, 26-28",
+    "phoneDisplay": "+7 (87932) 2-60-88",
+    "phoneTel": "+78793226088",
+    "site": "https://kislovodsk.plaza.spa/",
+    "whatsAppNumber": ""
+  },
+  "defaultGuestName": "Гость",
+  "greetingSubtitle": "Индивидуальный отдых и лечение в Кисловодске",
+  "flow": [
+    "intro",
+    "greeting"
+  ],
+  "defaultMenuId": "main",
+  "branches": [
+    {
+      "id": "about",
+      "label": "О санатории",
+      "sequenceId": "about"
+    },
+    {
+      "id": "rooms",
+      "label": "Размещение",
+      "sequenceId": "rooms"
+    },
+    {
+      "id": "treatment",
+      "label": "Лечение",
+      "sequenceId": "treatment"
+    },
+    {
+      "id": "food",
+      "label": "Питание",
+      "sequenceId": "food"
+    },
+    {
+      "id": "leisure",
+      "label": "Досуг и СПА",
+      "sequenceId": "leisure"
+    },
+    {
+      "id": "place",
+      "label": "Кисловодск и локация",
+      "sequenceId": "place"
+    }
+  ],
+  "mediaLibrary": [
+    {
+      "folder": "about",
+      "count": 8
+    },
+    {
+      "folder": "food",
+      "count": 8
+    },
+    {
+      "folder": "intro",
+      "count": 7
+    },
+    {
+      "folder": "leisure",
+      "count": 14
+    },
+    {
+      "folder": "place",
+      "count": 5
+    },
+    {
+      "folder": "rooms",
+      "count": 18
+    },
+    {
+      "folder": "treatment",
+      "count": 10
+    }
+  ],
+  "theme": {
+    "orientation": "portrait",
+    "captionBarColor": "#14110c",
+    "captionBarOpacity": 0.76,
+    "titleColor": "#f4ead8",
+    "textColor": "#f4ead8",
+    "titleFont": "cormorant",
+    "textFont": "manrope",
+    "titleFontSize": 28,
+    "textFontSize": 14,
+    "musicVolume": 0.2,
+    "ttsVolume": 1
+  },
+  "menus": {
+    "main": {
+      "id": "main",
+      "label": "Главное меню",
+      "branches": [
+        {
+          "id": "about",
+          "label": "О санатории",
+          "sequenceId": "about"
+        },
+        {
+          "id": "rooms",
+          "label": "Размещение",
+          "sequenceId": "rooms"
+        },
+        {
+          "id": "treatment",
+          "label": "Лечение",
+          "sequenceId": "treatment"
+        },
+        {
+          "id": "food",
+          "label": "Питание",
+          "sequenceId": "food"
+        },
+        {
+          "id": "leisure",
+          "label": "Досуг и СПА",
+          "sequenceId": "leisure"
+        },
+        {
+          "id": "place",
+          "label": "Кисловодск и локация",
+          "sequenceId": "place"
+        }
+      ],
+      "menuCopy": {
+        "showKicker": true,
+        "kicker": "Санаторий «Плаза СПА» · Кисловодск",
+        "showTitle": true,
+        "title": "{name}, что хотите узнать?",
+        "showHint": true,
+        "hint": "Выберите тему — можно посмотреть всё по очереди"
+      },
+      "menuTheme": {
+        "titleFont": "cormorant",
+        "titleFontSize": 34,
+        "titleColor": "#f4ead8",
+        "textFont": "manrope",
+        "textFontSize": 13,
+        "textColor": "#f4ead8",
+        "kickerColor": "#c8ad78",
+        "kickerFontSize": 11,
+        "buttonBg": "#f4ead8",
+        "buttonText": "#17130f",
+        "contactBg": "#c8ad78",
+        "contactText": "#17130f",
+        "buttonsX": 0.06,
+        "buttonsY": 0.06,
+        "buttonsW": 0.88,
+        "buttonFontSize": 16,
+        "buttonPadY": 13,
+        "buttonGap": 9,
+        "buttonRadius": 14
+      },
+      "menuLinks": [
+        {
+          "id": "menu-link-whatsapp",
+          "label": "Написать в WhatsApp",
+          "href": "https://wa.me/{phone}?text=Здравствуйте! Меня зовут {name}. Смотрел(а) презентацию {brand} и хочу уточнить детали заезда.",
+          "bg": "#25d366",
+          "textColor": "#ffffff"
+        },
+        {
+          "id": "menu-link-tel",
+          "label": "Позвонить",
+          "href": "tel:{tel}",
+          "bg": "#34c759",
+          "textColor": "#ffffff"
+        },
+        {
+          "id": "menu-link-site",
+          "label": "Сайт",
+          "href": "https://kislovodsk.plaza.spa/",
+          "bg": "#f4ead8",
+          "textColor": "#17130f"
+        }
+      ],
+      "menuTtsFirstOnly": true
+    }
+  },
+  "musicSrc": "/media/music/ambient.mp3",
+  "emailPreview": {
+    "enabled": true,
+    "src": "/media/projects/plaza-kislovodsk/library/gallery/about/07-psk5.jpg",
+    "showPlay": true,
+    "showTitle": true,
+    "title": "{name}, ждём вас в «Плаза СПА»"
+  },
+  "sequences": {
+    "intro": {
+      "id": "intro",
+      "label": "Интро",
+      "title": "Плаза СПА Кисловодск",
+      "subtitle": "Больше, чем просто отдых",
+      "clips": [
+        {
+          "id": "intro-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/07-psk5.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 3.8,
+          "animSec": 3.8,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": true
+        },
+        {
+          "id": "intro-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/intro/04.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 3.5,
+          "animSec": 3.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "intro-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/intro/01.webp",
+          "media": "image",
+          "motion": "pan-right",
+          "durationSec": 3.6,
+          "animSec": 3.6,
+          "from": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "intro-04",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/intro/02.jpg",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 3.6,
+          "animSec": 3.6,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": []
+    },
+    "greeting": {
+      "id": "greeting",
+      "label": "Приветствие",
+      "title": "Здравствуйте, {name}!",
+      "subtitle": "Коротко покажем, каким может быть ваш отдых",
+      "clips": [
+        {
+          "id": "greeting-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/04.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": true
+        },
+        {
+          "id": "greeting-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.0,
+          "animSec": 4.0,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "greeting-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/intro/06-bassein_plz_001-1620x1080.webp",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.1,
+          "animSec": 4.1,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "greeting-04",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/01.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "greeting-05",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/05.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.0,
+          "animSec": 4.0,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-greeting-01",
+          "startSec": 0,
+          "durationSec": 4.2,
+          "text": "Здравствуйте, {name}!",
+          "ttsText": "Здравствуйте, {name}! Это короткая презентация санатория «Плаза СПА» в Кисловодске."
+        },
+        {
+          "id": "cue-greeting-02",
+          "startSec": 4.2,
+          "durationSec": 4.0,
+          "text": "Здесь встречают спокойно и внимательно",
+          "ttsText": "Здесь делают ставку на индивидуальный подход, спокойный сервис и понятную заботу о госте."
+        },
+        {
+          "id": "cue-greeting-03",
+          "startSec": 8.2,
+          "durationSec": 4.1,
+          "text": "Бассейн, сауна и восстановление",
+          "ttsText": "В отдых уже входят бассейн, сауна и тренажёры, а лечебные программы подбираются по назначению врача."
+        },
+        {
+          "id": "cue-greeting-04",
+          "startSec": 12.3,
+          "durationSec": 4.2,
+          "text": "Номера — от делюксов до апартаментов",
+          "ttsText": "Можно выбрать номер под короткий заезд, семейный отдых или длительное восстановление."
+        },
+        {
+          "id": "cue-greeting-05",
+          "startSec": 16.5,
+          "durationSec": 4.0,
+          "text": "Выберите раздел — покажем подробнее",
+          "ttsText": "Дальше выберите интересующий раздел: размещение, лечение, питание, досуг или локацию."
+        }
+      ]
+    },
+    "about": {
+      "id": "about",
+      "label": "О санатории",
+      "title": "Пятизвёздочный санаторий в Кисловодске",
+      "subtitle": "Сервис, лечение и отдых в одном комплексе",
+      "clips": [
+        {
+          "id": "about-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/08-plaza_cameras.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 5.0,
+          "animSec": 5.0,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": true
+        },
+        {
+          "id": "about-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/02.webp",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.8,
+          "animSec": 4.8,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "about-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/intro/03.webp",
+          "media": "image",
+          "motion": "pan-right",
+          "durationSec": 4.8,
+          "animSec": 4.8,
+          "from": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "about-04",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/03.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 5.0,
+          "animSec": 5.0,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-about-01",
+          "startSec": 0,
+          "durationSec": 5.0,
+          "text": "Пятизвёздочный комплекс в Кисловодске",
+          "ttsText": "«Плаза СПА» — пятизвёздочный санаторный комплекс в Кисловодске, рассчитанный на комфортный отдых и лечение."
+        },
+        {
+          "id": "cue-about-02",
+          "startSec": 5.0,
+          "durationSec": 4.8,
+          "text": "Интерьеры без ощущения больницы",
+          "ttsText": "Номера и общие зоны выглядят как спокойный гостиничный отдых, а не как больничный режим."
+        },
+        {
+          "id": "cue-about-03",
+          "startSec": 9.8,
+          "durationSec": 4.8,
+          "text": "Внутри — бассейн, сауна и тренажёры",
+          "ttsText": "На территории доступны бассейн, сауна и тренажёры, чтобы восстановление было частью каждого дня."
+        },
+        {
+          "id": "cue-about-04",
+          "startSec": 14.6,
+          "durationSec": 5.0,
+          "text": "Апартаменты и люксы под разный заезд",
+          "ttsText": "Можно выбрать формат размещения под короткий визит, семью или более длинное восстановление."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-about-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms": {
+      "id": "rooms",
+      "label": "Размещение",
+      "title": "Номера для спокойного отдыха",
+      "subtitle": "240 номеров: делюксы, люксы и апартаменты",
+      "clips": [
+        {
+          "id": "rooms-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 5.0,
+          "animSec": 5.0,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": true
+        },
+        {
+          "id": "rooms-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "media": "image",
+          "motion": "pan-right",
+          "durationSec": 4.8,
+          "animSec": 4.8,
+          "from": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "rooms-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.4,
+          "animSec": 4.4,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "rooms-04",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.7,
+          "animSec": 4.7,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "rooms-05",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "media": "image",
+          "motion": "pan-right",
+          "durationSec": 4.7,
+          "animSec": 4.7,
+          "from": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "rooms-06",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms-01",
+          "startSec": 0,
+          "durationSec": 5.0,
+          "text": "Делюксы, люксы и апартаменты",
+          "ttsText": "В санатории 240 номеров: от компактных делюксов до просторных люксов и апартаментов."
+        },
+        {
+          "id": "cue-rooms-02",
+          "startSec": 5.0,
+          "durationSec": 4.8,
+          "text": "Свет, мягкие оттенки и вид из окна",
+          "ttsText": "Многие кадры построены на спокойном свете, мягких оттенках и ощущении личного пространства."
+        },
+        {
+          "id": "cue-rooms-03",
+          "startSec": 9.8,
+          "durationSec": 4.4,
+          "text": "Для короткого заезда и долгого отдыха",
+          "ttsText": "Есть варианты для пары, семьи и длительной санаторной программы."
+        },
+        {
+          "id": "cue-rooms-04",
+          "startSec": 14.2,
+          "durationSec": 4.7,
+          "text": "Больше воздуха и пространства",
+          "ttsText": "Категории выше дают отдельные зоны отдыха и больше места для проживания."
+        },
+        {
+          "id": "cue-rooms-05",
+          "startSec": 18.9,
+          "durationSec": 4.7,
+          "text": "Балкон — для тех, кто любит горный воздух",
+          "ttsText": "В некоторых категориях есть балкон, чтобы начинать утро с воздуха Кисловодска."
+        },
+        {
+          "id": "cue-rooms-06",
+          "startSec": 23.6,
+          "durationSec": 4.6,
+          "text": "Подберите категорию под свой сценарий",
+          "ttsText": "В редакторе можно оставить только те категории, которые нужны конкретному предложению гостю."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment": {
+      "id": "treatment",
+      "label": "Лечение",
+      "title": "Лечение с врачебным сопровождением",
+      "subtitle": "Оздоровление, санаторно-курортные и специализированные программы",
+      "clips": [
+        {
+          "id": "treatment-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.8,
+          "animSec": 4.8,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": true
+        },
+        {
+          "id": "treatment-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/02.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.8,
+          "animSec": 4.8,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "treatment-04",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/05.jpg",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "treatment-05",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/07.webp",
+          "media": "image",
+          "motion": "pan-right",
+          "durationSec": 4.8,
+          "animSec": 4.8,
+          "from": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "treatment-06",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment-01",
+          "startSec": 0.0,
+          "durationSec": 4.8,
+          "text": "Программы под наблюдением врача",
+          "ttsText": "На сайте указаны программы оздоровления, лечения и специализированные направления с наблюдением врача-терапевта."
+        },
+        {
+          "id": "cue-treatment-02",
+          "startSec": 4.8,
+          "durationSec": 4.8,
+          "text": "Минеральная вода, консультации и процедуры",
+          "ttsText": "В санаторно-курортные пакеты входят минеральная вода, консультации специалистов и процедуры по назначению."
+        },
+        {
+          "id": "cue-treatment-03",
+          "startSec": 9.6,
+          "durationSec": 4.6,
+          "text": "Процедуры — только по назначению",
+          "ttsText": "Медицинские кадры здесь работают как подтверждение: оборудование и процедуры подбираются индивидуально."
+        },
+        {
+          "id": "cue-treatment-04",
+          "startSec": 14.2,
+          "durationSec": 4.8,
+          "text": "Профили: сердце, спина, дыхание, ЖКТ",
+          "ttsText": "Сайт отдельно выделяет профили по сердечно-сосудистой системе, позвоночнику, дыханию, ЖКТ и обмену веществ."
+        },
+        {
+          "id": "cue-treatment-05",
+          "startSec": 19.0,
+          "durationSec": 4.6,
+          "text": "Диагностика и контроль состояния",
+          "ttsText": "Важная часть программы — консультации и контроль, чтобы отдых оставался понятным и безопасным."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "food": {
+      "id": "food",
+      "label": "Питание",
+      "title": "Питание без компромиссов",
+      "subtitle": "Рестораны «Роял» и «Панорама», индивидуальный подход",
+      "clips": [
+        {
+          "id": "food-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/08-img_9373-1728x1080.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": true
+        },
+        {
+          "id": "food-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.4,
+          "animSec": 4.4,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "food-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/04.jpg",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.4,
+          "animSec": 4.4,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "food-04",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/06.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "food-05",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/01.jpg",
+          "media": "image",
+          "motion": "pan-right",
+          "durationSec": 4.4,
+          "animSec": 4.4,
+          "from": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "food-06",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/07.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-food-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Два ресторана — два настроения",
+          "ttsText": "На сайте указаны два ресторана: «Роял» с авторской подачей и «Панорама» со шведским столом."
+        },
+        {
+          "id": "cue-food-02",
+          "startSec": 4.6,
+          "durationSec": 4.4,
+          "text": "Индивидуальное питание в программе",
+          "ttsText": "В лечебные пакеты входит индивидуальное питание, а меню можно адаптировать под назначение."
+        },
+        {
+          "id": "cue-food-03",
+          "startSec": 9.0,
+          "durationSec": 4.4,
+          "text": "Авторская подача без тяжёлой роскоши",
+          "ttsText": "Блюда выглядят аккуратно и современно: кадр держит внимание на вкусе и деталях."
+        },
+        {
+          "id": "cue-food-04",
+          "startSec": 13.4,
+          "durationSec": 4.2,
+          "text": "Свежие продукты и понятные блюда",
+          "ttsText": "Сайт делает акцент на фермерских продуктах и качественной основе рациона."
+        },
+        {
+          "id": "cue-food-05",
+          "startSec": 17.6,
+          "durationSec": 4.4,
+          "text": "Еда как часть отдыха",
+          "ttsText": "Питание здесь не отдельная услуга, а спокойная часть санаторного дня."
+        },
+        {
+          "id": "cue-food-06",
+          "startSec": 22.0,
+          "durationSec": 4.2,
+          "text": "Завершить день можно красиво",
+          "ttsText": "Десерты и лёгкие блюда оставляют ощущение ресторана, а не столовой по расписанию."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-food-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "leisure": {
+      "id": "leisure",
+      "label": "Досуг и СПА",
+      "title": "День можно собрать по настроению",
+      "subtitle": "Бассейн, сауна, спорт, кино и вечерние концерты",
+      "clips": [
+        {
+          "id": "leisure-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/06.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.8,
+          "animSec": 4.8,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": true
+        },
+        {
+          "id": "leisure-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.3,
+          "animSec": 4.3,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "leisure-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/02.jpg",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.4,
+          "animSec": 4.4,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "leisure-04",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/03.jpg",
+          "media": "image",
+          "motion": "pan-right",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "leisure-05",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.3,
+          "animSec": 4.3,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "leisure-06",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/07.jpg",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.3,
+          "animSec": 4.3,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-leisure-01",
+          "startSec": 0,
+          "durationSec": 4.8,
+          "text": "СПА и тихий ритм после процедур",
+          "ttsText": "Досуг можно начать спокойно: тепло, пауза и восстановление после прогулок или процедур."
+        },
+        {
+          "id": "cue-leisure-02",
+          "startSec": 4.8,
+          "durationSec": 4.3,
+          "text": "Тренажёры — для привычного ритма",
+          "ttsText": "Тренажёрный зал помогает не выпадать из привычного ритма даже во время санаторной поездки."
+        },
+        {
+          "id": "cue-leisure-03",
+          "startSec": 9.1,
+          "durationSec": 4.4,
+          "text": "Вечером — живая музыка",
+          "ttsText": "На сайте отдельно указаны вечерние концерты российских и зарубежных артистов."
+        },
+        {
+          "id": "cue-leisure-04",
+          "startSec": 13.5,
+          "durationSec": 4.5,
+          "text": "Сцена и программа меняются",
+          "ttsText": "Концерты, кино и развлечения дают вечеру другой темп — без ощущения пустого расписания."
+        },
+        {
+          "id": "cue-leisure-05",
+          "startSec": 18.0,
+          "durationSec": 4.3,
+          "text": "Есть и более спокойные форматы",
+          "ttsText": "Можно выбрать тихий вечер или событие с настроением — как удобнее именно вам."
+        },
+        {
+          "id": "cue-leisure-06",
+          "startSec": 22.3,
+          "durationSec": 4.3,
+          "text": "День собирается под ваш темп",
+          "ttsText": "Этот раздел лучше всего дополняет лечебные блоки: каждый день можно настроить под себя."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-leisure-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "place": {
+      "id": "place",
+      "label": "Кисловодск и локация",
+      "title": "Кисловодск рядом с Кавказскими видами",
+      "subtitle": "Город-курорт, воздух и прогулки между процедурами",
+      "clips": [
+        {
+          "id": "place-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/01.webp",
+          "media": "image",
+          "motion": "pan-up",
+          "durationSec": 5.5,
+          "animSec": 5.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.62,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.38,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": true
+        },
+        {
+          "id": "place-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/02.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 5.5,
+          "animSec": 5.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-place-01",
+          "startSec": 0,
+          "durationSec": 5.5,
+          "text": "Кавказские Минеральные Воды",
+          "ttsText": "Путешествие в «Плаза СПА» начинается с атмосферы Кавказских Минеральных Вод и горного воздуха."
+        },
+        {
+          "id": "cue-place-02",
+          "startSec": 5.5,
+          "durationSec": 5.5,
+          "text": "Санаторий — в Кисловодске",
+          "ttsText": "Адрес санатория — проспект Ленина, 26-28, в городе-курорте Кисловодске. Рядом — прогулки, воздух и спокойный курортный ритм."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-place-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    }
+  }
+}

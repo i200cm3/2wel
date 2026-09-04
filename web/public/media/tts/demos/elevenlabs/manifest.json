@@ -1,0 +1,104 @@
+{
+  "text": "Здравствуйте! Мы подготовили для вас персональную презентацию.",
+  "modelId": "eleven_v3",
+  "voiceSettings": {
+    "stability": 0.55,
+    "similarity_boost": 0.75,
+    "style": 0.35,
+    "use_speaker_boost": true
+  },
+  "voices": [
+    {
+      "id": "ymDCYd8puC7gYjxIamPt",
+      "name": "Marina · тёплая женская"
+    },
+    {
+      "id": "EDpEYNf6XIeKYRzYcx4I",
+      "name": "Mariia · спокойная женская"
+    },
+    {
+      "id": "EXAVITQu4vr4xnSDxMaL",
+      "name": "Sarah · мягкая женская"
+    },
+    {
+      "id": "XrExE9yKIg1WjnnlVkGX",
+      "name": "Matilda · дружелюбная женская"
+    },
+    {
+      "id": "cgSgspJ2msm6clMCkdW9",
+      "name": "Jessica · живая женская"
+    },
+    {
+      "id": "0BcDz9UPwL3MpsnTeUlO",
+      "name": "Denis · приятный мужской"
+    },
+    {
+      "id": "ogi2DyUAKJb7CEdqqvlU",
+      "name": "Stanislav · глубокий мужской"
+    },
+    {
+      "id": "JBFqnCBsd6RMkjVDRZzb",
+      "name": "George · тёплый мужской"
+    },
+    {
+      "id": "pNInz6obpgDQGcFmaJgB",
+      "name": "Adam · солидный диктор"
+    },
+    {
+      "id": "vQxSi2EuaRWwBw3nn6dK",
+      "name": "Marat · спокойный мужской"
+    }
+  ],
+  "generatedAt": "2026-08-23T18:09:49.210Z",
+  "outputDir": "/out",
+  "mode": "direct API",
+  "files": {
+    "EXAVITQu4vr4xnSDxMaL": {
+      "name": "Sarah · мягкая женская",
+      "bytes": 71515
+    },
+    "XrExE9yKIg1WjnnlVkGX": {
+      "name": "Matilda · дружелюбная женская",
+      "bytes": 69007
+    },
+    "cgSgspJ2msm6clMCkdW9": {
+      "name": "Jessica · живая женская",
+      "bytes": 65245
+    },
+    "JBFqnCBsd6RMkjVDRZzb": {
+      "name": "George · тёплый мужской",
+      "bytes": 61066
+    },
+    "pNInz6obpgDQGcFmaJgB": {
+      "name": "Adam · солидный диктор",
+      "bytes": 65245
+    }
+  },
+  "errors": [
+    {
+      "id": "ymDCYd8puC7gYjxIamPt",
+      "name": "Marina · тёплая женская",
+      "error": "HTTP 402: {\"detail\":{\"type\":\"payment_required\",\"code\":\"paid_plan_required\",\"message\":\"Free users cannot use library voices via the API. Please upgrade your subscription to use this voice.\",\"status\":\"payment_req"
+    },
+    {
+      "id": "EDpEYNf6XIeKYRzYcx4I",
+      "name": "Mariia · спокойная женская",
+      "error": "HTTP 402: {\"detail\":{\"type\":\"payment_required\",\"code\":\"paid_plan_required\",\"message\":\"Free users cannot use library voices via the API. Please upgrade your subscription to use this voice.\",\"status\":\"payment_req"
+    },
+    {
+      "id": "0BcDz9UPwL3MpsnTeUlO",
+      "name": "Denis · приятный мужской",
+      "error": "HTTP 402: {\"detail\":{\"type\":\"payment_required\",\"code\":\"paid_plan_required\",\"message\":\"Free users cannot use library voices via the API. Please upgrade your subscription to use this voice.\",\"status\":\"payment_req"
+    },
+    {
+      "id": "ogi2DyUAKJb7CEdqqvlU",
+      "name": "Stanislav · глубокий мужской",
+      "error": "HTTP 402: {\"detail\":{\"type\":\"payment_required\",\"code\":\"paid_plan_required\",\"message\":\"Free users cannot use library voices via the API. Please upgrade your subscription to use this voice.\",\"status\":\"payment_req"
+    },
+    {
+      "id": "vQxSi2EuaRWwBw3nn6dK",
+      "name": "Marat · спокойный мужской",
+      "error": "HTTP 402: {\"detail\":{\"type\":\"payment_required\",\"code\":\"paid_plan_required\",\"message\":\"Free users cannot use library voices via the API. Please upgrade your subscription to use this voice.\",\"status\":\"payment_req"
+    }
+  ]
+}

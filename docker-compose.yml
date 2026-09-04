@@ -1,0 +1,123 @@
+# Продакшен: HTTPS через host nginx (2wel.ru → :8086).
+# Перед первым запуском: ./init-letsencrypt.sh <email> 2wel.ru
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: promo-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-promo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-promo}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - promo-net
+
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+      args:
+        API_CACHEBUST: ${API_CACHEBUST:-1}
+    container_name: promo-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: 3000
+      PUBLIC_DIR: /data/public
+      DATABASE_URL: postgres://${POSTGRES_USER:-promo}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-promo}
+      GUEST_SSL_ENSURE_URL: http://guest-ssl:9299
+      ENSURE_GUEST_SSL: ${ENSURE_GUEST_SSL:-0}
+    volumes:
+      - ./web/public:/data/public
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    networks:
+      - promo-net
+
+  guest-ssl:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+      args:
+        API_CACHEBUST: ${API_CACHEBUST:-1}
+    container_name: promo-guest-ssl
+    command: ["node", "guestSslAgent.mjs"]
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      GUEST_SSL_PORT: 9299
+    # Нужны для certbot через docker.sock и nginx reload через nsenter на PID 1 хоста.
+    # Порт 9299 наружу НЕ публикуем — только promo-net (api → guest-ssl).
+    pid: host
+    privileged: true
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - certbot-data:/etc/letsencrypt:ro
+    networks:
+      - promo-net
+    # Не добавляйте ports: — агент не должен быть доступен с хоста/интернета.
+  web:
+    build:
+      context: .
+      dockerfile: web/Dockerfile
+    container_name: promo-web
+    restart: unless-stopped
+    environment:
+      - YOUR_DOMAIN=${DOMAIN:-2wel.ru}
+    ports:
+      # Host nginx терминирует TLS и проксирует HTTP сюда (см. nginx-router-update.sh).
+      - "${PROMO_PORT:-8086}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+      certbot:
+        condition: service_started
+    volumes:
+      - ./web/public/media:/usr/share/nginx/html/media
+      - ./web/public/properties:/usr/share/nginx/html/properties
+      - ./web/public/s:/usr/share/nginx/html/s
+      - certbot-data:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    networks:
+      - promo-net
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: promo-certbot
+    volumes:
+      - certbot-data:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - promo-net
+
+volumes:
+  postgres-data:
+  certbot-data:
+    external: true
+  certbot-www:
+    external: true
+
+networks:
+  promo-net:
+    driver: bridge
+    name: promo-net

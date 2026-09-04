@@ -1,0 +1,22 @@
+{
+  "text": "Здравствуйте! Мы подготовили для вас персональную презентацию.",
+  "modelId": "eleven_v3",
+  "voiceSettings": {
+    "stability": 0.55,
+    "similarity_boost": 0.75,
+    "style": 0.35,
+    "use_speaker_boost": true
+  },
+  "voices": [
+    { "id": "ymDCYd8puC7gYjxIamPt", "name": "Marina (тёплый, женский)" },
+    { "id": "EDpEYNf6XIeKYRzYcx4I", "name": "Mariia (спокойный, женский)" },
+    { "id": "EXAVITQu4vr4xnSDxMaL", "name": "Sarah (мягкий, женский)" },
+    { "id": "XrExE9yKIg1WjnnlVkGX", "name": "Matilda (дружелюбный, женский)" },
+    { "id": "cgSgspJ2msm6clMCkdW9", "name": "Jessica (живой, женский)" },
+    { "id": "0BcDz9UPwL3MpsnTeUlO", "name": "Denis (приятный, мужской)" },
+    { "id": "ogi2DyUAKJb7CEdqqvlU", "name": "Stanislav (глубокий, мужской)" },
+    { "id": "JBFqnCBsd6RMkjVDRZzb", "name": "George (тёплый, мужской)" },
+    { "id": "pNInz6obpgDQGcFmaJgB", "name": "Adam (солидный, мужской)" },
+    { "id": "vQxSi2EuaRWwBw3nn6dK", "name": "Marat (спокойный, мужской)" }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "scm.countBadge": "off",
+  "scm.diffDecorations": "none",
+  "git.decorations.enabled": false,
+  "git.autofetch": false,
+  "git.autoStash": false,
+  "git.showPushSuccessNotification": false,
+  "git.branchProtection": [],
+  "git.confirmSync": false
+}

@@ -1,0 +1,6723 @@
+{
+  "id": "plaza-kislovodsk",
+  "brand": {
+    "name": "Плаза СПА",
+    "fullName": "Санаторий «Плаза СПА»",
+    "city": "Кисловодск",
+    "address": "проспект Ленина, 26-28",
+    "phoneDisplay": "+7 (87932) 2-60-88",
+    "phoneTel": "+78793226088",
+    "site": "https://kislovodsk.plaza.spa/",
+    "whatsAppNumber": ""
+  },
+  "defaultGuestName": "Гость",
+  "greetingSubtitle": "Адаптивная презентация под цель поездки",
+  "flow": [
+    "intro_generic",
+    "greeting_warm"
+  ],
+  "defaultMenuId": "main",
+  "branches": [
+    {
+      "id": "about",
+      "label": "О санатории",
+      "sequenceId": "about_positioning"
+    },
+    {
+      "id": "rooms",
+      "label": "Размещение",
+      "sequenceId": "rooms_comfort"
+    },
+    {
+      "id": "treatment",
+      "label": "Лечение",
+      "sequenceId": "treatment_start"
+    },
+    {
+      "id": "food",
+      "label": "Питание",
+      "sequenceId": "food_buffet"
+    },
+    {
+      "id": "wellness",
+      "label": "Бассейн и СПА",
+      "sequenceId": "wellness_pool"
+    },
+    {
+      "id": "leisure",
+      "label": "Досуг",
+      "sequenceId": "leisure_evening"
+    },
+    {
+      "id": "location",
+      "label": "Кисловодск и локация",
+      "sequenceId": "location_where_is_it"
+    },
+    {
+      "id": "price",
+      "label": "Что входит",
+      "sequenceId": "price_what_included"
+    }
+  ],
+  "mediaLibrary": [
+    {
+      "folder": "about",
+      "count": 8
+    },
+    {
+      "folder": "food",
+      "count": 8
+    },
+    {
+      "folder": "intro",
+      "count": 6
+    },
+    {
+      "folder": "leisure",
+      "count": 8
+    },
+    {
+      "folder": "place",
+      "count": 5
+    },
+    {
+      "folder": "rooms",
+      "count": 6
+    },
+    {
+      "folder": "treatment",
+      "count": 5
+    }
+  ],
+  "theme": {
+    "orientation": "portrait",
+    "captionBarColor": "#14110c",
+    "captionBarOpacity": 0.76,
+    "titleColor": "#f4ead8",
+    "textColor": "#f4ead8",
+    "titleFont": "cormorant",
+    "textFont": "manrope",
+    "titleFontSize": 28,
+    "textFontSize": 14,
+    "musicVolume": 0.2,
+    "ttsVolume": 1
+  },
+  "menus": {
+    "main": {
+      "id": "main",
+      "label": "Главное меню",
+      "branches": [
+        {
+          "id": "about",
+          "label": "О санатории",
+          "sequenceId": "about_positioning"
+        },
+        {
+          "id": "rooms",
+          "label": "Размещение",
+          "sequenceId": "rooms_comfort"
+        },
+        {
+          "id": "treatment",
+          "label": "Лечение",
+          "sequenceId": "treatment_start"
+        },
+        {
+          "id": "food",
+          "label": "Питание",
+          "sequenceId": "food_buffet"
+        },
+        {
+          "id": "wellness",
+          "label": "Бассейн и СПА",
+          "sequenceId": "wellness_pool"
+        },
+        {
+          "id": "leisure",
+          "label": "Досуг",
+          "sequenceId": "leisure_evening"
+        },
+        {
+          "id": "location",
+          "label": "Кисловодск и локация",
+          "sequenceId": "location_where_is_it"
+        },
+        {
+          "id": "price",
+          "label": "Что входит",
+          "sequenceId": "price_what_included"
+        }
+      ],
+      "menuCopy": {
+        "showKicker": true,
+        "kicker": "Санаторий «Плаза СПА» · Кисловодск",
+        "showTitle": false,
+        "title": "{name}, что важно для вашей поездки?",
+        "showHint": true,
+        "hint": "Выберите тему или загрузите адаптивную сборку под гостя"
+      },
+      "menuTheme": {
+        "titleFont": "cormorant",
+        "titleFontSize": 34,
+        "titleColor": "#f4ead8",
+        "textFont": "manrope",
+        "textFontSize": 13,
+        "textColor": "#f4ead8",
+        "kickerColor": "#c8ad78",
+        "kickerFontSize": 11,
+        "buttonBg": "#f4ead8",
+        "buttonText": "#17130f",
+        "contactBg": "#c8ad78",
+        "contactText": "#17130f",
+        "buttonsX": 0.06,
+        "buttonsY": 0.06,
+        "buttonsW": 0.88,
+        "buttonFontSize": 16,
+        "buttonPadY": 13,
+        "buttonGap": 9,
+        "buttonRadius": 14
+      },
+      "menuLinks": [
+        {
+          "id": "menu-link-email",
+          "label": "Написать на bron@plaza.spa",
+          "href": "mailto:bron@plaza.spa?subject=Запрос%20по%20заезду%20{brand}&body=Здравствуйте!%20Меня%20зовут%20{name}.%20Хочу%20уточнить%20детали%20заезда.",
+          "bg": "#c8ad78",
+          "textColor": "#17130f"
+        },
+        {
+          "id": "menu-link-tel",
+          "label": "Позвонить",
+          "href": "tel:{tel}",
+          "bg": "#34c759",
+          "textColor": "#ffffff"
+        },
+        {
+          "id": "menu-link-site",
+          "label": "Сайт",
+          "href": "https://kislovodsk.plaza.spa/",
+          "bg": "#f4ead8",
+          "textColor": "#17130f"
+        }
+      ],
+      "menuTtsFirstOnly": true
+    }
+  },
+  "musicSrc": "/media/projects/plaza-kislovodsk/music/ambient.mp3",
+  "emailPreview": {
+    "enabled": true,
+    "src": "/media/projects/plaza-kislovodsk/library/gallery/about/07-psk5.jpg",
+    "showPlay": true,
+    "showTitle": false,
+    "title": "{name}, персональная презентация «Плаза СПА»"
+  },
+  "sequences": {
+    "intro_generic": {
+      "id": "intro_generic",
+      "label": "Intro универсальный",
+      "title": "Искусство заботы о вашем здоровье",
+      "clips": [
+        {
+          "id": "intro_generic-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/07-psk5.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 3.8,
+          "animSec": 3.8,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "intro_generic-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/intro/04.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 3.5,
+          "animSec": 3.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "intro_generic-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/intro/06-bassein_plz_001-1620x1080.webp",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 3.6,
+          "animSec": 3.6,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": []
+    },
+    "greeting_warm": {
+      "id": "greeting_warm",
+      "label": "Приветствие",
+      "title": "Добро пожаловать в «Плаза СПА»",
+      "clips": [
+        {
+          "id": "greeting_warm-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/07-psk5.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "greeting_warm-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/08-plaza_cameras.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "greeting_warm-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/02.webp",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4,
+          "animSec": 4,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-greeting_warm-01",
+          "startSec": 0,
+          "durationSec": 4.2,
+          "text": "Персональный взгляд на ваш отдых",
+          "ttsText": "Здравствуйте, {name}! Мы рады открыть для вас атмосферу пятизвёздочного санатория «Плаза СПА» в Кисловодске."
+        },
+        {
+          "id": "cue-greeting_warm-02",
+          "startSec": 4.2,
+          "durationSec": 4.2,
+          "text": "Гармония медицины и отельного комфорта",
+          "ttsText": "Здесь академическая курортная медицина соединяется с безупречным европейским сервисом и эстетикой каждого дня."
+        },
+        {
+          "id": "cue-greeting_warm-03",
+          "startSec": 8.4,
+          "durationSec": 4,
+          "text": "Все детали идеального заезда",
+          "ttsText": "Познакомьтесь с номерами, лечебными возможностями и гастрономией, чтобы примерить этот отдых на себя."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-greeting_warm-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "about_positioning": {
+      "id": "about_positioning",
+      "label": "О санатории: позиционирование",
+      "title": "Флагманский курорт у входа в парк",
+      "clips": [
+        {
+          "id": "about_positioning-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/03.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "about_positioning-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/04.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "about_positioning-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/05.jpg",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-about_positioning-01",
+          "startSec": 0,
+          "durationSec": 4.5,
+          "text": "Престижный адрес на проспекте Ленина",
+          "ttsText": "«Плаза СПА» расположился в самом сердце курортного Кисловодска, прямо у входа в знаменитый Национальный парк."
+        },
+        {
+          "id": "cue-about_positioning-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Пятизвёздочный стандарт с 2005 года",
+          "ttsText": "С две тысячи пятого года мы создаём отдых, где забота о здоровье возведена в ранг истинного искусства."
+        },
+        {
+          "id": "cue-about_positioning-03",
+          "startSec": 9,
+          "durationSec": 4.5,
+          "text": "Всё для гармонии в едином пространстве",
+          "ttsText": "Передовой медицинский центр, собственный бювет минеральных вод, СПА-комплекс и изысканные рестораны — всё рядом с вами."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-about_positioning-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_comfort": {
+      "id": "rooms_comfort",
+      "label": "Номера: общий комфорт",
+      "title": "Элегантное пространство для глубокого отдыха",
+      "clips": [
+        {
+          "id": "rooms_comfort-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_comfort-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_comfort-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms_comfort-01",
+          "startSec": 0,
+          "durationSec": 4.5,
+          "text": "Двести сорок номеров на любой вкус",
+          "ttsText": "Номерной фонд включает двести сорок номеров — от уютных стандартов до роскошных тематических апартаментов."
+        },
+        {
+          "id": "cue-rooms_comfort-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Индивидуальный выбор спальных мест",
+          "ttsText": "В базовых категориях вы можете выбрать номер с одной большой двуспальной кроватью или двумя раздельными."
+        },
+        {
+          "id": "cue-rooms_comfort-03",
+          "startSec": 9,
+          "durationSec": 4.5,
+          "text": "Безупречный уют и внимание к деталям",
+          "ttsText": "Каждый номер встречает мягкой пастельной палитрой, современным оснащением и всем необходимым для безмятежного сна."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms_comfort-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_start": {
+      "id": "treatment_start",
+      "label": "Лечение: старт",
+      "title": "Превентивная медицина и личный терапевт",
+      "clips": [
+        {
+          "id": "treatment_start-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_start-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/02.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_start-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/05.jpg",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment_start-01",
+          "startSec": 0,
+          "durationSec": 4.5,
+          "text": "Персональная консультация при заезде",
+          "ttsText": "Ваш путь к здоровью начинается с глубокого приёма врача-терапевта и точной диагностики на передовом оборудовании."
+        },
+        {
+          "id": "cue-treatment_start-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Сила природы и высокие технологии",
+          "ttsText": "Нарзанные ванны, лечебные грязи озера Тамбукан и современная физиотерапия объединяются в целостную систему."
+        },
+        {
+          "id": "cue-treatment_start-03",
+          "startSec": 9,
+          "durationSec": 4.5,
+          "text": "От трёх до семи процедур ежедневно",
+          "ttsText": "График процедур выстраивается плавно, чтобы лечение гармонично чередовалось со СПА, прогулками и отдыхом."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment_start-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "food_buffet": {
+      "id": "food_buffet",
+      "label": "Питание: рестораны",
+      "title": "Гастрономическое путешествие каждый день",
+      "clips": [
+        {
+          "id": "food_buffet-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/08-img_9373-1728x1080.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "food_buffet-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        },
+        {
+          "id": "food_buffet-03",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/04.jpg",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-food_buffet-01",
+          "startSec": 0,
+          "durationSec": 4.5,
+          "text": "«Панорама»: четырнадцать кухонь мира",
+          "ttsText": "В просторном ресторане «Панорама» вас ждёт богатый шведский стол с блюдами четырнадцати кухонь из двадцати шести стран."
+        },
+        {
+          "id": "cue-food_buffet-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Авторское меню в ресторане «Роял»",
+          "ttsText": "В камерном ресторане «Роял» царит атмосфера высокой кухни с индивидуальной подачей шедевров от шеф-повара."
+        },
+        {
+          "id": "cue-food_buffet-03",
+          "startSec": 9,
+          "durationSec": 4.5,
+          "text": "Комфортное расписание приёмов пищи",
+          "ttsText": "Завтрак, обед и ужин сервируются в удобные часы, чтобы вы легко сочетали гастрономию с процедурами."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-food_buffet-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "wellness_pool": {
+      "id": "wellness_pool",
+      "label": "Wellness: бассейн",
+      "title": "Аква-термальный комплекс для релаксации",
+      "clips": [
+        {
+          "id": "wellness_pool-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/06.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "wellness_pool-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-wellness_pool-01",
+          "startSec": 0,
+          "durationSec": 4.5,
+          "text": "Двадцатипятиметровый бассейн и гидромассаж",
+          "ttsText": "Кристально чистая вода с ультрафиолетовой очисткой, приятные гидромассажные зоны и отдельный детский бассейн."
+        },
+        {
+          "id": "cue-wellness_pool-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Соляная финская сауна и хаммам",
+          "ttsText": "Финская сауна с целебными соляными камнями и традиционный турецкий хаммам снимут любую усталость."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-wellness_pool-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "leisure_evening": {
+      "id": "leisure_evening",
+      "label": "Досуг: вечер",
+      "title": "Изысканный вечерний досуг",
+      "clips": [
+        {
+          "id": "leisure_evening-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/02.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "leisure_evening-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/03.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-leisure_evening-01",
+          "startSec": 0,
+          "durationSec": 4.5,
+          "text": "Живая музыка и кинопоказы в лобби-баре",
+          "ttsText": "Каждый вечер звучит живой вокал, проходят фортепианные мелодии, трансляции и показы любимых кинолент."
+        },
+        {
+          "id": "cue-leisure_evening-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Концерты звёзд эстрады на сцене санатория",
+          "ttsText": "В «Плаза СПА» регулярно выступают артисты первой величины, превращая каждый вечер в настоящий праздник."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-leisure_evening-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "location_where_is_it": {
+      "id": "location_where_is_it",
+      "label": "Локация",
+      "title": "Кисловодск: у входа в Национальный парк",
+      "clips": [
+        {
+          "id": "location_where_is_it-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/05.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "location_where_is_it-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/04.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-location_where_is_it-01",
+          "startSec": 0,
+          "durationSec": 4.5,
+          "text": "Исторический центр курорта",
+          "ttsText": "Санаторий находится на проспекте Ленина, двадцать шесть — двадцать восемь, в тихой и красивой части города."
+        },
+        {
+          "id": "cue-location_where_is_it-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Прямой выход к целебным терренкурам",
+          "ttsText": "Собственный выход в парк позволяет начинать день с утренних прогулок по живописным тропам среди реликтовых деревьев."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-location_where_is_it-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "price_what_included": {
+      "id": "price_what_included",
+      "label": "Цена: что входит",
+      "title": "Продуманное наполнение вашей путёвки",
+      "clips": [
+        {
+          "id": "price_what_included-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/06.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "price_what_included-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/01.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.5,
+          "animSec": 4.5,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-price_what_included-01",
+          "startSec": 0,
+          "durationSec": 4.5,
+          "text": "Проживание, шведский стол и СПА-комплекс",
+          "ttsText": "В стоимость уже включены комфортный номер, трёхразовое питание, посещение бассейна, саун и анимационная программа."
+        },
+        {
+          "id": "cue-price_what_included-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Лечение и диагностика по вашей программе",
+          "ttsText": "При выборе санаторно-курортного тарифа в путёвку входит полноценный лечебный комплекс под наблюдением личного терапевта."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-price_what_included-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_standard": {
+      "id": "rooms_standard",
+      "label": "Стандарт",
+      "title": "Элегантный стандарт в пастельных тонах",
+      "clips": [
+        {
+          "id": "rooms_standard-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_standard-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms_standard-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Двадцать два метра выверенного уюта",
+          "ttsText": "Стандарт на третьем этаже дарит атмосферу спокойствия: здесь вас ждут двадцать два квадратных метра элегантного интерьера."
+        },
+        {
+          "id": "cue-rooms_standard-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Комфорт для одного или пары",
+          "ttsText": "Номер рассчитан на двух основных гостей с возможностью дополнительного места, оснащён душевой кабиной, TV и чайным сетом."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms_standard-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_deluxe": {
+      "id": "rooms_deluxe",
+      "label": "Делюкс",
+      "title": "Делюкс: атмосфера умиротворения",
+      "clips": [
+        {
+          "id": "rooms_deluxe-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_deluxe-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms_deluxe-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Изысканный комфорт на этажах с четвёртого по седьмой",
+          "ttsText": "Номера категории делюкс расположены на верхних этажах: те же двадцать два метра наполнены особым чувством уюта и света."
+        },
+        {
+          "id": "cue-rooms_deluxe-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Выбор постоянных гостей курорта",
+          "ttsText": "Здесь приятно отдыхать вдвоём или одному, наслаждаясь тишиной, эргономичной мебелью и пятизвёздочным сервисом."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms_deluxe-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_luxury": {
+      "id": "rooms_luxury",
+      "label": "Люкс и апартаменты",
+      "title": "Люксы и апартаменты повышенного комфорта",
+      "clips": [
+        {
+          "id": "rooms_luxury-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_luxury-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms_luxury-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Две комнаты: спальня и просторная гостиная",
+          "ttsText": "Двухкомнатные люксы площадью от сорока метров созданы для тех, кто ценит простор, уединённость и долгие комфортные заезды."
+        },
+        {
+          "id": "cue-rooms_luxury-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Привилегия ужина в ресторане «Роял»",
+          "ttsText": "Для гостей апартаментов и люксов с балконом питание в изысканном ресторане «Роял» уже включено в стоимость отдыха."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms_luxury-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_single": {
+      "id": "rooms_single",
+      "label": "Одноместный сценарий",
+      "title": "Уединение и комфорт в поездке соло",
+      "clips": [
+        {
+          "id": "rooms_single-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_single-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms_single-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Личный оазис тишины и восстановления",
+          "ttsText": "Для индивидуального отдыха идеально подойдут стандарт или делюкс, где ничто не нарушит ваш собственный ритм."
+        },
+        {
+          "id": "cue-rooms_single-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Внимание к вашим пожеланиям при заселении",
+          "ttsText": "Вы бронируете категорию, а служба размещения подберёт наиболее уютный этаж и расположение комнаты для вашего покоя."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms_single-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_double": {
+      "id": "rooms_double",
+      "label": "Для двоих",
+      "title": "Идеальное размещение для двоих",
+      "clips": [
+        {
+          "id": "rooms_double-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_double-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms_double-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Одна большая кровать или две раздельные",
+          "ttsText": "Для совместной поездки мы подготовим номер с широкой кроватью King-size или раздельными спальными местами."
+        },
+        {
+          "id": "cue-rooms_double-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Гармония совместного отпуска",
+          "ttsText": "Продуманный интерьер позволяет обоим гостям чувствовать себя свободно, совмещая процедуры с романтичным отдыхом."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms_double-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_family": {
+      "id": "rooms_family",
+      "label": "Семейный формат",
+      "title": "Простор и забота для всей семьи",
+      "clips": [
+        {
+          "id": "rooms_family-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_family-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms_family-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Двухкомнатные люксы и апартаменты",
+          "ttsText": "Для семей с детьми мы рекомендуем просторные двухкомнатные люксы от сорока метров или апартаменты до ста шестнадцати метров."
+        },
+        {
+          "id": "cue-rooms_family-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Детские принадлежности по вашему запросу",
+          "ttsText": "Мы с радостью предоставим детскую кроватку, стульчик и коляску для прогулок, чтобы путешествие было лёгким."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms_family-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_view": {
+      "id": "rooms_view",
+      "label": "Номер с атмосферой",
+      "title": "Номера с балконом и свежим горным воздухом",
+      "clips": [
+        {
+          "id": "rooms_view-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_view-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms_view-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Люкс премиум с балконом на седьмом этаже",
+          "ttsText": "Если вы мечтаете начинать утро на открытом воздухе, выберите люкс премиум с балконом на седьмом этаже."
+        },
+        {
+          "id": "cue-rooms_view-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Просторные террасы в апартаментах",
+          "ttsText": "Тематические апартаменты предлагают до двух видовых балконов, открывающих живописные пейзажи Кисловодска."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms_view-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_quiet": {
+      "id": "rooms_quiet",
+      "label": "Тихий номер",
+      "title": "Спокойная атмосфера для глубокого сна",
+      "clips": [
+        {
+          "id": "rooms_quiet-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "rooms_quiet-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-rooms_quiet-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Индивидуальный подбор расположения",
+          "ttsText": "Мы закрепляем за вами выбранную категорию номера, а при распределении учтём ваши пожелания к максимальной тишине."
+        },
+        {
+          "id": "cue-rooms_quiet-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Полноценное восстановление сил",
+          "ttsText": "Мягкое освещение, тихие холлы и деликатная забота персонала помогут восстановить сон с первых же дней пребывания."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-rooms_quiet-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_individual_plan": {
+      "id": "treatment_individual_plan",
+      "label": "Индивидуальный план",
+      "title": "Индивидуальная программа под ваши цели",
+      "clips": [
+        {
+          "id": "treatment_individual_plan-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/07.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_individual_plan-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment_individual_plan-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Точный учёт анамнеза и показаний",
+          "ttsText": "Лечащий врач формирует персональный лечебный план, опираясь на диагностику и особенности вашего организма."
+        },
+        {
+          "id": "cue-treatment_individual_plan-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Бережная корректировка в ходе курса",
+          "ttsText": "Врачебный консилиум всегда готов адаптировать назначения, чтобы каждая процедура приносила максимальную пользу."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment_individual_plan-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_day_rhythm": {
+      "id": "treatment_day_rhythm",
+      "label": "Ритм лечебного дня",
+      "title": "Идеальный распорядок курортного дня",
+      "clips": [
+        {
+          "id": "treatment_day_rhythm-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_day_rhythm-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/02.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment_day_rhythm-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Утренние процедуры и свободный вечер",
+          "ttsText": "Утро посвящено заботе о здоровье, а послеобеденное время остаётся для неспешных прогулок, плавания и отдыха."
+        },
+        {
+          "id": "cue-treatment_day_rhythm-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Баланс пользы и ярких впечатлений",
+          "ttsText": "Вы не привязаны к кабинетам на весь день: в санатории легко соблюдать комфортный темп без усталости и суеты."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment_day_rhythm-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_profile_cardio": {
+      "id": "treatment_profile_cardio",
+      "label": "Профиль: сердце и сосуды",
+      "title": "Здоровье сердца и лёгкость движений",
+      "clips": [
+        {
+          "id": "treatment_profile_cardio-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/05.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_profile_cardio-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/07.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment_profile_cardio-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Кардиологический контроль и ЭКГ",
+          "ttsText": "Программа включает функциональную диагностику, суточный мониторинг и бережные методы бальнеотерапии."
+        },
+        {
+          "id": "cue-treatment_profile_cardio-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Целебные нарзанные ванны и терренкур",
+          "ttsText": "Природный нарзан в сочетании с дозированными прогулками по парку мягко укрепляет сосуды и нормализует давление."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_cardio-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_profile_musculoskeletal": {
+      "id": "treatment_profile_musculoskeletal",
+      "label": "Профиль: спина и суставы",
+      "title": "Свобода движений: суставы и позвоночник",
+      "clips": [
+        {
+          "id": "treatment_profile_musculoskeletal-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_profile_musculoskeletal-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/01.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment_profile_musculoskeletal-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Тамбуканская грязь и гидротерапия",
+          "ttsText": "Целебные грязевые аппликации и подводный душ-массаж бережно снимают напряжение и воспаление в суставах."
+        },
+        {
+          "id": "cue-treatment_profile_musculoskeletal-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Лечебная физкультура и массаж",
+          "ttsText": "Индивидуальный комплекс ЛФК и классический массаж возвращают телу гибкость, лёгкость и правильный тонус."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_musculoskeletal-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_profile_neuro": {
+      "id": "treatment_profile_neuro",
+      "label": "Профиль: нервная система",
+      "title": "Перезагрузка нервной системы и антистресс",
+      "clips": [
+        {
+          "id": "treatment_profile_neuro-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/02.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_profile_neuro-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment_profile_neuro-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Хвойные ванны и мягкая релаксация",
+          "ttsText": "Ароматические ванны, массажные методики и спелеокамера помогают освободиться от накопленного стресса и тревоги."
+        },
+        {
+          "id": "cue-treatment_profile_neuro-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Глубокий сон и душевное равновесие",
+          "ttsText": "Уже через несколько дней мягкого санаторного ритма вы почувствуете прилив жизненной энергии и ясность мыслей."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_neuro-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_profile_breathing": {
+      "id": "treatment_profile_breathing",
+      "label": "Профиль: дыхание",
+      "title": "Чистое дыхание и укрепление иммунитета",
+      "clips": [
+        {
+          "id": "treatment_profile_breathing-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/07.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_profile_breathing-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment_profile_breathing-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Спелеокамера и лечебные ингаляции",
+          "ttsText": "Микроклимат соляной пещеры в сочетании с ингаляциями очищает дыхательные пути и укрепляет естественную защиту."
+        },
+        {
+          "id": "cue-treatment_profile_breathing-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Целебный воздух Кисловодского парка",
+          "ttsText": "Кисловодская долина — природный ингаляторий: прогулки среди хвойных рощ наполняют каждую клеточку кислородом."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_breathing-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_profile_digestive": {
+      "id": "treatment_profile_digestive",
+      "label": "Профиль: ЖКТ",
+      "title": "Гармония пищеварения и очищение",
+      "clips": [
+        {
+          "id": "treatment_profile_digestive-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_profile_digestive-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/02.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment_profile_digestive-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Бювет минеральных вод прямо в санатории",
+          "ttsText": "Нарзан, Славяновская и Ессентуки доступны в собственном бювете — врач подберёт правильную схему приёма воды."
+        },
+        {
+          "id": "cue-treatment_profile_digestive-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Сбалансированное диетическое меню",
+          "ttsText": "Щадящий рацион из свежих фермерских продуктов восстанавливает баланс ЖКТ легко и без строгих ограничений."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_digestive-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_detox_antistress": {
+      "id": "treatment_detox_antistress",
+      "label": "Детокс и антистресс",
+      "title": "Премиальные программы «Детокс» и «Антистресс»",
+      "clips": [
+        {
+          "id": "treatment_detox_antistress-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/05.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "treatment_detox_antistress-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/07.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-treatment_detox_antistress-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Глубокая перезагрузка от семи дней",
+          "ttsText": "Специализированные программы объединяют экспертную диагностику, лимфодренаж, суперфуды и персональный рацион."
+        },
+        {
+          "id": "cue-treatment_detox_antistress-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Питание от шефа в ресторане «Роял»",
+          "ttsText": "Для участников программ детоксикации авторское диетическое меню подаётся в атмосфере роскошного зала «Роял»."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-treatment_detox_antistress-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "food_diet": {
+      "id": "food_diet",
+      "label": "Диетическое питание",
+      "title": "Изысканная польза диетического меню",
+      "clips": [
+        {
+          "id": "food_diet-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/06.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "food_diet-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/01.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-food_diet-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Широкий выбор лёгких и диетических блюд",
+          "ttsText": "Здоровое питание здесь выглядит празднично и аппетитно: шеф-повар виртуозно сохраняет пользу каждого ингредиента."
+        },
+        {
+          "id": "cue-food_diet-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Индивидуальный подход к вашему рациону",
+          "ttsText": "В специализированных программах создаётся персональный рацион, который мягко поддерживает лечебный эффект."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-food_diet-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "food_restaurant_space": {
+      "id": "food_restaurant_space",
+      "label": "Ресторан и атмосфера",
+      "title": "Эстетика двух ресторанных концепций",
+      "clips": [
+        {
+          "id": "food_restaurant_space-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/07.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "food_restaurant_space-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/02.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-food_restaurant_space-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Просторный и светлый зал «Панорама»",
+          "ttsText": "Главный ресторан на триста гостей дарит ощущение праздника, изобилия и непринуждённого семейного отдыха."
+        },
+        {
+          "id": "cue-food_restaurant_space-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Уединённая роскошь ресторана «Роял»",
+          "ttsText": "Зал «Роял» создан для ценителей эксклюзивного сервиса, приватных бесед и высокой авторской кухни."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-food_restaurant_space-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "food_family": {
+      "id": "food_family",
+      "label": "Питание для семьи",
+      "title": "Вкусный и заботливый стол для детей",
+      "clips": [
+        {
+          "id": "food_family-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/03.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "food_family-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/08-img_9373-1728x1080.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-food_family-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Детская зона с мультфильмами и игрушками",
+          "ttsText": "В зале «Панорама» обустроен уютный детский уголок, где малыши с удовольствием едят за просмотром любимых историй."
+        },
+        {
+          "id": "cue-food_family-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Второй завтрак и полезный полдник",
+          "ttsText": "Для юных гостей организованы дополнительные приёмы пищи, чтобы поддержать их активность на протяжении дня."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-food_family-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "wellness_spa": {
+      "id": "wellness_spa",
+      "label": "СПА",
+      "title": "Мир красоты и полного обновления",
+      "clips": [
+        {
+          "id": "wellness_spa-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "wellness_spa-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/07.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-wellness_spa-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Бассейн и термы с семи утра до одиннадцати вечера",
+          "ttsText": "СПА-центр открыт весь день, чтобы вы могли посвятить время уходу за собой в удобные для вас часы."
+        },
+        {
+          "id": "cue-wellness_spa-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Фитнес, йога и тренажёрный зал",
+          "ttsText": "Зал CardioPower, пилатес, аэройога и ЛФК помогут мягко поддерживать превосходную физическую форму."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-wellness_spa-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "wellness_sleep_recovery": {
+      "id": "wellness_sleep_recovery",
+      "label": "Сон и восстановление",
+      "title": "Глубокое восстановление и безмятежный сон",
+      "clips": [
+        {
+          "id": "wellness_sleep_recovery-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/14-bassein_plz_001-1620x1080.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "wellness_sleep_recovery-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/04.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-wellness_sleep_recovery-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Вечерний релакс в теплом бассейне",
+          "ttsText": "Мягкое плавание и хаммам в конце дня снимают мышечный тонус и настраивают на спокойный ночной отдых."
+        },
+        {
+          "id": "cue-wellness_sleep_recovery-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Целебный горный микроклимат",
+          "ttsText": "Свежий воздух Кисловодска и тишина курортной зоны дарят ощущение обновления с первых минут пробуждения."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-wellness_sleep_recovery-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "territory_walks": {
+      "id": "territory_walks",
+      "label": "Прогулки",
+      "title": "Прогулки по знаменитому Кисловодскому парку",
+      "clips": [
+        {
+          "id": "territory_walks-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/03.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "territory_walks-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/02.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-territory_walks-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Собственный вход в мир терренкуров",
+          "ttsText": "Всего пара шагов от санатория — и вы на живописных маршрутах крупнейшего рукотворного парка Европы."
+        },
+        {
+          "id": "cue-territory_walks-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Более ста пятидесяти солнечных дней в году",
+          "ttsText": "Уникальное расположение в долине защищает город от ветров и дарит удивительно мягкую солнечную погоду."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-territory_walks-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "territory_season_summer": {
+      "id": "territory_season_summer",
+      "label": "Летний сезон",
+      "title": "Летнее очарование Кавказских Минеральных Вод",
+      "clips": [
+        {
+          "id": "territory_season_summer-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/01.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "territory_season_summer-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-territory_season_summer-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Комфортное лето без изнуряющего зноя",
+          "ttsText": "Горная прохлада и тенистые аллеи парка делают летний отдых в Кисловодске исключительно приятным."
+        },
+        {
+          "id": "cue-territory_season_summer-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Цветущие сады и путешествия в горы",
+          "ttsText": "Идеальное время для сочетания санаторного курса с вдохновляющими экскурсиями к Эльбрусу и Джилы-Су."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-territory_season_summer-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "territory_season_winter": {
+      "id": "territory_season_winter",
+      "label": "Зимний сезон",
+      "title": "Солнечная и мягкая кисловодская зима",
+      "clips": [
+        {
+          "id": "territory_season_winter-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/07-psk5.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "territory_season_winter-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/08-plaza_cameras.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-territory_season_winter-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Ясные зимние дни и чистейший воздух",
+          "ttsText": "Кисловодск славится тёплой бесснежной зимой: яркое солнце позволяет с комфортом гулять по парку каждый день."
+        },
+        {
+          "id": "cue-territory_season_winter-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Круглогодичный комфорт всех зон отдыха",
+          "ttsText": "Все лечебные кабинеты, тёплый бассейн, сауны и рестораны работают в едином ритме круглый год."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-territory_season_winter-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "leisure_active": {
+      "id": "leisure_active",
+      "label": "Активный досуг",
+      "title": "Спорт, движение и клубный отдых",
+      "clips": [
+        {
+          "id": "leisure_active-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/06.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "leisure_active-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-leisure_active-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Тренажёрный комплекс CardioPower и фитнес",
+          "ttsText": "Более тридцати современных тренажёров, залы для йоги и растяжки помогут сохранить отличный тонус."
+        },
+        {
+          "id": "cue-leisure_active-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Скандинавская ходьба и русский бильярд",
+          "ttsText": "Возьмите в прокат палки для ходьбы по парку или проведите приятный вечер за игрой на двенадцатифутовом столе."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-leisure_active-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "family_with_kids": {
+      "id": "family_with_kids",
+      "label": "С детьми",
+      "title": "Премиальный семейный отдых с заботой о детях",
+      "clips": [
+        {
+          "id": "family_with_kids-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "family_with_kids-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-family_with_kids-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Детский клуб с утра до позднего вечера",
+          "ttsText": "Для ребят от четырёх до одиннадцати лет с девяти утра открыт клуб с творческими квестами и играми."
+        },
+        {
+          "id": "cue-family_with_kids-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Оздоровление юных гостей с четырёх лет",
+          "ttsText": "Опытный педиатр назначит мягкие водные процедуры, ингаляции и спелеотерапию для укрепления детского иммунитета."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-family_with_kids-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "family_activities": {
+      "id": "family_activities",
+      "label": "Семейный досуг",
+      "title": "Насыщенный и радостный досуг для всей семьи",
+      "clips": [
+        {
+          "id": "family_activities-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/02.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "family_activities-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/03.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-family_activities-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Ежедневная анимация для детей и взрослых",
+          "ttsText": "С десяти утра до десяти вечера профессиональные аниматоры проводят мастер-классы, турниры и весёлые конкурсы."
+        },
+        {
+          "id": "cue-family_activities-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Подростковый клуб с PlayStation 5",
+          "ttsText": "Подростков ждёт стильное пространство с игровыми приставками, настольными играми и новыми друзьями."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-family_activities-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "couple_quiet_rest": {
+      "id": "couple_quiet_rest",
+      "label": "Пара",
+      "title": "Романтичный и уединённый отдых для пары",
+      "clips": [
+        {
+          "id": "couple_quiet_rest-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "couple_quiet_rest-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-couple_quiet_rest-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Время только для вас двоих",
+          "ttsText": "Просторные номера с широкой кроватью King-size, неспешные завтраки и вечерние прогулки в парке."
+        },
+        {
+          "id": "cue-couple_quiet_rest-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Атмосфера гармонии и внимания",
+          "ttsText": "Совмещайте приятные спа-ритуалы и вечерние концерты, наслаждаясь каждым мгновением вдвоём."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-couple_quiet_rest-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "couple_wellness": {
+      "id": "couple_wellness",
+      "label": "Wellness для пары",
+      "title": "СПА-восстановление вдвоём",
+      "clips": [
+        {
+          "id": "couple_wellness-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "couple_wellness-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/07.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-couple_wellness-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Бассейн, финская сауна и хаммам",
+          "ttsText": "Вместе проведите время в аква-термальной зоне, чередуя плавание в бассейне с тёплым паром сауны."
+        },
+        {
+          "id": "cue-couple_wellness-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Фитнес, прогулки и десерты в лобби",
+          "ttsText": "Занимайтесь йогой, пейте фитококтейли и встречайте закаты в уютной атмосфере курортного Кисловодска."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-couple_wellness-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "senior_calm_rhythm": {
+      "id": "senior_calm_rhythm",
+      "label": "Старшие гости",
+      "title": "Чуткая забота и мягкий санаторный ритм",
+      "clips": [
+        {
+          "id": "senior_calm_rhythm-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "senior_calm_rhythm-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/01.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-senior_calm_rhythm-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Размеренный график без спешки и нагрузок",
+          "ttsText": "Процедуры распределяются в течение дня так, чтобы у вас всегда оставалось время для отдыха и прогулок."
+        },
+        {
+          "id": "cue-senior_calm_rhythm-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Постоянное внимание квалифицированных врачей",
+          "ttsText": "Терапевт внимательно следит за динамикой самочувствия, обеспечивая безопасное и бережное оздоровление."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-senior_calm_rhythm-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "senior_medical_confidence": {
+      "id": "senior_medical_confidence",
+      "label": "Медицинская уверенность",
+      "title": "Врачебный опыт и высочайшая надёжность",
+      "clips": [
+        {
+          "id": "senior_medical_confidence-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/02.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "senior_medical_confidence-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-senior_medical_confidence-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Доктора с многолетней курортной практикой",
+          "ttsText": "В нашем медицинском центре работают опытные специалисты, готовые ответить на любые вопросы о здоровье."
+        },
+        {
+          "id": "cue-senior_medical_confidence-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Удобная регистратура и понятный маршрут",
+          "ttsText": "Медицинские администраторы помогут составить расписание так, чтобы посещение кабинетов было исключительно лёгким."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-senior_medical_confidence-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "solo_support": {
+      "id": "solo_support",
+      "label": "Один гость",
+      "title": "Комфорт и безопасность для путешествующих соло",
+      "clips": [
+        {
+          "id": "solo_support-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/02.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "solo_support-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/03.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-solo_support-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Круглосуточная служба консьержей",
+          "ttsText": "Консьерж всегда на связи, чтобы организовать трансфер, записать на экскурсию или решить любой бытовой вопрос."
+        },
+        {
+          "id": "cue-solo_support-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Тёплое гостеприимство и новые впечатления",
+          "ttsText": "Путешествуя в одиночку, вы попадаете в атмосферу заботы, где легко наслаждаться тишиной или интересным досугом."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-solo_support-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_price": {
+      "id": "objection_price",
+      "label": "Возражение: цена",
+      "title": "Честная ценность премиального отдыха",
+      "clips": [
+        {
+          "id": "objection_price-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/04.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "objection_price-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-objection_price-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Всё включено: проживание, шведский стол и СПА",
+          "ttsText": "Вам не нужно беспокоиться о скрытых тратах: питание, водный комплекс, фитнес и досуг уже входят в путёвку."
+        },
+        {
+          "id": "cue-objection_price-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Индивидуальный расчёт под ваш бюджет",
+          "ttsText": "Мы подберём оптимальную категорию номера и даты, чтобы поездка подарила максимум пользы и удовольствия."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-objection_price-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_distance": {
+      "id": "objection_distance",
+      "label": "Возражение: дорога",
+      "title": "Комфортное прибытие без лишних забот",
+      "clips": [
+        {
+          "id": "objection_distance-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/04.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "objection_distance-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/03.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-objection_distance-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Персональный трансфер из Минеральных Вод",
+          "ttsText": "Наш водитель встретит вас у терминала аэропорта с персональной табличкой и поможет с багажом."
+        },
+        {
+          "id": "cue-objection_distance-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Встреча на ж/д вокзале Кисловодска",
+          "ttsText": "Мы также организуем комфортную встречу на вокзале, доставив вас прямо ко входу в санаторий ко времени заезда."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-objection_distance-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_treatment_fit": {
+      "id": "objection_treatment_fit",
+      "label": "Подойдёт ли лечение",
+      "title": "Точный подбор лечения под ваши задачи",
+      "clips": [
+        {
+          "id": "objection_treatment_fit-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/07.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "objection_treatment_fit-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-objection_treatment_fit-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Программы для сердца, суставов, ЖКТ и дыхания",
+          "ttsText": "Наш медицинский центр специализируется на ключевых направлениях оздоровления с доказанной эффективностью."
+        },
+        {
+          "id": "cue-objection_treatment_fit-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Назначения строго по показаниям врача",
+          "ttsText": "Состав процедур определяется индивидуально после консультации терапевта, исключая любые лишние нагрузки."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-objection_treatment_fit-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_room_fit": {
+      "id": "objection_room_fit",
+      "label": "Подойдёт ли номер",
+      "title": "Точный выбор номера под ваш состав",
+      "clips": [
+        {
+          "id": "objection_room_fit-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "objection_room_fit-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-objection_room_fit-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Разнообразие категорий от 22 до 116 метров",
+          "ttsText": "Мы детально расскажем об особенностях каждой категории: от уютных стандартов до многокомнатных апартаментов."
+        },
+        {
+          "id": "cue-objection_room_fit-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Учёт всех ваших пожеланий к комфорту",
+          "ttsText": "Сообщите нам о желаемом этаже, виде или необходимости детской кроватки — мы учтём это при бронировании."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-objection_room_fit-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_food_fit": {
+      "id": "objection_food_fit",
+      "label": "Подойдёт ли питание",
+      "title": "Гастрономический комфорт для каждого гостя",
+      "clips": [
+        {
+          "id": "objection_food_fit-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/05.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "objection_food_fit-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/food/04.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-objection_food_fit-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Шведский стол четырнадцати кухонь мира",
+          "ttsText": "В зале «Панорама» ежедневно представлен огромный выбор свежих блюд, включая диетические и вегетарианские позиции."
+        },
+        {
+          "id": "cue-objection_food_fit-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Индивидуальная адаптация рациона",
+          "ttsText": "В специализированных программах диетолог и шеф-повар выстраивают персональное меню под ваши рекомендации."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-objection_food_fit-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_family_fit": {
+      "id": "objection_family_fit",
+      "label": "Удобно ли с семьёй",
+      "title": "Идеальные условия для отдыха с детьми",
+      "clips": [
+        {
+          "id": "objection_family_fit-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "objection_family_fit-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-objection_family_fit-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Клуб, анимация и детский бассейн",
+          "ttsText": "Малыши и подростки увлечены играми и спортом под присмотром педагогов, пока родители отдыхают на процедурах."
+        },
+        {
+          "id": "cue-objection_family_fit-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Бесплатный прокат колясок и кроваток",
+          "ttsText": "Мы предоставляем всё необходимое для ухода за детьми, чтобы ваш семейный отпуск прошёл легко и беззаботно."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-objection_family_fit-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_dates_not_fixed": {
+      "id": "objection_dates_not_fixed",
+      "label": "Даты не определены",
+      "title": "Гибкий выбор дат и планирование поездки",
+      "clips": [
+        {
+          "id": "objection_dates_not_fixed-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/02.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "objection_dates_not_fixed-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/01.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-objection_dates_not_fixed-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Динамическое ценообразование курорта",
+          "ttsText": "Стоимость зависит от сезона и загрузки: мы покажем выгодные периоды для заезда, если даты ещё не утверждены."
+        },
+        {
+          "id": "cue-objection_dates_not_fixed-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Предварительный расчёт на разные месяцы",
+          "ttsText": "Вы сможете спокойно сравнить варианты и зафиксировать лучшую цену внесением предоплаты в удобное время."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-objection_dates_not_fixed-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_uncertainty": {
+      "id": "objection_uncertainty",
+      "label": "Неопределённость",
+      "title": "Поможем определиться с форматом отдыха",
+      "clips": [
+        {
+          "id": "objection_uncertainty-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/06.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "objection_uncertainty-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/01.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-objection_uncertainty-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Оздоровление от трёх ночей, лечение от семи",
+          "ttsText": "Если вам нужен краткий отдых и СПА — выбирайте оздоровление; для глубокой терапии подойдёт курс от недели."
+        },
+        {
+          "id": "cue-objection_uncertainty-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Простая и понятная консультация",
+          "ttsText": "Наш специалист подробно объяснит различия программ и поможет найти идеальный баланс пользы и релакса."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-objection_uncertainty-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_compare": {
+      "id": "objection_compare",
+      "label": "Сравнение с конкурентом",
+      "title": "Преимущества отдыха в «Плаза СПА»",
+      "clips": [
+        {
+          "id": "objection_compare-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/07-psk5.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "objection_compare-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/08-plaza_cameras.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-objection_compare-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Пятизвёздочный сервис у входа в парк",
+          "ttsText": "Мы соединили богатство природных факторов Кисловодска с безупречным отельным сервисом и стильными интерьерами."
+        },
+        {
+          "id": "cue-objection_compare-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Богатейшее наполнение каждой путёвки",
+          "ttsText": "Сравнивая варианты, обратите внимание на уровень шведской линии, масштаб СПА-центра и медицинскую базу в три тысячи метров."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-objection_compare-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_health_recovery": {
+      "id": "purpose_health_recovery",
+      "label": "Цель: лечение и восстановление",
+      "title": "Полноценный лечебный курс для крепкого здоровья",
+      "clips": [
+        {
+          "id": "purpose_health_recovery-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "purpose_health_recovery-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/02.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-purpose_health_recovery-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Санаторно-курортная программа от семи ночей",
+          "ttsText": "Оптимальная длительность курса позволяет мягко пройти адаптацию и получить стойкий оздоровительный результат."
+        },
+        {
+          "id": "cue-purpose_health_recovery-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Комплексный врачебный контроль",
+          "ttsText": "Диагностика, консультации узких специалистов и процедуры работают как единая слаженная система оздоровления."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-purpose_health_recovery-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_rest_reset": {
+      "id": "purpose_rest_reset",
+      "label": "Цель: отдых и перезагрузка",
+      "title": "Перезагрузка, релакс и восстановление сил",
+      "clips": [
+        {
+          "id": "purpose_rest_reset-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/14-bassein_plz_001-1620x1080.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "purpose_rest_reset-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/leisure/04.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-purpose_rest_reset-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Оздоровительный отдых от трёх ночей",
+          "ttsText": "Идеальный формат, чтобы выспаться, насладиться тишиной курорта и сменить обстановку без строгих графиков."
+        },
+        {
+          "id": "cue-purpose_rest_reset-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "СПА, прогулки в парке и вкусная еда",
+          "ttsText": "Плавание в тёплом бассейне, сауна, терренкуры и блюда от шеф-повара быстро вернут лёгкость и энергию."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-purpose_rest_reset-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_mix": {
+      "id": "purpose_mix",
+      "label": "Цель: лечение плюс отдых",
+      "title": "Идеальный союз лечения и удовольствия",
+      "clips": [
+        {
+          "id": "purpose_mix-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/02.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "purpose_mix-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/03.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-purpose_mix-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Забота о здоровье без больничной рутины",
+          "ttsText": "Утром вы проходите приятные оздоровительные процедуры, а день и вечер посвящаете СПА, парку и концертам."
+        },
+        {
+          "id": "cue-purpose_mix-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Полноценный пятизвёздочный отпуск",
+          "ttsText": "Такой формат укрепляет иммунитет, сохраняя ощущение лёгкого, яркого и вдохновляющего путешествия."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-purpose_mix-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_long_stay": {
+      "id": "purpose_long_stay",
+      "label": "Длинный курс",
+      "title": "Длительный заезд в атмосфере домашнего уюта",
+      "clips": [
+        {
+          "id": "purpose_long_stay-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "purpose_long_stay-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-purpose_long_stay-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Люксы и апартаменты для долгого проживания",
+          "ttsText": "Для заездов от двух недель особенно удобны двухкомнатные люксы со спальней и просторной гостиной."
+        },
+        {
+          "id": "cue-purpose_long_stay-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Глубокий оздоровительный эффект",
+          "ttsText": "Длительный курс позволяет врачам провести полный цикл терапии с максимальной отдачей для всего организма."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-purpose_long_stay-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_short_stay": {
+      "id": "purpose_short_stay",
+      "label": "Короткий заезд",
+      "title": "Оздоровительный уикенд в Кисловодске",
+      "clips": [
+        {
+          "id": "purpose_short_stay-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/04.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "purpose_short_stay-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-purpose_short_stay-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Экспресс-восстановление от трёх ночей",
+          "ttsText": "Короткий заезд по оздоровительной программе подарит заряд бодрости, свежий горный воздух и полный релакс в СПА."
+        },
+        {
+          "id": "cue-purpose_short_stay-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Быстрый старт отдыха с первого часа",
+          "ttsText": "Всё готово к вашему приезду: вы сразу погружаетесь в пятизвёздочный уют без лишней организационной суеты."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-purpose_short_stay-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "next_step_ask_price": {
+      "id": "next_step_ask_price",
+      "label": "Следующий шаг: расчёт",
+      "title": "Индивидуальный расчёт вашей поездки",
+      "clips": [
+        {
+          "id": "next_step_ask_price-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/06.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "next_step_ask_price-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/01.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-next_step_ask_price-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Точный расчёт под даты и состав гостей",
+          "ttsText": "Свяжитесь с нами, и мы подготовим официальный расчёт стоимости с учётом актуальных сезонных тарифов."
+        },
+        {
+          "id": "cue-next_step_ask_price-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Прозрачные условия и бронирование",
+          "ttsText": "Менеджер подробно расскажет о составе путёвки и поможет зафиксировать лучшие условия для вашего заезда."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-next_step_ask_price-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "next_step_pick_room": {
+      "id": "next_step_pick_room",
+      "label": "Следующий шаг: номер",
+      "title": "Помощь в выборе идеального номера",
+      "clips": [
+        {
+          "id": "next_step_pick_room-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "next_step_pick_room-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-next_step_pick_room-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Подбор категории под ваши предпочтения",
+          "ttsText": "Мы сориентируем по площади, этажности, конфигурации кроватей и виду, чтобы номер радовал вас каждый день."
+        },
+        {
+          "id": "cue-next_step_pick_room-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Закрепление выбранной категории",
+          "ttsText": "За вами будет надёжно зафиксирована выбранная категория с учётом всех пожеланий службы размещения."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-next_step_pick_room-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "next_step_pick_treatment": {
+      "id": "next_step_pick_treatment",
+      "label": "Следующий шаг: лечение",
+      "title": "Согласование лечебного профиля",
+      "clips": [
+        {
+          "id": "next_step_pick_treatment-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/05.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "next_step_pick_treatment-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/treatment/07.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-next_step_pick_treatment-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Подбор оздоровительной программы",
+          "ttsText": "Расскажите о главных приоритетах вашего отдыха, и мы пришлём подробный состав подходящей программы."
+        },
+        {
+          "id": "cue-next_step_pick_treatment-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Консультация эксперта до заезда",
+          "ttsText": "Мы подскажем, какие медицинские документы подготовить, чтобы ваше лечение началось легко и комфортно."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-next_step_pick_treatment-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "next_step_confirm_dates": {
+      "id": "next_step_confirm_dates",
+      "label": "Следующий шаг: даты",
+      "title": "Проверка наличия на удобные даты",
+      "clips": [
+        {
+          "id": "next_step_confirm_dates-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/05.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "next_step_confirm_dates-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/04.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-next_step_confirm_dates-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Моментальная сверка доступных номеров",
+          "ttsText": "Назовите желаемые даты или месяц заезда — мы моментально проверим свободные категории в системе бронирования."
+        },
+        {
+          "id": "cue-next_step_confirm_dates-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Круглогодичный заезд в любой день",
+          "ttsText": "Санаторий принимает гостей круглый год: мы поможем подобрать самый удобный день для старта вашего отдыха."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-next_step_confirm_dates-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "next_step_manager_chat": {
+      "id": "next_step_manager_chat",
+      "label": "Следующий шаг: менеджер",
+      "title": "Персональный менеджер на связи",
+      "clips": [
+        {
+          "id": "next_step_manager_chat-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/07-psk5.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "next_step_manager_chat-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/08-plaza_cameras.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-next_step_manager_chat-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Ответы на все вопросы в удобном формате",
+          "ttsText": "Наш специалист с удовольствием проконсультирует вас по телефону или электронной почте в любое время."
+        },
+        {
+          "id": "cue-next_step_manager_chat-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Забота о каждой детали вашего заезда",
+          "ttsText": "Мы объединим все пожелания по трансферу, номеру и лечению в единое безупречное бронирование."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-next_step_manager_chat-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "cta_whatsapp": {
+      "id": "cta_whatsapp",
+      "label": "CTA: связь",
+      "title": "Свяжитесь с отделом бронирования",
+      "clips": [
+        {
+          "id": "cta_whatsapp-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/02.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-cta_whatsapp-01",
+          "startSec": 0,
+          "durationSec": 4.2,
+          "text": "Мгновенный расчёт под ваши пожелания",
+          "ttsText": "{name}, свяжитесь с нами прямо сейчас: мы подберём свободный номер, программу и пришлём точный расчёт на ваши даты."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-cta_whatsapp-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "cta_call": {
+      "id": "cta_call",
+      "label": "CTA: звонок",
+      "title": "Обсудите детали поездки по телефону",
+      "clips": [
+        {
+          "id": "cta_call-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/04.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "cta_call-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/05.jpg",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-cta_call-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Прямой звонок в службу бронирования",
+          "ttsText": "Позвоните нам по номеру плюс семь, восемь семь девять три два, двадцать два шестьдесят восемьдесят восемь."
+        },
+        {
+          "id": "cue-cta_call-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Персональная консультация за пару минут",
+          "ttsText": "Мы ответим на любые вопросы о лечении, питании и номерах и сразу забронируем лучший вариант для вас."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-cta_call-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "cta_get_options": {
+      "id": "cta_get_options",
+      "label": "CTA: варианты",
+      "title": "Получите сравнение двух-трёх вариантов",
+      "clips": [
+        {
+          "id": "cta_get_options-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.6,
+          "animSec": 4.6,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "cta_get_options-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "media": "image",
+          "motion": "zoom-in",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-cta_get_options-01",
+          "startSec": 0,
+          "durationSec": 4.6,
+          "text": "Наглядный выбор номеров и программ",
+          "ttsText": "Мы подготовим персональную подборку с описанием категорий, состава услуг и стоимости под ваши даты."
+        },
+        {
+          "id": "cue-cta_get_options-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Спокойное решение без спешки",
+          "ttsText": "Оставьте заявку, чтобы получить готовый расчёт и выбрать вариант, который откликается именно вам."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-cta_get_options-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "intro_by_dates": {
+      "id": "intro_by_dates",
+      "label": "Intro по датам",
+      "title": "Персональное предложение на ваши даты",
+      "clips": [
+        {
+          "id": "intro_by_dates-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/place/05.jpg",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.4,
+          "animSec": 4.4,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        },
+        {
+          "id": "intro_by_dates-02",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/06.webp",
+          "media": "image",
+          "motion": "pan-left",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "easing": "ease-in-out",
+          "transition": "dissolve",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-intro_by_dates-01",
+          "startSec": 0,
+          "durationSec": 4.4,
+          "text": "Актуальная доступность и сезонные условия",
+          "ttsText": "Мы сформировали обзор с учётом выбранного вами периода, чтобы сразу показать доступные номера и программы."
+        },
+        {
+          "id": "cue-intro_by_dates-02",
+          "startSec": 4.4,
+          "durationSec": 4.2,
+          "text": "Лёгкий выбор идеального формата",
+          "ttsText": "Познакомьтесь с условиями отдыха и выберите сценарий, который сделает вашу поездку по-настоящему особенной."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-intro_by_dates-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "cta_whatsapp_generic": {
+      "id": "cta_whatsapp_generic",
+      "label": "CTA: связь (без имени)",
+      "title": "Свяжитесь с отделом бронирования",
+      "clips": [
+        {
+          "id": "cta_whatsapp_generic-01",
+          "src": "/media/projects/plaza-kislovodsk/library/gallery/about/02.webp",
+          "media": "image",
+          "motion": "zoom-out",
+          "durationSec": 4.2,
+          "animSec": 4.2,
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "easing": "ease-in-out",
+          "transition": "cut",
+          "showTitle": false
+        }
+      ],
+      "cues": [
+        {
+          "id": "cue-cta_whatsapp_generic-01",
+          "startSec": 0,
+          "durationSec": 4.2,
+          "text": "Мгновенный расчёт под ваши пожелания",
+          "ttsText": "Свяжитесь с нами прямо сейчас: мы подберём свободный номер, программу и пришлём точный расчёт на ваши даты."
+        }
+      ],
+      "endButtons": [
+        {
+          "id": "btn-cta_whatsapp_generic-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    }
+  },
+  "constructorV2": {
+    "mode": "adaptive",
+    "sequenceMetaById": {
+      "intro_generic": {
+        "group": "intro",
+        "subgroup": "generic",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "intro"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "greeting_warm": {
+        "group": "intro",
+        "subgroup": "generic",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "intro"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "guestName"
+        ]
+      },
+      "about_positioning": {
+        "group": "about",
+        "subgroup": "positioning",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "medium",
+        "audienceTags": [],
+        "topicTags": [
+          "about"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": []
+      },
+      "rooms_comfort": {
+        "group": "rooms",
+        "subgroup": "comfort",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "medium",
+        "audienceTags": [],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": []
+      },
+      "treatment_start": {
+        "group": "treatment",
+        "subgroup": "start",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "medium",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "trust"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "topics"
+        ]
+      },
+      "food_buffet": {
+        "group": "food",
+        "subgroup": "buffet",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "medium",
+        "audienceTags": [],
+        "topicTags": [
+          "food"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": []
+      },
+      "wellness_pool": {
+        "group": "wellness",
+        "subgroup": "pool",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "topics"
+        ]
+      },
+      "leisure_evening": {
+        "group": "leisure",
+        "subgroup": "evening",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 4,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "leisure"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "topics"
+        ]
+      },
+      "location_where_is_it": {
+        "group": "location",
+        "subgroup": "where-is-it",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "location"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": []
+      },
+      "price_what_included": {
+        "group": "price",
+        "subgroup": "what-included",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "price"
+        ],
+        "objectionTags": [
+          "price",
+          "expensive"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "objections"
+        ]
+      },
+      "rooms_standard": {
+        "group": "rooms",
+        "subgroup": "standard",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [
+          "solo"
+        ],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [
+          "price"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_deluxe": {
+        "group": "rooms",
+        "subgroup": "deluxe",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_luxury": {
+        "group": "rooms",
+        "subgroup": "luxury",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_single": {
+        "group": "rooms",
+        "subgroup": "single",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "solo"
+        ],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_double": {
+        "group": "rooms",
+        "subgroup": "double",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_family": {
+        "group": "rooms",
+        "subgroup": "family",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "room",
+          "family"
+        ],
+        "objectionTags": [
+          "family-fit",
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_view": {
+        "group": "rooms",
+        "subgroup": "view",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "room",
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_quiet": {
+        "group": "rooms",
+        "subgroup": "quiet",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "room",
+          "trust"
+        ],
+        "objectionTags": [
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_individual_plan": {
+        "group": "treatment",
+        "subgroup": "individual-plan",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "trust"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_day_rhythm": {
+        "group": "treatment",
+        "subgroup": "day-rhythm",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "treatment",
+          "purpose"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_profile_cardio": {
+        "group": "treatment",
+        "subgroup": "profile-cardio",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "treatment",
+          "senior"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_profile_musculoskeletal": {
+        "group": "treatment",
+        "subgroup": "profile-musculoskeletal",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_profile_neuro": {
+        "group": "treatment",
+        "subgroup": "profile-neuro",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "wellness"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_profile_breathing": {
+        "group": "treatment",
+        "subgroup": "profile-breathing",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "territory"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_profile_digestive": {
+        "group": "treatment",
+        "subgroup": "profile-digestive",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "food"
+        ],
+        "objectionTags": [
+          "food-fit",
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_detox_antistress": {
+        "group": "treatment",
+        "subgroup": "individual-plan",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "wellness",
+          "purpose"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "food_diet": {
+        "group": "food",
+        "subgroup": "diet",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "food",
+          "treatment"
+        ],
+        "objectionTags": [
+          "food-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "food_restaurant_space": {
+        "group": "food",
+        "subgroup": "restaurant-space",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "food",
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "food_family": {
+        "group": "food",
+        "subgroup": "family",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "food",
+          "family"
+        ],
+        "objectionTags": [
+          "food-fit",
+          "family-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "wellness_spa": {
+        "group": "wellness",
+        "subgroup": "spa",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "wellness_sleep_recovery": {
+        "group": "wellness",
+        "subgroup": "sleep-recovery",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "wellness",
+          "purpose"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "territory_walks": {
+        "group": "territory",
+        "subgroup": "walks",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "territory",
+          "location"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "territory_season_summer": {
+        "group": "territory",
+        "subgroup": "season-summer",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "territory"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "dates"
+        ],
+        "slotFields": [
+          "dates",
+          "topics"
+        ]
+      },
+      "territory_season_winter": {
+        "group": "territory",
+        "subgroup": "season-winter",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "territory",
+          "leisure"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "dates"
+        ],
+        "slotFields": [
+          "dates",
+          "topics"
+        ]
+      },
+      "leisure_active": {
+        "group": "leisure",
+        "subgroup": "active",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "leisure"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "family_with_kids": {
+        "group": "family",
+        "subgroup": "with-kids",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "family",
+          "room",
+          "food"
+        ],
+        "objectionTags": [
+          "family-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "family_activities": {
+        "group": "family",
+        "subgroup": "activities",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "family",
+          "leisure"
+        ],
+        "objectionTags": [
+          "family-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "couple_quiet_rest": {
+        "group": "couple",
+        "subgroup": "quiet-rest",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "couple",
+          "wellness",
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "couple_wellness": {
+        "group": "couple",
+        "subgroup": "wellness",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "couple",
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "senior_calm_rhythm": {
+        "group": "senior",
+        "subgroup": "calm-rhythm",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "senior",
+          "treatment"
+        ],
+        "objectionTags": [
+          "distance",
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "senior_medical_confidence": {
+        "group": "senior",
+        "subgroup": "medical-confidence",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "senior",
+          "trust",
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "solo_support": {
+        "group": "senior",
+        "subgroup": "support",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "solo"
+        ],
+        "topicTags": [
+          "trust",
+          "room"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_price": {
+        "group": "objection",
+        "subgroup": "price",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "price"
+        ],
+        "objectionTags": [
+          "price",
+          "expensive"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_distance": {
+        "group": "objection",
+        "subgroup": "distance",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "location"
+        ],
+        "objectionTags": [
+          "distance"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_treatment_fit": {
+        "group": "objection",
+        "subgroup": "treatment-fit",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_room_fit": {
+        "group": "objection",
+        "subgroup": "room-fit",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_food_fit": {
+        "group": "objection",
+        "subgroup": "food-fit",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "food"
+        ],
+        "objectionTags": [
+          "food-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_family_fit": {
+        "group": "objection",
+        "subgroup": "family-fit",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "family",
+          "room",
+          "food"
+        ],
+        "objectionTags": [
+          "family-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_dates_not_fixed": {
+        "group": "objection",
+        "subgroup": "dates-not-fixed",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step"
+        ],
+        "objectionTags": [
+          "dates-not-fixed"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_uncertainty": {
+        "group": "objection",
+        "subgroup": "uncertainty",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "trust",
+          "next-step"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_compare": {
+        "group": "objection",
+        "subgroup": "compare-competitor",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "price",
+          "trust"
+        ],
+        "objectionTags": [
+          "compare-competitor"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_health_recovery": {
+        "group": "purpose",
+        "subgroup": "health-recovery",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_rest_reset": {
+        "group": "purpose",
+        "subgroup": "rest-reset",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "wellness"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_mix": {
+        "group": "purpose",
+        "subgroup": "mix",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "treatment",
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_long_stay": {
+        "group": "purpose",
+        "subgroup": "long-stay",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_short_stay": {
+        "group": "purpose",
+        "subgroup": "short-stay",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_ask_price": {
+        "group": "next-step",
+        "subgroup": "ask-price",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step",
+          "price"
+        ],
+        "objectionTags": [
+          "price"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_pick_room": {
+        "group": "next-step",
+        "subgroup": "pick-room",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step",
+          "room"
+        ],
+        "objectionTags": [
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_pick_treatment": {
+        "group": "next-step",
+        "subgroup": "pick-treatment",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step",
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_confirm_dates": {
+        "group": "next-step",
+        "subgroup": "confirm-dates",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step"
+        ],
+        "objectionTags": [
+          "dates-not-fixed"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_manager_chat": {
+        "group": "next-step",
+        "subgroup": "manager-chat",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step",
+          "cta"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "cta_whatsapp": {
+        "group": "cta",
+        "subgroup": "whatsapp",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 10,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "cta",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "name"
+        ],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "cta_call": {
+        "group": "cta",
+        "subgroup": "call",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "cta",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "cta_get_options": {
+        "group": "cta",
+        "subgroup": "get-options",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "cta",
+          "price",
+          "room"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "intro_by_dates": {
+        "group": "intro",
+        "subgroup": "by-dates",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "intro",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "dates"
+        ],
+        "slotFields": [
+          "dates"
+        ]
+      },
+      "cta_whatsapp_generic": {
+        "group": "cta",
+        "subgroup": "whatsapp-generic",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "cta",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      }
+    },
+    "assembly": {
+      "enabled": true,
+      "mode": "adaptive",
+      "maxAutoplaySec": 75,
+      "maxBlocks": 7,
+      "alwaysStartIds": [
+        "intro_generic",
+        "greeting_warm"
+      ],
+      "alwaysEndIds": [
+        "cta_whatsapp",
+        "cta_whatsapp_generic"
+      ],
+      "lowConfidenceBehavior": "menu"
+    }
+  }
+}
