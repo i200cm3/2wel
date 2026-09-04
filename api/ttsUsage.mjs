@@ -1,4 +1,4 @@
-import { query } from './db.mjs'
+import { query } from './db.js'
 import { fetchWithTimeout } from './fetchTimeout.mjs'
 
 function envPick(key, fallback = '') {

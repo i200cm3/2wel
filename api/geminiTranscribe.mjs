@@ -1,4 +1,4 @@
-import { loadEnv } from './env.mjs'
+import { loadEnv } from './env.js'
 import { fetchWithTimeout } from './fetchTimeout.mjs'
 
 const MIME_BY_EXT = {

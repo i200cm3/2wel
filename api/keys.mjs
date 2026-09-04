@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { query } from './db.mjs'
+import { query } from './db.js'
 
 const PREFIX = 'pk_live_'
 const UUID_RE =

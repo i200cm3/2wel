@@ -3,7 +3,7 @@
  * Допатчить templates в БД после PNG→JPG rename из optimize-library
  * (если Postgres был выключен во время прогона).
  */
-import { query } from './db.mjs'
+import { query } from './db.js'
 
 const RENAMES = [
   [

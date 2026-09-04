@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { projectForUser } from './cabinet.mjs'
-import { publicDir } from './env.mjs'
+import { publicDir } from './env.js'
 import { isOptimizableImageExt, optimizeImageBuffer } from './imageOptimize.mjs'
 
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp'])

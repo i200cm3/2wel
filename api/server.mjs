@@ -8,11 +8,11 @@ import {
   requestSessionToken,
   setSessionCookie,
   clearSessionCookie,
-} from './auth.mjs'
+} from './auth.js'
 import { createProjectForUser, handleCabinetApi, projectForUser } from './cabinet.mjs'
 import { adminSetProjectPlan } from './plans.mjs'
 import { parseProjectCode } from './projectCode.mjs'
-import { query } from './db.mjs'
+import { query } from './db.js'
 import { clientIp, consumeRateLimit, rateLimited } from './rateLimit.mjs'
 import { deviceFromUa, EVENT_TYPES, parseContactChannel, parseTopic, recordLinkEvent, userAgentOf } from './events.mjs'
 import { getLinkForEvent, getPublicPlayback, touchLinkOpen } from './links.mjs'

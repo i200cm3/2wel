@@ -1,4 +1,4 @@
-import { bearerToken } from './auth.mjs'
+import { bearerToken } from './auth.js'
 import {
   amoRedirectUri,
   amoWebhookUrl,

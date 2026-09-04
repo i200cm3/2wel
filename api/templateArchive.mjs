@@ -2,8 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import AdmZip from 'adm-zip'
 import { templateRowForUser, isPropertyConfig } from './cabinet.mjs'
-import { query } from './db.mjs'
-import { publicDir } from './env.mjs'
+import { query } from './db.js'
+import { publicDir } from './env.js'
 import { optimizeImagesInDir } from './imageOptimize.mjs'
 
 const PUBLIC_FILE_MODE = 0o644

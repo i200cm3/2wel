@@ -1,7 +1,7 @@
 import dns from 'node:dns/promises'
-import { authEnv, bearerToken, safeEqual } from './auth.mjs'
+import { authEnv, bearerToken, safeEqual } from './auth.js'
 import { guestBaseDomain } from './publicUrl.mjs'
-import { loadEnv } from './env.mjs'
+import { loadEnv } from './env.js'
 
 const PROJECT_CODE_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 const inFlight = new Map()

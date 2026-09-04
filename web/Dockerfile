@@ -6,7 +6,8 @@ COPY web/package.json web/package-lock.json ./
 RUN npm ci
 
 COPY web/ ./
-COPY api/auth.mjs /api/auth.mjs
+COPY api/auth.ts /api/auth.ts
+COPY api/package.json /api/package.json
 RUN npm run build
 
 FROM nginx:alpine

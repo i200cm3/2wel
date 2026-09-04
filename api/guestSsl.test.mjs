@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { authEnv } from './auth.mjs'
+import { authEnv } from './auth.js'
 import { guestHostname, parseSanNames, guestSslRequestAuthorized } from './guestSsl.mjs'
 
 describe('parseSanNames', () => {

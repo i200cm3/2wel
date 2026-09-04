@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
-import { query } from './db.mjs'
-import { loadEnv } from './env.mjs'
+import { query } from './db.js'
+import { loadEnv } from './env.js'
 import { generatePublicId } from './links.mjs'
 
 const INVITE_TTL_MS = 14 * 24 * 60 * 60 * 1000

@@ -1,5 +1,5 @@
-import { query } from './db.mjs'
-import { loadEnv } from './env.mjs'
+import { query } from './db.js'
+import { loadEnv } from './env.js'
 import { elevenDemoAvailable, elevenDemoSrc } from './ttsVoiceDemo.mjs'
 
 export const TTS_PROVIDERS = ['sber', 'elevenlabs']

@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { query } from './db.mjs'
+import { query } from './db.js'
 
 function mapRow(row) {
   if (!row) return null

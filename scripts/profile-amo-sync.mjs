@@ -10,8 +10,8 @@
 import { amoRedirectUri } from '../api/amoAuth.mjs'
 import { syncAmoCallsToLink } from '../api/amoCalls.mjs'
 import { getAmoConnection } from '../api/amoConnections.mjs'
-import { query, getPool } from '../api/db.mjs'
-import { loadEnv } from '../api/env.mjs'
+import { query, getPool } from '../api/db.js'
+import { loadEnv } from '../api/env.js'
 
 loadEnv()
 

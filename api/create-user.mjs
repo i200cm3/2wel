@@ -1,6 +1,6 @@
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { closePool, waitForDb } from './db.mjs'
+import { closePool, waitForDb } from './db.js'
 import { createProjectForUser } from './cabinet.mjs'
 import { findUserByEmail, registerUser, setUserPassword } from './users.mjs'
 

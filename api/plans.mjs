@@ -1,4 +1,4 @@
-import { query } from './db.mjs'
+import { query } from './db.js'
 
 /**
  * Два продукта: Старт (конструктор V1) и Про (конструктор V2).

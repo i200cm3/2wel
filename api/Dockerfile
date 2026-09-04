@@ -12,4 +12,4 @@ COPY prompts/ ./prompts/
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["node", "start.mjs"]
+CMD ["node", "--import", "tsx", "start.ts"]

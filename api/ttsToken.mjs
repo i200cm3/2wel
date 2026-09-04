@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
-import { authEnv, safeEqual } from './auth.mjs'
-import { loadEnv } from './env.mjs'
+import { authEnv, safeEqual } from './auth.js'
+import { loadEnv } from './env.js'
 
 const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000
 const FILE_RE = /^[a-z0-9_+.-]{1,120}$/i

@@ -1,7 +1,7 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
 import https from 'node:https'
-import { loadEnv } from './env.mjs'
+import { loadEnv } from './env.js'
 
 const OAUTH_URL = 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth'
 const SYNTH_URL = 'https://smartspeech.sber.ru/rest/v1/text:synthesize'

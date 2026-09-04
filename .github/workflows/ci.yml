@@ -21,6 +21,7 @@ jobs:
           cache: npm
           cache-dependency-path: api/package-lock.json
       - run: npm ci
+      - run: npm run typecheck
       - run: npm test
 
   web:

@@ -1,4 +1,4 @@
-import { query } from './db.mjs'
+import { query } from './db.js'
 
 const STATUS_ID_RE = /^[0-9]{1,64}$/
 const TEMPLATE_CODE_RE = /^[a-z0-9][a-z0-9_-]{0,63}$/

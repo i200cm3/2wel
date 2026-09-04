@@ -7,7 +7,7 @@ import {
   requestSessionToken,
   setSessionCookie,
   clearSessionCookie,
-} from './auth.mjs'
+} from './auth.js'
 
 describe('cookieToken', () => {
   it('читает promo_session из Cookie', () => {

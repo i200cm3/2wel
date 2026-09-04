@@ -10,7 +10,7 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { publicDir } from './env.mjs'
+import { publicDir } from './env.js'
 import { optimizeImagesInDir } from './imageOptimize.mjs'
 import { rebuildLibraryManifest } from './templateArchive.mjs'
 
@@ -124,7 +124,7 @@ if (renames.size) {
   const links = patchJsonFiles(path.join(root, 's'), renames)
   console.log(`Патч JSON: properties=${props}, s=${links}`)
   try {
-    const { query } = await import('./db.mjs')
+    const { query } = await import('./db.js')
     for (const [fromSrc, toSrc] of renames) {
       const r1 = await query(
         `UPDATE templates

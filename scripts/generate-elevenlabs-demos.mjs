@@ -9,7 +9,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { loadEnv, publicDir } from '../api/env.mjs'
+import { loadEnv, publicDir } from '../api/env.js'
 import { synthesizeEleven, elevenSettings } from '../api/tts.mjs'
 import {
   ELEVENLABS_VOICE_DEMO_TEXT,

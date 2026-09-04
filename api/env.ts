@@ -5,7 +5,11 @@ import { fileURLToPath } from 'node:url'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ROOT = path.resolve(__dirname, '..')
 
-function loadEnvFile(filePath, into, { override = false } = {}) {
+function loadEnvFile(
+  filePath: string,
+  into: NodeJS.ProcessEnv | Record<string, string | undefined>,
+  { override = false }: { override?: boolean } = {},
+): void {
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return
   for (const raw of fs.readFileSync(filePath, 'utf8').split(/\r?\n/)) {
     const line = raw.trim()
@@ -25,7 +29,7 @@ function loadEnvFile(filePath, into, { override = false } = {}) {
 let loaded = false
 
 /** Подмешивает корневой .env в process.env, не перезаписывая уже заданные переменные. */
-export function loadEnv() {
+export function loadEnv(): NodeJS.ProcessEnv {
   if (loaded) return process.env
   loadEnvFile(path.join(ROOT, '.env'), process.env)
   loadEnvFile(path.join(ROOT, 'web', '.env'), process.env)
@@ -33,7 +37,7 @@ export function loadEnv() {
   return process.env
 }
 
-export function publicDir() {
+export function publicDir(): string {
   loadEnv()
   return path.resolve(process.env.PUBLIC_DIR || path.join(ROOT, 'web/public'))
 }

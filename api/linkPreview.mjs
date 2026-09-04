@@ -5,7 +5,7 @@ import path from 'node:path'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import sharp from 'sharp'
-import { publicDir } from './env.mjs'
+import { publicDir } from './env.js'
 import { formatGuestName } from './guestLink.mjs'
 import { rewriteConfigMedia } from './projectMedia.mjs'
 

@@ -1,5 +1,5 @@
 import crypto from 'node:crypto'
-import { query } from './db.mjs'
+import { query } from './db.js'
 import { guestLinkUrl } from './publicUrl.mjs'
 
 function isPropertyConfig(value) {

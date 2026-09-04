@@ -1,5 +1,5 @@
-import { query } from './db.mjs'
-import { hashPassword, verifyPassword } from './password.mjs'
+import { query } from './db.js'
+import { hashPassword, verifyPassword } from './password.js'
 import {
   applyDuePlanChanges,
   periodLinkCounts,

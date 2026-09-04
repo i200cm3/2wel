@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import fs from 'node:fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -7,7 +8,7 @@ const TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000
 const REMEMBER_TTL_MS = 30 * 24 * 60 * 60 * 1000
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-function loadEnvFile(filePath, into) {
+function loadEnvFile(filePath: string, into: Record<string, string | undefined>): void {
   if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) return
   for (const raw of fs.readFileSync(filePath, 'utf8').split(/\r?\n/)) {
     const line = raw.trim()
@@ -33,8 +34,15 @@ const WEAK_SECRETS = new Set([
   'promo',
 ])
 
-export function authEnv() {
-  const out = { ...process.env }
+export type AuthEnv = {
+  login: string
+  password: string
+  secret: string
+  allowInsecure: boolean
+}
+
+export function authEnv(): AuthEnv {
+  const out: Record<string, string | undefined> = { ...process.env }
   const root = path.resolve(__dirname, '..')
   loadEnvFile(path.join(root, '.env'), out)
   loadEnvFile(path.join(root, 'web', '.env'), out)
@@ -49,14 +57,14 @@ export function authEnv() {
   }
 }
 
-export function isWeakAuthSecret(secret) {
+export function isWeakAuthSecret(secret: string | null | undefined): boolean {
   const value = String(secret ?? '').trim()
   if (value.length < 24) return true
   return WEAK_SECRETS.has(value)
 }
 
 /** Падать при старте API, если секрет слабый. Не вызывать из vite-плагинов. */
-export function assertAuthSecret() {
+export function assertAuthSecret(): void {
   const env = authEnv()
   if (!isWeakAuthSecret(env.secret)) return
   const msg =
@@ -69,7 +77,7 @@ export function assertAuthSecret() {
   process.exit(1)
 }
 
-export function safeEqual(a, b) {
+export function safeEqual(a: unknown, b: unknown): boolean {
   const left = Buffer.from(String(a), 'utf8')
   const right = Buffer.from(String(b), 'utf8')
   const len = Math.max(left.length, right.length, 1)
@@ -80,7 +88,10 @@ export function safeEqual(a, b) {
   return crypto.timingSafeEqual(la, ra) && left.length === right.length
 }
 
-export function checkCredentials(login, password) {
+export function checkCredentials(
+  login: string,
+  password: string,
+): { ok: true } | { ok: false; error: string } {
   const env = authEnv()
   if (!env.login || !env.password) {
     return { ok: false, error: 'EDITOR_LOGIN / EDITOR_PASSWORD не заданы в .env' }
@@ -97,7 +108,7 @@ export function checkCredentials(login, password) {
 const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
-export function issueToken(userId, { remember = false } = {}) {
+export function issueToken(userId: string, { remember = false }: { remember?: boolean } = {}): string {
   if (!userId || !UUID_RE.test(String(userId))) {
     throw new Error('issueToken: нужен user id')
   }
@@ -107,8 +118,7 @@ export function issueToken(userId, { remember = false } = {}) {
   return `${payload}.${sig}`
 }
 
-/** @returns {{ userId: string, exp: number } | null} */
-export function readSession(token) {
+export function readSession(token: string | null | undefined): { userId: string; exp: number } | null {
   if (!token || typeof token !== 'string') return null
   const parts = token.split('.')
   if (parts.length !== 3) return null
@@ -120,11 +130,17 @@ export function readSession(token) {
   return { userId, exp: Number(exp) }
 }
 
-export function verifyToken(token) {
+export function verifyToken(token: string | null | undefined): boolean {
   return Boolean(readSession(token))
 }
 
-export function bearerToken(req) {
+type HeaderCarrier = {
+  headers?: IncomingMessage['headers'] | Record<string, string | string[] | undefined>
+  /** net.Socket | tls.TLSSocket — encrypted есть только у TLS. */
+  socket?: object | null
+}
+
+export function bearerToken(req: HeaderCarrier): string {
   const raw = req.headers?.authorization
   const value = Array.isArray(raw) ? raw[0] : raw
   if (!value) return ''
@@ -132,7 +148,7 @@ export function bearerToken(req) {
   return m?.[1]?.trim() ?? ''
 }
 
-export function cookieToken(req, name = SESSION_COOKIE) {
+export function cookieToken(req: HeaderCarrier, name = SESSION_COOKIE): string {
   const raw = req.headers?.cookie
   const header = Array.isArray(raw) ? raw[0] : raw
   if (!header) return ''
@@ -152,19 +168,23 @@ export function cookieToken(req, name = SESSION_COOKIE) {
 }
 
 /** Bearer или httpOnly cookie. */
-export function requestSessionToken(req) {
+export function requestSessionToken(req: HeaderCarrier): string {
   return bearerToken(req) || cookieToken(req)
 }
 
-export function requestIsHttps(req) {
+export function requestIsHttps(req: HeaderCarrier): boolean {
   const raw = req?.headers?.['x-forwarded-proto']
   const value = Array.isArray(raw) ? raw[0] : raw
   const proto = String(value || '').split(',')[0].trim().toLowerCase()
   if (proto === 'https') return true
-  return Boolean(req?.socket?.encrypted)
+  const sock = req?.socket as { encrypted?: boolean } | null | undefined
+  return Boolean(sock?.encrypted)
 }
 
-function cookieHeader(token, { remember = false, secure = false, clear = false } = {}) {
+function cookieHeader(
+  token: string,
+  { remember = false, secure = false, clear = false }: { remember?: boolean; secure?: boolean; clear?: boolean } = {},
+): string {
   const maxAge = clear ? 0 : Math.floor((remember ? REMEMBER_TTL_MS : TOKEN_TTL_MS) / 1000)
   const parts = [
     `${SESSION_COOKIE}=${clear ? '' : encodeURIComponent(token)}`,
@@ -177,15 +197,22 @@ function cookieHeader(token, { remember = false, secure = false, clear = false }
   return parts.join('; ')
 }
 
-export function setSessionCookie(res, token, { remember = false, secure = false } = {}) {
+export function setSessionCookie(
+  res: ServerResponse,
+  token: string,
+  { remember = false, secure = false }: { remember?: boolean; secure?: boolean } = {},
+): void {
   res.setHeader('Set-Cookie', cookieHeader(token, { remember, secure }))
 }
 
-export function clearSessionCookie(res, { secure = false } = {}) {
+export function clearSessionCookie(
+  res: ServerResponse,
+  { secure = false }: { secure?: boolean } = {},
+): void {
   res.setHeader('Set-Cookie', cookieHeader('', { secure, clear: true }))
 }
 
-export function isPublicApi(url, method) {
+export function isPublicApi(url: string, method: string): boolean {
   if (url === '/health' || url === '/api/health') return true
   if (url === '/api/auth/login' && method === 'POST') return true
   if (url === '/api/auth/register' && method === 'POST') return true
@@ -201,11 +228,11 @@ export function isPublicApi(url, method) {
   return false
 }
 
-export function isProjectKeyApi(url) {
+export function isProjectKeyApi(url: string): boolean {
   return String(url ?? '').startsWith('/api/v1/')
 }
 
-export function isProtectedApi(url, method) {
+export function isProtectedApi(url: string, method: string): boolean {
   if (!url.startsWith('/api/')) return false
   if (isPublicApi(url, method)) return false
   if (isProjectKeyApi(url)) return false

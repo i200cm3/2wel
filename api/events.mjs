@@ -1,4 +1,4 @@
-import { query } from './db.mjs'
+import { query } from './db.js'
 
 export const EVENT_TYPES = ['open', 'autoplay', 'menu', 'whatsapp', 'topic', 'contact']
 const CONTACT_CHANNELS = ['whatsapp', 'telegram', 'max', 'tel', 'sms', 'site', 'other']

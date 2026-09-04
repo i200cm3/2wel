@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { closePool, getPool, waitForDb } from './db.mjs'
+import { closePool, getPool, waitForDb } from './db.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const MIGRATIONS_DIR = path.join(__dirname, 'migrations')

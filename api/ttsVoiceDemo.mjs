@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { publicDir } from './env.mjs'
+import { publicDir } from './env.js'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const VOICE_DEMO_JSON = path.join(ROOT, 'elevenlabs-proxy', 'voice-demo.json')

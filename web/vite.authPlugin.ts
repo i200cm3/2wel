@@ -1,5 +1,5 @@
 import type { Plugin } from 'vite'
-import { isProtectedApi, requestSessionToken, verifyToken } from '../api/auth.mjs'
+import { isProtectedApi, requestSessionToken, verifyToken } from '../api/auth.ts'
 
 function json(res: import('http').ServerResponse, status: number, body: unknown) {
   res.statusCode = status

@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
-import { query } from './db.mjs'
-import { publicDir } from './env.mjs'
+import { query } from './db.js'
+import { publicDir } from './env.js'
 
 const SHARED_MUSIC = 'media/music/ambient.mp3'
 const STARTER_DIR = 'media/starter'

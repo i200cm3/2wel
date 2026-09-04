@@ -1,6 +1,6 @@
 import crypto from 'node:crypto'
-import { authEnv } from './auth.mjs'
-import { loadEnv } from './env.mjs'
+import { authEnv } from './auth.js'
+import { loadEnv } from './env.js'
 import { fetchWithTimeout } from './fetchTimeout.mjs'
 import { listAmoConnections } from './amoConnections.mjs'
 import { amoLog, amoWarn } from './amoLog.mjs'

@@ -9,8 +9,8 @@
  */
 import fs from 'node:fs'
 import path from 'node:path'
-import { closePool, query, waitForDb } from './db.mjs'
-import { publicDir } from './env.mjs'
+import { closePool, query, waitForDb } from './db.js'
+import { publicDir } from './env.js'
 
 const filePath = path.join(publicDir(), 'properties', 'djinal.json')
 

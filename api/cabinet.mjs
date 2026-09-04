@@ -2,7 +2,7 @@ import { applyDerivedFlowToConfig, computeLinkAssembly } from './assembly.mjs'
 import { amoRedirectUri, clearAmoLeadPresentationUrl } from './amoAuth.mjs'
 import { syncAmoCallsToLink, probeRecordingUrlsDetailed, recordingProbeAvailability } from './amoCalls.mjs'
 import { getAmoConnection } from './amoConnections.mjs'
-import { query } from './db.mjs'
+import { query } from './db.js'
 import { geminiTranscribeConfigured, geminiTextConfigured, transcribeAudioFromUrl } from './geminiTranscribe.mjs'
 import {
   buildRawTextFromSources,

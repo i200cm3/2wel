@@ -2,7 +2,7 @@ import http from 'node:http'
 import fs from 'node:fs'
 import { spawn, spawnSync } from 'node:child_process'
 import { guestBaseDomain } from './publicUrl.mjs'
-import { loadEnv } from './env.mjs'
+import { loadEnv } from './env.js'
 import { parseSanNames, guestSslRequestAuthorized } from './guestSsl.mjs'
 
 loadEnv()

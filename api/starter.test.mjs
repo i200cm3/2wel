@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import path from 'node:path'
 import { describe, it } from 'node:test'
-import { publicDir } from './env.mjs'
+import { publicDir } from './env.js'
 import { rewriteConfigMedia } from './projectMedia.mjs'
 import { trialPresentationConfig } from './starter.mjs'
 
