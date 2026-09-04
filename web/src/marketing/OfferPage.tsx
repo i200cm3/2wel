@@ -10,6 +10,8 @@ import './landing.css'
 
 const CONTACT_EMAIL = SUPPORT_EMAIL
 const MAIL_HREF = supportMailHref('2wel для объекта размещения')
+/** Живой плеер с bundled-конфигом djinal (тот же путь, что ?property= в App). */
+const DEMO_HREF = '/?property=djinal'
 
 type PlanUrl = {
   prefix?: string
@@ -318,6 +320,15 @@ export function OfferPage() {
             <Link to="/login" className="landing-btn landing-btn-ghost" onClick={() => setMenuOpen(false)}>
               Войти
             </Link>
+            <a
+              className="landing-btn landing-btn-ghost"
+              href={DEMO_HREF}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => setMenuOpen(false)}
+            >
+              Открыть демо гостя
+            </a>
             <a className="landing-btn landing-btn-primary" href={MAIL_HREF}>
               Обсудить 2wel
             </a>
@@ -343,8 +354,13 @@ export function OfferPage() {
                 Обсудить 2wel
                 <ArrowRight size={16} />
               </a>
-              <a className="landing-btn landing-btn-ghost" href="#product">
-                Посмотреть 2wel в работе
+              <a
+                className="landing-btn landing-btn-ghost"
+                href={DEMO_HREF}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Открыть демо гостя
               </a>
             </div>
           </Reveal>
@@ -607,6 +623,14 @@ export function OfferPage() {
             <div className="landing-cta-row mt-8 flex flex-wrap items-center gap-3">
               <a className="landing-btn landing-btn-invert" href={MAIL_HREF}>
                 {CONTACT_EMAIL}
+              </a>
+              <a
+                className="landing-btn border-primary-foreground/25 text-primary-foreground hover:bg-primary-foreground/10 border"
+                href={DEMO_HREF}
+                target="_blank"
+                rel="noreferrer"
+              >
+                Открыть демо гостя
               </a>
               <Link
                 to="/login"

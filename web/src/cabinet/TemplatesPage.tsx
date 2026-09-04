@@ -38,9 +38,8 @@ import {
   publishTemplate,
   type Template,
 } from '@/lib/api'
-import { EllipsisVerticalIcon, Loader2Icon, PlusIcon } from 'lucide-react'
+import { EllipsisVerticalIcon, Loader2Icon } from 'lucide-react'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card'
 import { editorPathForPlan, planTier } from '@/lib/plans'
 
 function copyTemplateName(source: Template, templates: Template[]) {
@@ -102,100 +101,135 @@ export function TemplatesPage() {
   if (error) return <p className="text-destructive p-6">{error}</p>
   if (!templates) return <p className="text-muted-foreground p-6">Загрузка…</p>
 
+  const addStarter = () => {
+    if (!code) return
+    setPending(true)
+    setFormError(null)
+    void createTemplate(code, { name: 'Пример шаблона: Сосновый берег', starter: true })
+      .then((data) => {
+        toast.success(`Добавлен «${data.template.name}» (${data.template.code})`)
+        return reload(code)
+      })
+      .catch((err) => {
+        setFormError(err instanceof Error ? err.message : 'Не удалось добавить шаблон')
+      })
+      .finally(() => setPending(false))
+  }
+
+  const publishTpl = (tpl: Template) => {
+    if (!code) return
+    setBusyCode(tpl.code)
+    void publishTemplate(code, tpl.code)
+      .then(() => reload(code))
+      .then(() => toast.success(`«${tpl.name}» опубликован`))
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : 'Не удалось опубликовать')
+      })
+      .finally(() => setBusyCode(null))
+  }
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-      <form
-        className="flex flex-col gap-2 sm:flex-row sm:items-end"
-        onSubmit={(event) => {
-          event.preventDefault()
-          if (!code) return
-          setPending(true)
-          setFormError(null)
-          void createTemplate(code, {
-            name: name.trim(),
-            from: fromCode || undefined,
-          })
-            .then((data) => {
-              setName('')
-              toast.success(
-                fromCode
-                  ? `Скопирован как «${data.template.name}» (${data.template.code})`
-                  : `Создан «${data.template.name}» (${data.template.code})`,
-              )
-              return reload(code)
+      {templates.length === 0 ? (
+        <div className="flex flex-col items-start gap-4 rounded-xl border border-dashed p-6 sm:p-8">
+          <div className="max-w-md space-y-1">
+            <p className="text-base font-medium">Пока нет шаблонов</p>
+            <p className="text-muted-foreground text-sm">
+              Добавьте пример «Сосновый берег» — сразу можно опубликовать и выдать ссылку гостю. Или
+              начните с пустого.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" disabled={pending} onClick={addStarter}>
+              {pending ? <Loader2Icon className="animate-spin" /> : null}
+              Добавить пример
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={pending}
+              onClick={() => {
+                if (!code) return
+                setPending(true)
+                setFormError(null)
+                void createTemplate(code, { name: 'Новый шаблон' })
+                  .then((data) => {
+                    toast.success(`Создан «${data.template.name}» (${data.template.code})`)
+                    return reload(code)
+                  })
+                  .catch((err) => {
+                    setFormError(err instanceof Error ? err.message : 'Не удалось создать шаблон')
+                  })
+                  .finally(() => setPending(false))
+              }}
+            >
+              Пустой шаблон
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <form
+          className="flex flex-col gap-2 sm:flex-row sm:items-end"
+          onSubmit={(event) => {
+            event.preventDefault()
+            if (!code) return
+            setPending(true)
+            setFormError(null)
+            void createTemplate(code, {
+              name: name.trim(),
+              from: fromCode || undefined,
             })
-            .catch((err) => {
-              setFormError(err instanceof Error ? err.message : 'Не удалось создать шаблон')
-            })
-            .finally(() => setPending(false))
-        }}
-      >
-        <label className="flex min-w-40 flex-1 flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">Название</span>
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Новый шаблон"
-            required
-            disabled={pending}
-          />
-        </label>
-        <label className="flex min-w-40 flex-1 flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">Копировать из</span>
-          <NativeSelect
-            value={fromCode}
-            onChange={(event) => setFromCode(event.target.value)}
-            disabled={pending}
-            className="h-8 w-full"
-          >
-            <NativeSelectOption value="">Пустой шаблон</NativeSelectOption>
-            {templates.map((tpl) => (
-              <NativeSelectOption key={tpl.id} value={tpl.code}>
-                {tpl.name} ({tpl.code})
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </label>
-        <Button type="submit" disabled={pending || !name.trim()}>
-          {pending ? 'Создание…' : 'Новый шаблон'}
-        </Button>
-        <HoverCard>
-          <HoverCardTrigger
-            delay={200}
-            closeDelay={100}
-            render={
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                disabled={pending}
-                onClick={() => {
-                  if (!code) return
-                  setPending(true)
-                  setFormError(null)
-                  void createTemplate(code, { name: 'Пример шаблона: Сосновый берег', starter: true })
-                    .then((data) => {
-                      toast.success(`Добавлен «${data.template.name}» (${data.template.code})`)
-                      return reload(code)
-                    })
-                    .catch((err) => {
-                      setFormError(err instanceof Error ? err.message : 'Не удалось добавить шаблон')
-                    })
-                    .finally(() => setPending(false))
-                }}
-              />
-            }
-          >
-            {pending ? <Loader2Icon className="animate-spin" /> : <PlusIcon />}
-            <span className="sr-only">Добавить пример шаблона: Сосновый берег</span>
-          </HoverCardTrigger>
-          <HoverCardContent side="top" className="w-auto max-w-64">
-            <p className="font-medium">Пример шаблона: Сосновый берег</p>
-            <p className="text-muted-foreground">Добавить тестовый шаблон</p>
-          </HoverCardContent>
-        </HoverCard>
-      </form>
+              .then((data) => {
+                setName('')
+                toast.success(
+                  fromCode
+                    ? `Скопирован как «${data.template.name}» (${data.template.code})`
+                    : `Создан «${data.template.name}» (${data.template.code})`,
+                )
+                return reload(code)
+              })
+              .catch((err) => {
+                setFormError(err instanceof Error ? err.message : 'Не удалось создать шаблон')
+              })
+              .finally(() => setPending(false))
+          }}
+        >
+          <label className="flex min-w-40 flex-1 flex-col gap-1 text-sm">
+            <span className="text-muted-foreground">Название</span>
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Новый шаблон"
+              required
+              disabled={pending}
+            />
+          </label>
+          <label className="flex min-w-40 flex-1 flex-col gap-1 text-sm">
+            <span className="text-muted-foreground">Копировать из</span>
+            <NativeSelect
+              value={fromCode}
+              onChange={(event) => setFromCode(event.target.value)}
+              disabled={pending}
+              className="h-8 w-full"
+            >
+              <NativeSelectOption value="">Пустой шаблон</NativeSelectOption>
+              {templates.map((tpl) => (
+                <NativeSelectOption key={tpl.id} value={tpl.code}>
+                  {tpl.name} ({tpl.code})
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </label>
+          <Button type="submit" disabled={pending || !name.trim()}>
+            {pending ? 'Создание…' : 'Новый шаблон'}
+          </Button>
+          <Button type="button" variant="outline" disabled={pending} onClick={addStarter}>
+            Пример
+          </Button>
+        </form>
+      )}
       {formError ? <p className="text-destructive text-sm">{formError}</p> : null}
+      {templates.length > 0 ? (
       <div className="overflow-hidden rounded-xl border">
         <Table>
           <TableHeader>
@@ -203,18 +237,13 @@ export function TemplatesPage() {
               <TableHead>Название</TableHead>
               <TableHead>Код</TableHead>
               <TableHead>Статус</TableHead>
-              <TableHead className="w-40 text-right"> </TableHead>
+              <TableHead className="w-48 text-right"> </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {templates.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="text-muted-foreground">
-                  Шаблонов нет
-                </TableCell>
-              </TableRow>
-            ) : (
-              templates.map((tpl) => (
+              {templates.map((tpl) => {
+                const needsPublish = tpl.status !== 'published' || Boolean(tpl.hasDraft)
+                return (
                 <TableRow key={tpl.id}>
                   <TableCell className="font-medium">
                     {tpl.name}
@@ -241,6 +270,18 @@ export function TemplatesPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      {needsPublish ? (
+                        <Button
+                          size="sm"
+                          disabled={Boolean(busyCode) || busyCode === tpl.code}
+                          onClick={() => publishTpl(tpl)}
+                        >
+                          {busyCode === tpl.code ? (
+                            <Loader2Icon className="animate-spin" />
+                          ) : null}
+                          Опубликовать
+                        </Button>
+                      ) : null}
                       <Button
                         variant="outline"
                         size="sm"
@@ -293,22 +334,14 @@ export function TemplatesPage() {
                           >
                             Создать копию
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            disabled={Boolean(busyCode) || (tpl.status === 'published' && !tpl.hasDraft)}
-                            onClick={() => {
-                              if (!code) return
-                              setBusyCode(tpl.code)
-                              void publishTemplate(code, tpl.code)
-                                .then(() => reload(code))
-                                .then(() => toast.success(`«${tpl.name}» опубликован`))
-                                .catch((err) => {
-                                  toast.error(err instanceof Error ? err.message : 'Не удалось опубликовать')
-                                })
-                                .finally(() => setBusyCode(null))
-                            }}
-                          >
-                            Опубликовать
-                          </DropdownMenuItem>
+                          {needsPublish ? (
+                            <DropdownMenuItem
+                              disabled={Boolean(busyCode)}
+                              onClick={() => publishTpl(tpl)}
+                            >
+                              Опубликовать
+                            </DropdownMenuItem>
+                          ) : null}
                           <DropdownMenuItem
                             disabled={tpl.isDefault}
                             onClick={() => {
@@ -371,11 +404,12 @@ export function TemplatesPage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
+              )
+              })}
           </TableBody>
         </Table>
       </div>
+      ) : null}
       <Dialog
         open={Boolean(rename)}
         onOpenChange={(open) => {

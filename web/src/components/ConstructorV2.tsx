@@ -853,13 +853,22 @@ export function ConstructorV2({
             </Button>
           ) : null}
           {onPublish ? (
-            <Button variant="outline" size="sm" onClick={() => onPublish()}>
-              {publishState === 'saving' ? 'Новая ссылка…' : 'Новая ссылка'}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPublish()}
+              title="Создать тестовую гостевую ссылку с текущим шаблоном"
+            >
+              {publishState === 'saving' ? 'Тестовая ссылка…' : 'Тестовая ссылка'}
             </Button>
           ) : null}
           {onSave ? (
-            <Button size="sm" onClick={() => onSave()}>
-              {saveState === 'saving' ? 'Публикация…' : 'Опубликовать'}
+            <Button
+              size="sm"
+              onClick={() => onSave()}
+              title="Опубликовать шаблон — после этого можно выдавать ссылки гостям"
+            >
+              {saveState === 'saving' ? 'Публикация…' : 'Опубликовать шаблон'}
             </Button>
           ) : null}
           <Button
@@ -1480,8 +1489,8 @@ export function ConstructorV2({
                       <CardTitle>Результат макет-сборки</CardTitle>
                       <CardDescription>
                         {adaptiveEnabled
-                          ? 'Preview отбора по параметрам гостя. При выдаче ссылки гость получит этот порядок. Клик — видеоредактор, двойной клик — параметры блока.'
-                          : 'Порядок autoplay шаблона. Перетащите за grip — это и есть flow. Клик — видеоредактор, двойной клик — параметры блока.'}
+                          ? 'Preview отбора по параметрам гостя. При выдаче ссылки гость получит этот порядок.'
+                          : 'Порядок autoplay шаблона. Перетащите за grip — это и есть flow.'}
                       </CardDescription>
                     </div>
                     <Button
@@ -1511,7 +1520,6 @@ export function ConstructorV2({
                         <div
                           key={entry.id}
                           draggable={includedSimulation.length > 1}
-                          title="Клик — видеоредактор · двойной клик — параметры блока"
                           className={[
                             'editor-seq-row has-draft-actions',
                             dragFlowId === entry.id ? 'is-dragging' : '',
@@ -1524,8 +1532,6 @@ export function ConstructorV2({
                           ]
                             .filter(Boolean)
                             .join(' ')}
-                          onClick={() => selectBlock(entry.id)}
-                          onDoubleClick={() => openBlockParams(entry.id)}
                           onDragStart={(e) => {
                             if (!flowDragFromGrip.current || includedSimulation.length < 2) {
                               e.preventDefault()
@@ -1591,6 +1597,30 @@ export function ConstructorV2({
                             type="button"
                             variant="ghost"
                             size="sm"
+                            className="editor-seq-place"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              selectBlock(entry.id)
+                            }}
+                          >
+                            Медиа
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="editor-seq-place"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              openBlockParams(entry.id)
+                            }}
+                          >
+                            Параметры
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
                             className="editor-seq-place is-danger"
                             onClick={(e) => {
                               e.stopPropagation()
@@ -1609,22 +1639,7 @@ export function ConstructorV2({
                       return (
                       <div
                         key={entry.id}
-                        role="button"
-                        tabIndex={0}
-                        title="Клик — видеоредактор · двойной клик — параметры блока"
-                        className="cursor-pointer rounded-lg border border-primary/50 bg-primary/5 p-3"
-                        onClick={() => selectBlock(entry.id)}
-                        onDoubleClick={() => openBlockParams(entry.id)}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault()
-                            if (e.shiftKey) {
-                              openBlockParams(entry.id)
-                            } else {
-                              selectBlock(entry.id)
-                            }
-                          }
-                        }}
+                        className="rounded-lg border border-primary/50 bg-primary/5 p-3"
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="flex min-w-0 items-center gap-2">
@@ -1648,6 +1663,24 @@ export function ConstructorV2({
                             className="shrink-0"
                           />
                         </div>
+                        <div className="mt-2 flex flex-wrap gap-1.5">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => selectBlock(entry.id)}
+                          >
+                            Медиа
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openBlockParams(entry.id)}
+                          >
+                            Параметры
+                          </Button>
+                        </div>
                       </div>
                       )
                     })
@@ -1663,22 +1696,7 @@ export function ConstructorV2({
                         return (
                         <div
                           key={entry.id}
-                          role="button"
-                          tabIndex={0}
-                          title="Клик — видеоредактор · двойной клик — параметры блока"
-                          className="cursor-pointer rounded-lg border p-3"
-                          onClick={() => selectBlock(entry.id)}
-                          onDoubleClick={() => openBlockParams(entry.id)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault()
-                              if (e.shiftKey) {
-                                openBlockParams(entry.id)
-                              } else {
-                                selectBlock(entry.id)
-                              }
-                            }
-                          }}
+                          className="rounded-lg border p-3"
                         >
                           <div className="flex flex-wrap items-center justify-between gap-2">
                             <div className="flex min-w-0 items-center gap-2">
@@ -1720,6 +1738,24 @@ export function ConstructorV2({
                               />
                             </div>
                           ) : null}
+                          <div className="mt-2 flex flex-wrap gap-1.5">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => selectBlock(entry.id)}
+                            >
+                              Медиа
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openBlockParams(entry.id)}
+                            >
+                              Параметры
+                            </Button>
+                          </div>
                         </div>
                         )
                       })}

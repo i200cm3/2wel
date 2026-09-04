@@ -646,20 +646,18 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
                     <Volume2 size={22} strokeWidth={2} aria-hidden />
                   )}
                 </button>
-                {phase === 'sequence' ? (
-                  <button
-                    type="button"
-                    className="player-corner-btn"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      goMenu()
-                    }}
-                    aria-label="В меню"
-                    title="В меню"
-                  >
-                    <LayoutGrid size={22} strokeWidth={2} aria-hidden />
-                  </button>
-                ) : null}
+                <button
+                  type="button"
+                  className="player-corner-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    goMenu()
+                  }}
+                  aria-label="В меню"
+                  title="В меню"
+                >
+                  <LayoutGrid size={22} strokeWidth={2} aria-hidden />
+                </button>
               </div>
               <button
                 type="button"
@@ -686,6 +684,18 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
                   ) : (
                     <Volume2 size={22} strokeWidth={2} aria-hidden />
                   )}
+                </button>
+                <button
+                  type="button"
+                  className="player-corner-btn"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    goMenu()
+                  }}
+                  aria-label="В меню"
+                  title="В меню"
+                >
+                  <LayoutGrid size={22} strokeWidth={2} aria-hidden />
                 </button>
               </div>
               <button

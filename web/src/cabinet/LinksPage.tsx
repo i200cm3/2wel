@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
-import { useOutletContext, useParams } from 'react-router-dom'
-import { CopyIcon, Trash2Icon } from 'lucide-react'
+import { Link, useOutletContext, useParams } from 'react-router-dom'
+import { ChevronDownIcon, CopyIcon, Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CabinetOutlet } from '@/cabinet/CabinetLayout'
 import { LinkAmoCallItem } from '@/cabinet/LinkAmoCallItem'
@@ -14,8 +14,6 @@ import {
 } from '@/cabinet/linkCallRecordingProbe'
 import { LinkRawSourceDraft, LinkRawSourceItem, type RawSourcePayload } from '@/cabinet/LinkRawSourceItem'
 import { isAmoCallHiddenFromMainList, isAmoCallSourceRef, isManualNonTargetSource } from '@/cabinet/linkRawSourceKinds'
-import { SkipTtsOnLinkIssueSetting } from '@/cabinet/SkipTtsOnLinkIssueSetting'
-import { CaptionsFromTtsSetting } from '@/cabinet/CaptionsFromTtsSetting'
 import { LinkAnalyticsCharts } from '@/components/link-analytics-charts'
 import { LinkAssemblyBlockItem } from '@/components/link-assembly-block-item'
 import { PlanUsageBanner } from '@/components/plan-usage'
@@ -27,6 +25,11 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
   Card,
   CardAction,
@@ -228,7 +231,7 @@ function orderedIncludedBlocks(detail: ProjectLinkDetail): AssemblyTraceEntry[] 
 
 export function LinksPage() {
   const { code } = useParams()
-  const { project, reloadProjects } = useOutletContext<CabinetOutlet>()
+  const { project } = useOutletContext<CabinetOutlet>()
   const [links, setLinks] = useState<ProjectLink[] | null>(null)
   const [templates, setTemplates] = useState<Template[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -371,7 +374,12 @@ export function LinksPage() {
         setLinks(linkData.links)
         setTemplates(tplData.templates)
         setAmoBaseDomain(amo.connected ? amo.baseDomain : null)
-        const def = tplData.templates.find((item) => item.isDefault) ?? tplData.templates[0]
+        const published = tplData.templates.filter((item) => item.status === 'published')
+        const def =
+          published.find((item) => item.isDefault) ??
+          published[0] ??
+          tplData.templates.find((item) => item.isDefault) ??
+          tplData.templates[0]
         if (def) setCategory(def.code)
       })
       .catch((err) => {
@@ -753,22 +761,6 @@ export function LinksPage() {
   if (error) {
     return (
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 p-4 md:p-6">
-        {code ? (
-          <>
-            <SkipTtsOnLinkIssueSetting
-              projectCode={code}
-              enabled={Boolean(project?.skipTtsOnLinkIssue)}
-              compact
-              onUpdated={() => void reloadProjects()}
-            />
-            <CaptionsFromTtsSetting
-              projectCode={code}
-              enabled={Boolean(project?.captionsFromTts)}
-              compact
-              onUpdated={() => void reloadProjects()}
-            />
-          </>
-        ) : null}
         <p className="text-destructive">{error}</p>
       </div>
     )
@@ -814,60 +806,53 @@ export function LinksPage() {
         }}
       >
         <div className="flex flex-wrap items-end gap-2">
-        <label className="flex min-w-[8.5rem] flex-1 basis-36 flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">Имя гостя</span>
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Иван"
-            required
-            disabled={pending}
-          />
-        </label>
-        <label className="flex min-w-[8.5rem] flex-1 basis-36 flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">Шаблон</span>
-          <NativeSelect
-            value={category}
-            onChange={(event) => setCategory(event.target.value)}
-            disabled={pending || templates.length === 0}
-            className="h-8"
-          >
-            {templates.map((tpl) => (
-              <NativeSelectOption key={tpl.id} value={tpl.code}>
-                {tpl.name} ({tpl.code})
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </label>
-        <label className="flex min-w-[8.5rem] flex-1 basis-36 flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">externalId</span>
-          <Input
-            value={externalId}
-            onChange={(event) => setExternalId(event.target.value)}
-            placeholder="crm-123"
-            disabled={pending}
-          />
-        </label>
-        <Button type="submit" className="shrink-0" disabled={pending || !name.trim()}>
-          {pending ? 'Выдача…' : 'Выдать ссылку'}
-        </Button>
+          <label className="flex min-w-[8.5rem] flex-1 basis-36 flex-col gap-1 text-sm">
+            <span className="text-muted-foreground">Имя гостя</span>
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Иван"
+              required
+              disabled={pending}
+            />
+          </label>
+          <label className="flex min-w-[8.5rem] flex-1 basis-36 flex-col gap-1 text-sm">
+            <span className="text-muted-foreground">Шаблон</span>
+            <NativeSelect
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+              disabled={pending || templates.length === 0}
+              className="h-8"
+            >
+              {templates.map((tpl) => (
+                <NativeSelectOption key={tpl.id} value={tpl.code}>
+                  {tpl.name}
+                  {tpl.status !== 'published' ? ' — не опубликован' : ''}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </label>
+          <Button type="submit" className="shrink-0" disabled={pending || !name.trim() || templates.length === 0}>
+            {pending ? 'Выдача…' : 'Выдать'}
+          </Button>
         </div>
-        {code ? (
-          <>
-            <SkipTtsOnLinkIssueSetting
-              projectCode={code}
-              enabled={Boolean(project?.skipTtsOnLinkIssue)}
-              compact
-              onUpdated={() => void reloadProjects()}
-            />
-            <CaptionsFromTtsSetting
-              projectCode={code}
-              enabled={Boolean(project?.captionsFromTts)}
-              compact
-              onUpdated={() => void reloadProjects()}
-            />
-          </>
-        ) : null}
+        <Collapsible className="group/more">
+          <CollapsibleTrigger className="text-muted-foreground flex items-center gap-1 text-sm outline-none hover:text-foreground">
+            Ещё
+            <ChevronDownIcon className="size-3.5 transition-transform group-data-[open]/more:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="overflow-hidden pt-2">
+            <label className="flex max-w-xs flex-col gap-1 text-sm">
+              <span className="text-muted-foreground">ID сделки в CRM</span>
+              <Input
+                value={externalId}
+                onChange={(event) => setExternalId(event.target.value)}
+                placeholder="необязательно"
+                disabled={pending}
+              />
+            </label>
+          </CollapsibleContent>
+        </Collapsible>
       </form>
       {formError ? <p className="text-destructive text-sm">{formError}</p> : null}
       <label className="flex max-w-sm flex-col gap-1 text-sm">
@@ -875,108 +860,54 @@ export function LinksPage() {
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Имя, externalId, шаблон, даты"
+          placeholder="Имя, шаблон, даты"
         />
       </label>
-      <div className="min-w-0 max-w-full overflow-hidden rounded-xl border">
+      <div className="min-w-0 max-w-full overflow-hidden rounded-xl border md:overflow-hidden">
         {!links ? (
           <div className="divide-y">
             {Array.from({ length: 3 }, (_, index) => (
               <LinkRowSkeleton key={index} />
             ))}
           </div>
-        ) : (
-        <Table className="table-fixed">
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[18%]">Имя</TableHead>
-              <TableHead className="w-[16%] max-lg:hidden">Шаблон</TableHead>
-              <TableHead className="w-[18%] max-md:hidden">Даты / темы</TableHead>
-              <TableHead className="w-[10%] max-lg:hidden">externalId</TableHead>
-              <TableHead className="w-[16%]">Ссылка</TableHead>
-              <TableHead className="w-[7%] max-md:hidden">Открытий</TableHead>
-              <TableHead className="w-[10%] max-md:hidden">Создана</TableHead>
-              <TableHead className="sticky right-0 z-10 w-[5.5rem] bg-background text-right shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.12)]">
-                {' '}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-muted-foreground whitespace-normal">
-                  {links.length === 0
-                    ? 'Пока нет выдач. Создайте ссылку выше или из CRM по API.'
-                    : 'Ничего не найдено'}
-                </TableCell>
-              </TableRow>
+        ) : filtered.length === 0 ? (
+          <p className="text-muted-foreground whitespace-normal p-4 text-sm">
+            {links.length === 0 ? (
+              <>
+                Пока нет выдач. Введите имя гостя выше и нажмите «Выдать».
+                {code ? (
+                  <>
+                    {' '}
+                    Нет шаблона?{' '}
+                    <Link className="text-primary underline-offset-4 hover:underline" to={`/app/projects/${code}/templates`}>
+                      Открыть шаблоны
+                    </Link>
+                  </>
+                ) : null}
+              </>
             ) : (
-              filtered.map((link) => {
+              'Ничего не найдено'
+            )}
+          </p>
+        ) : (
+          <>
+            <div className="divide-y md:hidden">
+              {filtered.map((link) => {
                 const url = guestShareUrl(code ?? '', link.url)
-                const preview = link.summaryPreview
                 return (
-                  <TableRow
+                  <div
                     key={link.id}
-                    className="cursor-pointer"
+                    className="flex cursor-pointer flex-col gap-2 p-3"
                     onClick={() => setSelectedPublicId(link.publicId)}
                   >
-                    <TableCell className="max-w-0 font-medium">
-                      <span className="inline-flex max-w-full items-center gap-1.5">
-                        <span className="truncate">{link.guestName}</span>
-                        {link.hasRawSources ? (
-                          <span
-                            className="bg-muted text-muted-foreground shrink-0 rounded px-1 text-[10px] font-normal tracking-wide uppercase"
-                            title="Есть сохранённые диалоги"
-                          >
-                            диалоги
-                          </span>
-                        ) : null}
-                      </span>
-                    </TableCell>
-                    <TableCell className="max-w-0 max-lg:hidden">
-                      <div className="truncate" title={`${link.templateName} (${link.templateCode})`}>
-                        {link.templateName}{' '}
-                        <code className="text-muted-foreground text-xs">{link.templateCode}</code>
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{link.guestName}</p>
+                        <p className="text-muted-foreground truncate text-xs">
+                          {link.templateName} · открытий: {link.openCount}
+                        </p>
                       </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground max-w-0 max-md:hidden text-xs whitespace-normal">
-                      <div className="truncate">{preview?.dates || '—'}</div>
-                      <div className="truncate">
-                        {preview?.topics
-                          ? summaryTagsLabel(preview.topics, TOPIC_TAG_OPTIONS)
-                          : ''}
-                      </div>
-                    </TableCell>
-                    <TableCell className="max-w-0 max-lg:hidden">
-                      {link.externalId ? (
-                        <div className="truncate">
-                          <AmoLeadLink
-                            leadId={link.externalId}
-                            baseDomain={amoBaseDomain}
-                            onClick={(event) => event.stopPropagation()}
-                          />
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="max-w-0">
-                      <a
-                        className="text-primary block truncate underline-offset-4 hover:underline"
-                        href={url}
-                        title={url}
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        /{link.publicId}
-                      </a>
-                    </TableCell>
-                    <TableCell className="max-md:hidden">{link.openCount}</TableCell>
-                    <TableCell className="max-md:hidden">{formatDt(link.createdAt)}</TableCell>
-                    <TableCell
-                      className="sticky right-0 z-10 bg-background text-right shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.12)]"
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      <div className="flex items-center justify-end gap-0.5">
+                      <div className="flex shrink-0 items-center gap-0.5" onClick={(event) => event.stopPropagation()}>
                         <Button
                           type="button"
                           variant="outline"
@@ -1017,13 +948,148 @@ export function LinksPage() {
                           <Trash2Icon />
                         </Button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </div>
+                    <a
+                      className="text-primary truncate text-sm underline-offset-4 hover:underline"
+                      href={url}
+                      title={url}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      /{link.publicId}
+                    </a>
+                  </div>
                 )
-              })
-            )}
-          </TableBody>
-        </Table>
+              })}
+            </div>
+            <Table className="table-fixed max-md:hidden">
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[18%]">Имя</TableHead>
+                  <TableHead className="w-[16%] max-lg:hidden">Шаблон</TableHead>
+                  <TableHead className="w-[18%] max-md:hidden">Даты / темы</TableHead>
+                  <TableHead className="w-[10%] max-lg:hidden">CRM</TableHead>
+                  <TableHead className="w-[16%]">Ссылка</TableHead>
+                  <TableHead className="w-[7%] max-md:hidden">Открытий</TableHead>
+                  <TableHead className="w-[10%] max-md:hidden">Создана</TableHead>
+                  <TableHead className="sticky right-0 z-10 w-[5.5rem] bg-background text-right shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.12)]">
+                    {' '}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((link) => {
+                  const url = guestShareUrl(code ?? '', link.url)
+                  const preview = link.summaryPreview
+                  return (
+                    <TableRow
+                      key={link.id}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedPublicId(link.publicId)}
+                    >
+                      <TableCell className="max-w-0 font-medium">
+                        <span className="inline-flex max-w-full items-center gap-1.5">
+                          <span className="truncate">{link.guestName}</span>
+                          {link.hasRawSources ? (
+                            <span
+                              className="bg-muted text-muted-foreground shrink-0 rounded px-1 text-[10px] font-normal tracking-wide uppercase"
+                              title="Есть сохранённые диалоги"
+                            >
+                              диалоги
+                            </span>
+                          ) : null}
+                        </span>
+                      </TableCell>
+                      <TableCell className="max-w-0 max-lg:hidden">
+                        <div className="truncate" title={`${link.templateName} (${link.templateCode})`}>
+                          {link.templateName}{' '}
+                          <code className="text-muted-foreground text-xs">{link.templateCode}</code>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-muted-foreground max-w-0 max-md:hidden text-xs whitespace-normal">
+                        <div className="truncate">{preview?.dates || '—'}</div>
+                        <div className="truncate">
+                          {preview?.topics
+                            ? summaryTagsLabel(preview.topics, TOPIC_TAG_OPTIONS)
+                            : ''}
+                        </div>
+                      </TableCell>
+                      <TableCell className="max-w-0 max-lg:hidden">
+                        {link.externalId ? (
+                          <div className="truncate">
+                            <AmoLeadLink
+                              leadId={link.externalId}
+                              baseDomain={amoBaseDomain}
+                              onClick={(event) => event.stopPropagation()}
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="max-w-0">
+                        <a
+                          className="text-primary block truncate underline-offset-4 hover:underline"
+                          href={url}
+                          title={url}
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          /{link.publicId}
+                        </a>
+                      </TableCell>
+                      <TableCell className="max-md:hidden">{link.openCount}</TableCell>
+                      <TableCell className="max-md:hidden">{formatDt(link.createdAt)}</TableCell>
+                      <TableCell
+                        className="sticky right-0 z-10 bg-background text-right shadow-[-6px_0_8px_-6px_rgba(0,0,0,0.12)]"
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-end gap-0.5">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="icon-sm"
+                            title={copiedId === link.publicId ? 'Скопировано' : 'Копировать'}
+                            aria-label={copiedId === link.publicId ? 'Скопировано' : 'Копировать'}
+                            onClick={() => {
+                              void copyText(url)
+                                .then(() => {
+                                  markCopied(link.publicId)
+                                  toast.success('Ссылка скопирована')
+                                })
+                                .catch(() => toast.error('Не удалось скопировать'))
+                            }}
+                          >
+                            <CopyIcon />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="icon-sm"
+                            title="Удалить"
+                            aria-label="Удалить"
+                            disabled={deletingId === link.publicId || pending}
+                            onClick={() => {
+                              if (!code) return
+                              if (!window.confirm(`Удалить ссылку для ${link.guestName}?`)) return
+                              setDeletingId(link.publicId)
+                              setFormError(null)
+                              void deleteProjectLink(code, link.publicId)
+                                .then(() => reload(code))
+                                .catch((err) => {
+                                  setFormError(err instanceof Error ? err.message : 'Не удалось удалить')
+                                })
+                                .finally(() => setDeletingId(null))
+                            }}
+                          >
+                            <Trash2Icon />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </>
         )}
       </div>
 
