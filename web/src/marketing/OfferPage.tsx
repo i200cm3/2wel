@@ -200,7 +200,7 @@ export function OfferPage() {
     const meta = document.querySelector('meta[name="theme-color"]')
     themeColor.current = meta?.getAttribute('content') ?? null
     document.title = '2wel — персональный канал общения с гостем'
-    meta?.setAttribute('content', '#F6F3EE')
+    meta?.setAttribute('content', '#fcfaf8')
     document.documentElement.classList.add('landing-open')
     return () => {
       document.title = prev

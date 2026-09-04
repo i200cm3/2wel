@@ -54,10 +54,15 @@ export function ChartRadialOpenRate({
               gridType="circle"
               radialLines={false}
               stroke="none"
-              className="first:fill-muted last:fill-background"
+              className="first:fill-muted last:fill-card"
               polarRadius={[74, 62]}
             />
-            <RadialBar dataKey="value" background stackId="a" cornerRadius={10} />
+            <RadialBar
+              dataKey="value"
+              background={{ fill: 'var(--muted)' }}
+              stackId="a"
+              cornerRadius={10}
+            />
             <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
               <Label
                 content={({ viewBox }) => {

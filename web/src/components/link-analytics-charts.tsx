@@ -272,7 +272,7 @@ export function LinkAnalyticsCharts({
           <p className="text-muted-foreground mb-1 min-h-4 text-xs">Досмотрел autoplay</p>
           <ChartContainer config={engagementConfig} className="aspect-auto h-[110px] w-full shrink-0">
             <RadialBarChart data={engagementData} startAngle={90} endAngle={-270} innerRadius={34} outerRadius={48}>
-              <PolarGrid gridType="circle" radialLines={false} stroke="none" className="first:fill-muted last:fill-background" polarRadius={[38, 30]} />
+              <PolarGrid gridType="circle" radialLines={false} stroke="none" className="first:fill-muted last:fill-card" polarRadius={[38, 30]} />
               <RadialBar dataKey="value" background stackId="a" cornerRadius={6} />
               <PolarRadiusAxis tick={false} tickLine={false} axisLine={false}>
                 <Label
