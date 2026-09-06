@@ -59,7 +59,7 @@ services:
       args:
         API_CACHEBUST: ${API_CACHEBUST:-1}
     container_name: promo-guest-ssl
-    command: ["node", "guestSslAgent.mjs"]
+    command: ["node", "--import", "tsx", "guestSslAgent.mjs"]
     restart: unless-stopped
     env_file:
       - .env
