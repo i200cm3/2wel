@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
-import { LayoutGrid, Play, Volume2, VolumeX } from 'lucide-react'
+import { ChevronRight, LayoutGrid, Play, Volume2, VolumeX } from 'lucide-react'
 import { fillName, fillNameOptional, openMenuHref, resolveMenuLinkHref, whatsAppHref } from '../content'
 import { useGuestName } from '../hooks/useGuestName'
 import { enterPresentationFullscreen, syncVisualViewportVars } from '../lib/fullscreen'
@@ -9,18 +9,34 @@ import { ttsPlaybackUrl } from '../lib/ttsUrl'
 import type { EndButton, MenuLink, PropertyConfig, ViewOrientation } from '../types/story'
 import {
   captionBarStyle,
+  clipHoldSec,
   endButtonsGoStraightToMenu,
   getDefaultMenuId,
+  normalizeClip,
   normalizeTheme,
   parseMenuLinkHref,
   resolveMenu,
   resolveReturnMenuId,
   withoutDisabledBlocks,
+  type StorySequence,
 } from '../types/story'
-import { backgroundMusicSrc } from './editor/timelineMath'
+import { backgroundMusicSrc, syncClipsToCues } from './editor/timelineMath'
 import { MenuScreen } from './MenuScreen'
 import { PlayerLoading } from './PlayerLoading'
-import { StoryPlayer } from './StoryPlayer'
+import { StoryPlayer, type PlaybackProgress } from './StoryPlayer'
+
+/** «Далее» появляется чуть позже старта блока — не перекрывает первый кадр. */
+const NEXT_BTN_DELAY_MS = 2500
+
+/** Длительность блока как в плеере (клипы, выровненные под cues). */
+function playbackBlockDurationSec(seq: StorySequence | undefined): number {
+  if (!seq?.clips.length) return 0.8
+  const normalized = seq.clips.map(normalizeClip)
+  const cues = seq.cues ?? []
+  const clips = cues.length ? syncClipsToCues(normalized, cues) : normalized
+  const dur = clips.reduce((sum, c) => sum + clipHoldSec(c), 0)
+  return Math.max(0.8, dur)
+}
 
 type Phase = 'flow' | 'menu' | 'sequence'
 
@@ -54,6 +70,9 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
   const [userMuted, setUserMuted] = useState(false)
   const [mediaWarm, setMediaWarm] = useState({ done: 0, total: 0 })
   const [mediaReady, setMediaReady] = useState(false)
+  const [playbackProgress, setPlaybackProgress] = useState<PlaybackProgress | null>(null)
+  const [skipRequest, setSkipRequest] = useState(0)
+  const [showNextBtn, setShowNextBtn] = useState(false)
   const musicRef = useRef<HTMLAudioElement | null>(null)
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null)
   const ttsUnlockedRef = useRef(false)
@@ -456,7 +475,78 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
   useEffect(() => {
     setShowEndButtons(false)
     setUserPaused(false)
+    setPlaybackProgress(null)
+    setShowNextBtn(false)
+    setSkipRequest(0)
   }, [phase, flowIndex, sequenceId])
+
+  useEffect(() => {
+    if (phase === 'menu' || showEndButtons || !soundArmed || userPaused) {
+      setShowNextBtn(false)
+      return
+    }
+    const timer = window.setTimeout(() => setShowNextBtn(true), NEXT_BTN_DELAY_MS)
+    return () => window.clearTimeout(timer)
+  }, [phase, flowIndex, sequenceId, showEndButtons, soundArmed, userPaused])
+
+  const skipAhead = useCallback((e: MouseEvent) => {
+    e.stopPropagation()
+    setUserPaused(false)
+    setSkipRequest((n) => n + 1)
+  }, [])
+
+  /** Полоски = блоки flow; ширина ∝ длительности → скорость заполнения ровная. */
+  const blockProgressUi = useMemo(() => {
+    if (phase === 'menu' || showEndButtons) return null
+
+    const withinBlock = (() => {
+      if (!playbackProgress) return 0
+      if (playbackProgress.durationSec > 0) {
+        return Math.min(
+          1,
+          Math.max(0, playbackProgress.timelineSec / playbackProgress.durationSec),
+        )
+      }
+      if (playbackProgress.clipCount <= 0) return 0
+      return Math.min(
+        1,
+        (playbackProgress.clipIndex + playbackProgress.clipProgress) /
+          playbackProgress.clipCount,
+      )
+    })()
+
+    if (phase === 'flow') {
+      const weights = property.flow.map((id) =>
+        playbackBlockDurationSec(property.sequences[id]),
+      )
+      const count = weights.length
+      if (count <= 0) return null
+      return {
+        count,
+        index: flowIndex,
+        progress: withinBlock,
+        weights,
+        label: `Блок ${flowIndex + 1} из ${count}`,
+      }
+    }
+    if (phase === 'sequence') {
+      return {
+        count: 1,
+        index: 0,
+        progress: withinBlock,
+        weights: [1],
+        label: 'Прогресс блока',
+      }
+    }
+    return null
+  }, [
+    phase,
+    showEndButtons,
+    property.flow,
+    property.sequences,
+    flowIndex,
+    playbackProgress,
+  ])
 
   useEffect(() => {
     const ordered: string[] = []
@@ -550,6 +640,8 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
               ttsVolume={ttsVol}
               userMuted={userMuted}
               ttsAudioRef={ttsAudioRef}
+              skipRequest={skipRequest}
+              onPlaybackProgress={setPlaybackProgress}
               onMediaProgress={(done, total) => {
                 setMediaWarm({ done, total })
                 const ready = total > 0 ? done >= total : true
@@ -559,6 +651,38 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
                 if (ready) ensureMusicPlaying()
               }}
             />
+            {soundArmed && blockProgressUi ? (
+              <div
+                className="player-progress"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={blockProgressUi.count}
+                aria-valuenow={blockProgressUi.index + 1}
+                aria-label={blockProgressUi.label}
+              >
+                {Array.from({ length: blockProgressUi.count }, (_, i) => {
+                  const fill =
+                    i < blockProgressUi.index
+                      ? 1
+                      : i === blockProgressUi.index
+                        ? blockProgressUi.progress
+                        : 0
+                  const weight = blockProgressUi.weights[i] ?? 1
+                  return (
+                    <div
+                      key={i}
+                      className="player-progress-seg"
+                      style={{ flexGrow: weight }}
+                    >
+                      <div
+                        className="player-progress-fill"
+                        style={{ transform: `scaleX(${fill})` }}
+                      />
+                    </div>
+                  )
+                })}
+              </div>
+            ) : null}
             {showEndButtons && endButtons?.length ? (
               <div className="end-buttons" role="dialog" aria-label="Дальше">
                 <div className="end-buttons-inner">
@@ -631,7 +755,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
             </div>
           ) : userPaused ? (
             <div className="start-gate" role="dialog" aria-label="Пауза">
-              <div className="player-corner-actions">
+              <div className="player-corner-actions has-progress">
                 <button
                   type="button"
                   className="player-corner-btn"
@@ -659,6 +783,17 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
                   <LayoutGrid size={22} strokeWidth={2} aria-hidden />
                 </button>
               </div>
+              {showNextBtn ? (
+                <button
+                  type="button"
+                  className="player-next-btn"
+                  onClick={skipAhead}
+                  aria-label="Далее"
+                >
+                  Далее
+                  <ChevronRight size={18} strokeWidth={2.5} aria-hidden />
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="start-gate-icon-btn"
@@ -670,7 +805,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
             </div>
           ) : (
             <>
-              <div className="player-corner-actions">
+              <div className="player-corner-actions has-progress">
                 <button
                   type="button"
                   className="player-corner-btn"
@@ -698,6 +833,17 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
                   <LayoutGrid size={22} strokeWidth={2} aria-hidden />
                 </button>
               </div>
+              {showNextBtn ? (
+                <button
+                  type="button"
+                  className="player-next-btn"
+                  onClick={skipAhead}
+                  aria-label="Далее"
+                >
+                  Далее
+                  <ChevronRight size={18} strokeWidth={2.5} aria-hidden />
+                </button>
+              ) : null}
               <button
                 type="button"
                 className="playback-tap-layer"

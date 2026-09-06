@@ -751,6 +751,28 @@ export async function fetchPublicLink(publicId: string): Promise<PublicPlayback 
   return data
 }
 
+export async function requestDemoGuest(payload: {
+  name: string
+  email: string
+}): Promise<{ ok: true; url: string; mailed: boolean }> {
+  const res = await fetch('/api/public/demo', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  })
+  const data = (await res.json().catch(() => ({}))) as {
+    ok?: boolean
+    url?: string
+    mailed?: boolean
+    error?: string
+  }
+  if (!res.ok || !data.ok || !data.url) {
+    throw new ApiError(data.error || `HTTP ${res.status}`, res.status)
+  }
+  return { ok: true, url: data.url, mailed: Boolean(data.mailed) }
+}
+
 export type PublicEventType = 'autoplay' | 'menu' | 'whatsapp' | 'topic' | 'contact'
 
 export function trackPublicEvent(

@@ -6,12 +6,11 @@ import { BrandLogo } from '@/components/BrandLogo'
 import { cn, SUPPORT_EMAIL, supportMailHref } from '@/lib/utils'
 import { formatPriceFrom, PLAN_TIERS } from '@/lib/plans'
 import { GuestPhone, type GuestScreenId } from './GuestPhone'
+import { DemoGuestDialog } from './DemoGuestDialog'
 import './landing.css'
 
 const CONTACT_EMAIL = SUPPORT_EMAIL
 const MAIL_HREF = supportMailHref('2wel для объекта размещения')
-/** Живой плеер с bundled-конфигом djinal (тот же путь, что ?property= в App). */
-const DEMO_HREF = '/?property=djinal'
 
 type PlanUrl = {
   prefix?: string
@@ -320,15 +319,12 @@ export function OfferPage() {
             <Link to="/login" className="landing-btn landing-btn-ghost" onClick={() => setMenuOpen(false)}>
               Войти
             </Link>
-            <a
+            <DemoGuestDialog
               className="landing-btn landing-btn-ghost"
-              href={DEMO_HREF}
-              target="_blank"
-              rel="noreferrer"
-              onClick={() => setMenuOpen(false)}
-            >
-              Открыть демо гостя
-            </a>
+              onOpenChange={(open) => {
+                if (open) setMenuOpen(false)
+              }}
+            />
             <a className="landing-btn landing-btn-primary" href={MAIL_HREF}>
               Обсудить 2wel
             </a>
@@ -354,14 +350,7 @@ export function OfferPage() {
                 Обсудить 2wel
                 <ArrowRight size={16} />
               </a>
-              <a
-                className="landing-btn landing-btn-ghost"
-                href={DEMO_HREF}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Открыть демо гостя
-              </a>
+              <DemoGuestDialog className="landing-btn landing-btn-ghost" />
             </div>
           </Reveal>
           <Reveal className="flex justify-center lg:justify-end" delay={120}>
@@ -624,14 +613,7 @@ export function OfferPage() {
               <a className="landing-btn landing-btn-invert" href={MAIL_HREF}>
                 {CONTACT_EMAIL}
               </a>
-              <a
-                className="landing-btn border-primary-foreground/25 text-primary-foreground hover:bg-primary-foreground/10 border"
-                href={DEMO_HREF}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Открыть демо гостя
-              </a>
+              <DemoGuestDialog className="landing-btn border-primary-foreground/25 text-primary-foreground hover:bg-primary-foreground/10 border" />
               <Link
                 to="/login"
                 className="landing-btn border-primary-foreground/25 text-primary-foreground hover:bg-primary-foreground/10 border"

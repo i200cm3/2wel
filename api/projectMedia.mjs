@@ -307,6 +307,21 @@ export async function renameProjectMedia(fromCode, toCode) {
   await fs.promises.rename(from, to)
 }
 
+/** Удаляет весь каталог media проекта (library, music, tts). Shared starter не трогает. */
+export async function removeProjectMedia(code) {
+  if (!code || /[^a-z0-9-]/.test(code)) return { ok: false, removed: false }
+  const root = publicDir()
+  const projectsRoot = path.resolve(root, 'media/projects')
+  const projectRoot = path.resolve(projectsRoot, code)
+  const rel = path.relative(projectsRoot, projectRoot)
+  if (!rel || rel.startsWith('..') || path.isAbsolute(rel) || rel.includes(path.sep)) {
+    return { ok: false, removed: false }
+  }
+  if (!fs.existsSync(projectRoot)) return { ok: true, removed: false }
+  await fs.promises.rm(projectRoot, { recursive: true, force: true })
+  return { ok: true, removed: true }
+}
+
 export async function isolateProjectMedia(code) {
   await ensureProjectMedia(code)
   const { rows: projects } = await query('SELECT id FROM projects WHERE code = $1', [code])

@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, Navigate, useOutletContext, useParams, useSearchParams } from 'react-router-dom'
+import { Loader2Icon } from 'lucide-react'
 import { toast } from 'sonner'
 import { ChartAreaInteractive } from '@/components/chart-area-interactive'
 import { ChartLineRates } from '@/components/chart-line-rates'
@@ -13,9 +14,11 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   createProjectLink,
+  createTemplate,
   fetchProjectStats,
   fetchTemplateConfig,
   fetchTemplates,
+  publishTemplate,
   type ProjectStats,
   type Template,
 } from '@/lib/api'
@@ -54,6 +57,7 @@ export function OverviewPage() {
   const periodLabel = formatRangeLabel(range.from, range.to)
   const [stats, setStats] = useState<ProjectStats | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const welcome = params.get('welcome') === '1'
 
   useEffect(() => {
     if (!code) return
@@ -85,6 +89,17 @@ export function OverviewPage() {
     )
   }
 
+  const clearWelcome = useCallback(() => {
+    setParams(
+      (prev) => {
+        const nextParams = new URLSearchParams(prev)
+        nextParams.delete('welcome')
+        return nextParams
+      },
+      { replace: true },
+    )
+  }, [setParams])
+
   if (error && !stats) {
     return <p className="text-destructive p-6">{error}</p>
   }
@@ -96,7 +111,13 @@ export function OverviewPage() {
     <div className="@container/main flex flex-1 flex-col gap-2">
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
         {code ? (
-          <SetupCard code={code} stats={stats} planId={project?.plan?.id} />
+          <SetupCard
+            code={code}
+            stats={stats}
+            planId={project?.plan?.id}
+            welcome={welcome}
+            onWelcomeHandled={clearWelcome}
+          />
         ) : null}
         <div className="px-4 lg:px-6 empty:hidden">
           <PlanUsageBanner plan={project.plan} projectCode={project.code} />
@@ -131,14 +152,37 @@ function SetupCard({
   code,
   stats,
   planId,
+  welcome,
+  onWelcomeHandled,
 }: {
   code: string
   stats: ProjectStats
   planId?: string
+  welcome?: boolean
+  onWelcomeHandled?: () => void
 }) {
   const [templates, setTemplates] = useState<Template[] | null>(null)
   const [whatsApp, setWhatsApp] = useState<string | null>(null)
   const [pendingLink, setPendingLink] = useState(false)
+  const [pendingTemplate, setPendingTemplate] = useState(false)
+  const [pendingPublish, setPendingPublish] = useState(false)
+
+  const applyTemplates = async (list: Template[]) => {
+    setTemplates(list)
+    const nextDef = list.find((item) => item.isDefault) ?? list[0]
+    if (!nextDef) {
+      setWhatsApp('')
+      return
+    }
+    const cfg = await fetchTemplateConfig(code, nextDef.code)
+    setWhatsApp(whatsAppFromConfig(cfg.draft ?? cfg.config))
+  }
+
+  const loadTemplates = () =>
+    fetchTemplates(code).then(async (data) => {
+      await applyTemplates(data.templates)
+      return data.templates
+    })
 
   useEffect(() => {
     let cancelled = false
@@ -146,12 +190,12 @@ function SetupCard({
       .then(async (data) => {
         if (cancelled) return
         setTemplates(data.templates)
-        const def = data.templates.find((item) => item.isDefault) ?? data.templates[0]
-        if (!def) {
+        const nextDef = data.templates.find((item) => item.isDefault) ?? data.templates[0]
+        if (!nextDef) {
           setWhatsApp('')
           return
         }
-        const cfg = await fetchTemplateConfig(code, def.code)
+        const cfg = await fetchTemplateConfig(code, nextDef.code)
         if (cancelled) return
         setWhatsApp(whatsAppFromConfig(cfg.draft ?? cfg.config))
       })
@@ -177,12 +221,136 @@ function SetupCard({
   const linksTo = `/app/projects/${code}/links`
   const ctorLabel = planTier(planId).constructor === 'v2' ? 'Конструктор V2' : 'Конструктор шаблона'
 
-  const steps: { id: string; text: string; to?: string; action?: 'test-link' }[] = []
-  if (templates.length === 0 || published.length === 0) {
+  const issueTestLink = () => {
+    setPendingLink(true)
+    void createProjectLink(code, { name: 'Тест' })
+      .then((created) => {
+        const url = guestShareUrl(code, created.url)
+        return navigator.clipboard.writeText(url).then(
+          () => url,
+          () => url,
+        )
+      })
+      .then((url) => {
+        toast.success('Тестовая ссылка скопирована')
+        onWelcomeHandled?.()
+        window.open(url, '_blank', 'noopener,noreferrer')
+      })
+      .catch((err) => toast.error(err instanceof Error ? err.message : 'Не удалось выдать ссылку'))
+      .finally(() => setPendingLink(false))
+  }
+
+  // Регистрация уже создаёт опубликованный «Сосновый берег» — welcome ведёт к первому тесту.
+  if (welcome && templates.length > 0 && published.length > 0) {
+    return (
+      <div className="px-4 lg:px-6">
+        <Card className="border-primary/40">
+          <CardHeader>
+            <CardTitle className="font-sans">Добро пожаловать</CardTitle>
+            <CardDescription>
+              Пример «Сосновый берег» уже в объекте и опубликован. Откройте тестовую ссылку с
+              телефона — так выглядит канал для гостя. Потом можно поменять бренд в конструкторе.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button type="button" disabled={pendingLink} onClick={issueTestLink}>
+              {pendingLink ? <Loader2Icon className="animate-spin" /> : null}
+              Тестовая ссылка
+            </Button>
+            {def ? (
+              <Button
+                type="button"
+                variant="outline"
+                nativeButton={false}
+                render={<Link to={editorTo} onClick={() => onWelcomeHandled?.()} />}
+              >
+                {ctorLabel}
+              </Button>
+            ) : null}
+            <Button type="button" variant="ghost" size="sm" onClick={() => onWelcomeHandled?.()}>
+              Позже
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (templates.length === 0) {
+    const addStarter = () => {
+      setPendingTemplate(true)
+      void createTemplate(code, { name: 'Пример шаблона: Сосновый берег', starter: true })
+        .then(async (data) => {
+          try {
+            await publishTemplate(code, data.template.code)
+            toast.success('Пример добавлен и опубликован — можно выдать тестовую ссылку')
+          } catch {
+            toast.success('Пример добавлен — опубликуйте его, чтобы выдать ссылку')
+          }
+          onWelcomeHandled?.()
+          return loadTemplates()
+        })
+        .catch((err) => {
+          toast.error(err instanceof Error ? err.message : 'Не удалось добавить пример')
+        })
+        .finally(() => setPendingTemplate(false))
+    }
+
+    const addBlank = () => {
+      setPendingTemplate(true)
+      void createTemplate(code, { name: 'Новый шаблон' })
+        .then((data) => {
+          toast.success(`Создан «${data.template.name}» — откройте конструктор`)
+          onWelcomeHandled?.()
+          return loadTemplates()
+        })
+        .catch((err) => {
+          toast.error(err instanceof Error ? err.message : 'Не удалось создать шаблон')
+        })
+        .finally(() => setPendingTemplate(false))
+    }
+
+    return (
+      <div className="px-4 lg:px-6">
+        <Card className={welcome ? 'border-primary/40' : undefined}>
+          <CardHeader>
+            <CardTitle className="font-sans">
+              {welcome ? 'Добро пожаловать — добавьте первый шаблон' : 'Добавьте первый шаблон'}
+            </CardTitle>
+            <CardDescription>
+              Без шаблона ссылку гостю не выдать. Пример «Сосновый берег» сразу можно
+              опубликовать и открыть с телефона. Или начните с пустого.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button type="button" disabled={pendingTemplate} onClick={addStarter}>
+              {pendingTemplate ? <Loader2Icon className="animate-spin" /> : null}
+              Добавить пример
+            </Button>
+            <Button type="button" variant="outline" disabled={pendingTemplate} onClick={addBlank}>
+              Пустой шаблон
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              nativeButton={false}
+              render={<Link to={templatesTo} />}
+            >
+              К шаблонам
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const steps: { id: string; text: string; to?: string; action?: 'test-link' | 'publish' }[] = []
+  if (published.length === 0) {
     steps.push({
       id: 'publish',
       text: 'Опубликуйте шаблон — без этого ссылку гостю не выдать.',
-      to: templatesTo,
+      action: 'publish',
     })
   }
   if (def && whatsApp === '') {
@@ -208,22 +376,14 @@ function SetupCard({
 
   if (steps.length === 0) return null
 
-  const issueTestLink = () => {
-    setPendingLink(true)
-    void createProjectLink(code, { name: 'Тест' })
-      .then((created) => {
-        const url = guestShareUrl(code, created.url)
-        return navigator.clipboard.writeText(url).then(
-          () => url,
-          () => url,
-        )
-      })
-      .then((url) => {
-        toast.success('Тестовая ссылка скопирована')
-        window.open(url, '_blank', 'noopener,noreferrer')
-      })
-      .catch((err) => toast.error(err instanceof Error ? err.message : 'Не удалось выдать ссылку'))
-      .finally(() => setPendingLink(false))
+  const publishDraft = () => {
+    if (!def) return
+    setPendingPublish(true)
+    void publishTemplate(code, def.code)
+      .then(() => loadTemplates())
+      .then(() => toast.success(`«${def.name}» опубликован`))
+      .catch((err) => toast.error(err instanceof Error ? err.message : 'Не удалось опубликовать'))
+      .finally(() => setPendingPublish(false))
   }
 
   return (
@@ -242,6 +402,12 @@ function SetupCard({
             ))}
           </ol>
           <div className="flex flex-wrap gap-2">
+            {published.length === 0 && def ? (
+              <Button size="sm" disabled={pendingPublish} onClick={publishDraft}>
+                {pendingPublish ? <Loader2Icon className="animate-spin" /> : null}
+                Опубликовать
+              </Button>
+            ) : null}
             {def ? (
               <Button variant="outline" size="sm" nativeButton={false} render={<Link to={editorTo} />}>
                 {ctorLabel}

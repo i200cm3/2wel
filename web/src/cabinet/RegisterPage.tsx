@@ -1,7 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { EditorLoginPage } from '@/components/EditorLoginPage'
+import { fetchProjects } from '@/lib/api'
 import { fetchRegistration, fetchSessionUser, registerEditor, resendAuthOtp, verifyAuthOtp } from '@/lib/auth'
+
+/** Всегда в объект с welcome — не через /app (AppIndex иначе срежет query). */
+function postRegisterPath(projectCode: string | null | undefined) {
+  const code = String(projectCode ?? '')
+    .trim()
+    .toLowerCase()
+  if (!code) return '/app'
+  return `/app/projects/${encodeURIComponent(code)}?welcome=1`
+}
 
 export function RegisterPage() {
   const navigate = useNavigate()
@@ -17,7 +27,7 @@ export function RegisterPage() {
   const [inviteRequired, setInviteRequired] = useState(false)
   const [otpEmail, setOtpEmail] = useState<string | null>(null)
   const [remember, setRemember] = useState(true)
-  const [createdCode, setCreatedCode] = useState<string | null>(null)
+  const createdCodeRef = useRef<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -40,6 +50,21 @@ export function RegisterPage() {
     return <Navigate to={next.startsWith('/') ? next : '/app'} replace />
   }
 
+  const goToProject = async (preferred?: string | null) => {
+    let code =
+      String(preferred ?? '').trim().toLowerCase() || createdCodeRef.current
+    if (!code) {
+      try {
+        const list = await fetchProjects()
+        code = list.projects[0]?.code ?? null
+      } catch {
+        code = null
+      }
+    }
+    if (code) createdCodeRef.current = code
+    navigate(postRegisterPath(code), { replace: true })
+  }
+
   return (
     <EditorLoginPage
       mode={otpEmail ? 'otp' : mode}
@@ -54,6 +79,8 @@ export function RegisterPage() {
           setError('Нужна ссылка-приглашение')
           return
         }
+        const normalized = projectCode.trim().toLowerCase() || null
+        createdCodeRef.current = normalized
         setPending(true)
         setError(null)
         setNotice(null)
@@ -61,17 +88,12 @@ export function RegisterPage() {
         void registerEditor(email, password, projectName, projectCode, inviteToken, nextRemember)
           .then((result) => {
             if ('needsOtp' in result && result.needsOtp) {
-              setCreatedCode(result.projectCode ?? null)
+              createdCodeRef.current = result.projectCode ?? normalized
               setOtpEmail(result.email)
               setNotice('Код отправили на почту.')
               return
             }
-            const dest = next.startsWith('/app/projects/')
-              ? next
-              : result.projectCode
-                ? `/app/projects/${result.projectCode}`
-                : '/app'
-            navigate(dest.startsWith('/') ? dest : '/app', { replace: true })
+            return goToProject(result.projectCode ?? normalized)
           })
           .catch((err) => setError(err instanceof Error ? err.message : 'Не удалось зарегистрироваться'))
           .finally(() => setPending(false))
@@ -81,14 +103,7 @@ export function RegisterPage() {
         setPending(true)
         setError(null)
         void verifyAuthOtp(otpEmail, 'register', code, remember)
-          .then(() => {
-            const dest = next.startsWith('/app/projects/')
-              ? next
-              : createdCode
-                ? `/app/projects/${createdCode}`
-                : '/app'
-            navigate(dest.startsWith('/') ? dest : '/app', { replace: true })
-          })
+          .then(() => goToProject(createdCodeRef.current))
           .catch((err) => setError(err instanceof Error ? err.message : 'Неверный код'))
           .finally(() => setPending(false))
       }}

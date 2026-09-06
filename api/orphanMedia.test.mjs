@@ -12,6 +12,7 @@ const {
   listOrphanProjectMedia,
   mediaSrcsFromConfigs,
   purgeProjectMediaSrcs,
+  removeProjectMedia,
 } = await import('./projectMedia.mjs')
 
 function writeMedia(code, rel, body = 'x') {
@@ -71,4 +72,19 @@ test('purgeProjectMediaSrcs deletes orphans and rebuilds library manifest', () =
   )
   assert.equal(manifest.total, 1)
   assert.equal(manifest.items[0].src, keep)
+})
+
+test('removeProjectMedia deletes library music and tts under the project', async () => {
+  const code = 'c-remove'
+  writeMedia(code, 'library/gallery/a.jpg', 'img')
+  writeMedia(code, 'music/ambient.mp3', 'music')
+  writeMedia(code, 'tts/voice.mp3', 'tts')
+  const starter = path.join(tmp, 'media', 'tts', 'starter', 'keep.mp3')
+  fs.mkdirSync(path.dirname(starter), { recursive: true })
+  fs.writeFileSync(starter, 'shared')
+  const result = await removeProjectMedia(code)
+  assert.equal(result.ok, true)
+  assert.equal(result.removed, true)
+  assert.ok(!fs.existsSync(path.join(tmp, 'media', 'projects', code)))
+  assert.ok(fs.existsSync(starter))
 })

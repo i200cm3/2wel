@@ -16,6 +16,7 @@ import { LinkRawSourceDraft, LinkRawSourceItem, type RawSourcePayload } from '@/
 import { isAmoCallHiddenFromMainList, isAmoCallSourceRef, isManualNonTargetSource } from '@/cabinet/linkRawSourceKinds'
 import { LinkAnalyticsCharts } from '@/components/link-analytics-charts'
 import { LinkAssemblyBlockItem } from '@/components/link-assembly-block-item'
+import { Combobox } from '@/components/Combobox'
 import { PlanUsageBanner } from '@/components/plan-usage'
 import { SingleTagCombobox, TagsCombobox } from '@/components/TagsCombobox'
 import { Button } from '@/components/ui/button'
@@ -89,7 +90,7 @@ import {
   type TagOption,
 } from '@/lib/blockMetaTags'
 import { isPropertyConfig } from '@/hooks/usePropertyConfig'
-import { amoLeadUrl } from '@/lib/amo'
+import { amoLeadUrl, emailFromDemoExternalId, isMarketingDemoExternalId } from '@/lib/amo'
 import { guestShareUrl } from '@/lib/utils'
 import { defaultBlockMeta, normalizeProperty, type PropertyConfig } from '@/types/story'
 import { formatRangeLabel } from '@/lib/statsRange'
@@ -127,6 +128,32 @@ function AmoLeadLink({
       {leadId}
     </a>
   )
+}
+
+/** CRM id сделки или email демо с лендинга (`demo:…`). */
+function ExternalRefCell({
+  externalId,
+  baseDomain,
+  onClick,
+}: {
+  externalId: string
+  baseDomain: string | null
+  onClick?: (event: MouseEvent) => void
+}) {
+  const demoEmail = emailFromDemoExternalId(externalId)
+  if (demoEmail) {
+    return (
+      <a
+        href={`mailto:${demoEmail}`}
+        className="text-primary block truncate text-xs underline-offset-4 hover:underline"
+        title="Почта демо с лендинга"
+        onClick={onClick}
+      >
+        {demoEmail}
+      </a>
+    )
+  }
+  return <AmoLeadLink leadId={externalId} baseDomain={baseDomain} onClick={onClick} />
 }
 
 function formatDt(value: string | null) {
@@ -486,7 +513,8 @@ export function LinksPage() {
     const q = query.trim().toLowerCase()
     if (!q) return links
     return links.filter((link) => {
-      const hay = `${link.guestName} ${link.externalId ?? ''} ${link.templateName} ${link.templateCode} ${link.publicId} ${link.summaryPreview?.dates ?? ''} ${link.summaryPreview?.topics ?? ''}`
+      const demoEmail = emailFromDemoExternalId(link.externalId)
+      const hay = `${link.guestName} ${link.externalId ?? ''} ${demoEmail ?? ''} ${link.templateName} ${link.templateCode} ${link.publicId} ${link.summaryPreview?.dates ?? ''} ${link.summaryPreview?.topics ?? ''}`
       return hay.toLowerCase().includes(q)
     })
   }, [links, query])
@@ -818,19 +846,18 @@ export function LinksPage() {
           </label>
           <label className="flex min-w-[8.5rem] flex-1 basis-36 flex-col gap-1 text-sm">
             <span className="text-muted-foreground">Шаблон</span>
-            <NativeSelect
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
+            <Combobox
+              aria-label="Шаблон"
+              placeholder="Выбрать шаблон"
               disabled={pending || templates.length === 0}
-              className="h-8"
-            >
-              {templates.map((tpl) => (
-                <NativeSelectOption key={tpl.id} value={tpl.code}>
-                  {tpl.name}
-                  {tpl.status !== 'published' ? ' — не опубликован' : ''}
-                </NativeSelectOption>
-              ))}
-            </NativeSelect>
+              value={category}
+              onValueChange={setCategory}
+              items={templates.map((tpl) => ({
+                value: tpl.code,
+                label:
+                  tpl.status !== 'published' ? `${tpl.name} — не опубликован` : tpl.name,
+              }))}
+            />
           </label>
           <Button type="submit" className="shrink-0" disabled={pending || !name.trim() || templates.length === 0}>
             {pending ? 'Выдача…' : 'Выдать'}
@@ -860,7 +887,7 @@ export function LinksPage() {
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Имя, шаблон, даты"
+          placeholder="Имя, почта, шаблон, даты"
         />
       </label>
       <div className="min-w-0 max-w-full overflow-hidden rounded-xl border md:overflow-hidden">
@@ -894,6 +921,7 @@ export function LinksPage() {
             <div className="divide-y md:hidden">
               {filtered.map((link) => {
                 const url = guestShareUrl(code ?? '', link.url)
+                const demoEmail = emailFromDemoExternalId(link.externalId)
                 return (
                   <div
                     key={link.id}
@@ -905,6 +933,7 @@ export function LinksPage() {
                         <p className="truncate font-medium">{link.guestName}</p>
                         <p className="text-muted-foreground truncate text-xs">
                           {link.templateName} · открытий: {link.openCount}
+                          {demoEmail ? ` · ${demoEmail}` : ''}
                         </p>
                       </div>
                       <div className="flex shrink-0 items-center gap-0.5" onClick={(event) => event.stopPropagation()}>
@@ -967,7 +996,7 @@ export function LinksPage() {
                   <TableHead className="w-[18%]">Имя</TableHead>
                   <TableHead className="w-[16%] max-lg:hidden">Шаблон</TableHead>
                   <TableHead className="w-[18%] max-md:hidden">Даты / темы</TableHead>
-                  <TableHead className="w-[10%] max-lg:hidden">CRM</TableHead>
+                  <TableHead className="w-[10%] max-lg:hidden">CRM / почта</TableHead>
                   <TableHead className="w-[16%]">Ссылка</TableHead>
                   <TableHead className="w-[7%] max-md:hidden">Открытий</TableHead>
                   <TableHead className="w-[10%] max-md:hidden">Создана</TableHead>
@@ -989,6 +1018,14 @@ export function LinksPage() {
                       <TableCell className="max-w-0 font-medium">
                         <span className="inline-flex max-w-full items-center gap-1.5">
                           <span className="truncate">{link.guestName}</span>
+                          {isMarketingDemoExternalId(link.externalId) ? (
+                            <span
+                              className="bg-muted text-muted-foreground shrink-0 rounded px-1 text-[10px] font-normal tracking-wide uppercase"
+                              title="Демо с лендинга"
+                            >
+                              демо
+                            </span>
+                          ) : null}
                           {link.hasRawSources ? (
                             <span
                               className="bg-muted text-muted-foreground shrink-0 rounded px-1 text-[10px] font-normal tracking-wide uppercase"
@@ -1016,8 +1053,8 @@ export function LinksPage() {
                       <TableCell className="max-w-0 max-lg:hidden">
                         {link.externalId ? (
                           <div className="truncate">
-                            <AmoLeadLink
-                              leadId={link.externalId}
+                            <ExternalRefCell
+                              externalId={link.externalId}
                               baseDomain={amoBaseDomain}
                               onClick={(event) => event.stopPropagation()}
                             />
@@ -1188,10 +1225,15 @@ export function LinksPage() {
                         </p>
                       </div>
                       <div className="rounded-lg border px-3 py-2.5">
-                        <p className="text-muted-foreground text-xs">Сделка amo</p>
+                        <p className="text-muted-foreground text-xs">
+                          {emailFromDemoExternalId(detail.externalId) ? 'Почта (демо)' : 'Сделка amo'}
+                        </p>
                         <p className="mt-0.5 font-medium">
                           {detail.externalId ? (
-                            <AmoLeadLink leadId={detail.externalId} baseDomain={amoBaseDomain} />
+                            <ExternalRefCell
+                              externalId={detail.externalId}
+                              baseDomain={amoBaseDomain}
+                            />
                           ) : (
                             '—'
                           )}
@@ -1297,7 +1339,7 @@ export function LinksPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="font-sans">Диалоги</CardTitle>
-                    {detail.externalId ? (
+                    {detail.externalId && !isMarketingDemoExternalId(detail.externalId) ? (
                       <CardAction>
                         <Button
                           type="button"
@@ -1352,6 +1394,14 @@ export function LinksPage() {
                       {!detail.externalId ? (
                         <p className="text-muted-foreground text-sm">
                           Нет externalId (id сделки amo) — звонки подтянутся после webhook.
+                        </p>
+                      ) : isMarketingDemoExternalId(detail.externalId) ? (
+                        <p className="text-muted-foreground text-sm">
+                          Демо с лендинга
+                          {emailFromDemoExternalId(detail.externalId)
+                            ? ` · ${emailFromDemoExternalId(detail.externalId)}`
+                            : ''}
+                          — звонков amo здесь не будет.
                         </p>
                       ) : amoCallSources.length === 0 ? (
                         <p className="text-muted-foreground text-sm">

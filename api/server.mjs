@@ -53,6 +53,7 @@ import {
 } from './access.mjs'
 import { issueEmailOtp, isOtpPurpose, verifyEmailOtp } from './otp.mjs'
 import { getAdminTtsUsageOverview } from './ttsUsage.mjs'
+import { createDemoGuestLead } from './demoLead.mjs'
 
 const PORT = Number(process.env.PORT || 3000)
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024
@@ -226,6 +227,34 @@ const server = http.createServer(async (req, res) => {
     const publicTts = url.match(/^\/api\/public\/tts\/([^/]+)\/?$/)
     if (publicTts) {
       handlePublicTts(req, res, decodeURIComponent(publicTts[1]), json)
+      return
+    }
+
+    if (url === '/api/public/demo' && req.method === 'POST') {
+      const ip = clientIp(req)
+      const limited = consumeRateLimit(`demo:${ip}`, { windowMs: 60 * 60 * 1000, max: 8 })
+      if (!limited.ok) {
+        rateLimited(res, json, limited.retryAfterSec, 'Слишком много запросов демо. Подождите.')
+        return
+      }
+      const raw = await readBuffer(req, 16 * 1024)
+      let payload
+      try {
+        payload = JSON.parse(raw.toString('utf8') || '{}')
+      } catch {
+        json(res, 400, { error: 'invalid json' })
+        return
+      }
+      const result = await createDemoGuestLead({
+        name: payload?.name,
+        email: payload?.email,
+        source: 'offer_demo',
+      })
+      if (!result.ok) {
+        json(res, result.status || 500, { error: result.error || 'demo failed' })
+        return
+      }
+      json(res, 200, { ok: true, url: result.url, mailed: result.mailed })
       return
     }
 

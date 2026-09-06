@@ -56,6 +56,19 @@ type Props = {
   ttsAudioRef?: { current: HTMLAudioElement | null }
   /** Первые кадры: done/total, чтобы гость видел ход загрузки */
   onMediaProgress?: (done: number, total: number) => void
+  /** Прогресс шкалы блока (для полосок / «Далее» в презентации) */
+  onPlaybackProgress?: (progress: PlaybackProgress) => void
+  /** Инкремент → досрочно завершить весь блок (onEnded) */
+  skipRequest?: number
+}
+
+export type PlaybackProgress = {
+  clipIndex: number
+  clipCount: number
+  /** 0..1 внутри текущего клипа */
+  clipProgress: number
+  timelineSec: number
+  durationSec: number
 }
 
 function InlineEdit({
@@ -165,6 +178,8 @@ export function StoryPlayer({
   outroTtsSrc,
   ttsAudioRef,
   onMediaProgress,
+  onPlaybackProgress,
+  skipRequest = 0,
 }: Props) {
   const rootRef = useRef<HTMLDivElement>(null)
   const internalTtsRef = useRef<HTMLAudioElement | null>(null)
@@ -172,6 +187,10 @@ export function StoryPlayer({
   const ownsTtsAudio = !ttsAudioRef
   const outroTtsSrcRef = useRef(outroTtsSrc)
   outroTtsSrcRef.current = outroTtsSrc
+  const skipFnRef = useRef<(() => void) | null>(null)
+  const appliedSkipRef = useRef(skipRequest)
+  const skipRequestRef = useRef(skipRequest)
+  skipRequestRef.current = skipRequest
   const [viewAspect, setViewAspect] = useState(VIEW_ASPECT)
 
   const safeClips = useMemo(() => {
@@ -219,6 +238,7 @@ export function StoryPlayer({
   const onClipChangeRef = useRef(onClipChange)
   const onTtsPlayingChangeRef = useRef(onTtsPlayingChange)
   const onMediaProgressRef = useRef(onMediaProgress)
+  const onPlaybackProgressRef = useRef(onPlaybackProgress)
   const ttsVolumeRef = useRef(ttsVolume)
   const pausedRef = useRef(paused)
   const imgElsRef = useRef(new Map<string, HTMLImageElement>())
@@ -228,8 +248,15 @@ export function StoryPlayer({
   onClipChangeRef.current = onClipChange
   onTtsPlayingChangeRef.current = onTtsPlayingChange
   onMediaProgressRef.current = onMediaProgress
+  onPlaybackProgressRef.current = onPlaybackProgress
   ttsVolumeRef.current = ttsVolume
   pausedRef.current = paused
+
+  useEffect(() => {
+    if (!skipRequest || skipRequest === appliedSkipRef.current) return
+    appliedSkipRef.current = skipRequest
+    skipFnRef.current?.()
+  }, [skipRequest])
 
   const notifyDecoded = (clipId: string) => {
     decodedIdsRef.current.add(clipId)
@@ -467,6 +494,8 @@ export function StoryPlayer({
     let ttsGen = 0
     /** Инкремент при каждом playTts — предыдущий вызов завершается без pause чужого звука */
     let ttsPlayGen = 0
+    /** Отмена текущего playTts (skip / stop) — иначе Promise висит до watchdog */
+    let activeTtsCancel: (() => void) | null = null
     /**
      * Cut: пока старый кадр сверху (ждём decode), шкалу не двигаем —
      * иначе титр/TTS следующего cue срабатывают на ещё видимом предыдущем слайде.
@@ -496,6 +525,11 @@ export function StoryPlayer({
     }
 
     const stopTts = () => {
+      if (activeTtsCancel) {
+        activeTtsCancel()
+        activeTtsCancel = null
+        return
+      }
       const audio = ttsRef.current
       ttsPlayGen += 1
       if (!audio) return
@@ -535,6 +569,7 @@ export function StoryPlayer({
         const finish = (reason: 'ended' | 'error' | 'cancel' = 'cancel') => {
           if (settled) return
           settled = true
+          if (activeTtsCancel === cancelSelf) activeTtsCancel = null
           window.clearTimeout(startTimer)
           window.clearTimeout(watchdog)
           audio.removeEventListener('ended', onEnded)
@@ -560,6 +595,8 @@ export function StoryPlayer({
           flushTtsWaiters()
           resolve()
         }
+        const cancelSelf = () => finish('cancel')
+        activeTtsCancel = cancelSelf
 
         const onPlaying = () => {
           started = true
@@ -703,6 +740,7 @@ export function StoryPlayer({
      * TTS по startSec; фразу доигрываем целиком.
      * Пока mp3 звучит дольше окна cue — шкалу держим на конце cue (слайд + титр ждут).
      * Иначе картинки убегают на несколько секунд при серии фраз.
+     * После skip — пропускаем cues, которые уже «позади» шкалы.
      */
     const playSequenceTts = async () => {
       const gen = ++ttsGen
@@ -710,9 +748,13 @@ export function StoryPlayer({
         .filter((c): c is StoryCue & { ttsSrc: string } => Boolean(c.ttsSrc))
         .sort((a, b) => a.startSec - b.startSec || a.id.localeCompare(b.id))
       for (const cue of list) {
+        if (cancelled || gen !== ttsGen) return
+        // Уже прошли старт фразы (seek / «Далее») — не доигрываем прошлое.
+        if (cue.startSec * 1000 < nowElapsedMs() - 80) continue
         const waitMs = cue.startSec * 1000 - nowElapsedMs()
         if (waitMs > 0) await sleep(waitMs)
         if (cancelled || gen !== ttsGen) return
+        if (cue.startSec * 1000 < nowElapsedMs() - 80) continue
         ttsHoldUntilMs = Math.max(0, (cue.startSec + cue.durationSec) * 1000 - 1)
         await playTts(cue.ttsSrc)
         ttsHoldUntilMs = null
@@ -850,7 +892,23 @@ export function StoryPlayer({
       }
       return 0
     }
-    const ttsChainTail = playSequenceTts()
+
+    const reportProgress = (clipIdx: number, t: number) => {
+      const count = safeClips.length
+      const start = starts[clipIdx] ?? 0
+      const hold = clipHoldSec(safeClips[clipIdx]!)
+      const clipProgress =
+        hold > 0 ? Math.min(1, Math.max(0, (t - start) / hold)) : 1
+      onPlaybackProgressRef.current?.({
+        clipIndex: clipIdx,
+        clipCount: count,
+        clipProgress,
+        timelineSec: t,
+        durationSec: seqEndSec,
+      })
+    }
+
+    let ttsChainTail = playSequenceTts()
 
     const finishSequence = async () => {
       if (endedRef.current || cancelled) return
@@ -862,12 +920,38 @@ export function StoryPlayer({
       if (cancelled || endedRef.current) return
       endedRef.current = true
       clearExit()
+      skipFnRef.current = null
       const outro = outroTtsSrcRef.current?.trim()
       if (outro) {
         await playTts(outro, { preserve: true })
         if (cancelled) return
       }
       onEndedRef.current()
+    }
+
+    const skipToEndOfBlock = () => {
+      if (endedRef.current || cancelled) return
+      ttsGen += 1
+      stopTts()
+      ttsHoldUntilMs = null
+      holdFreeze = false
+      window.clearTimeout(dissolveTimer)
+      const last = Math.max(0, safeClips.length - 1)
+      if (i !== last) {
+        goTo(i, last)
+        i = last
+      }
+      seqElapsedMs = seqEndSec * 1000
+      seqMark = performance.now()
+      setTimelineSec(seqEndSec)
+      reportProgress(last, seqEndSec)
+      void finishSequence()
+    }
+    skipFnRef.current = skipToEndOfBlock
+    const pendingSkip = skipRequestRef.current
+    if (pendingSkip > appliedSkipRef.current) {
+      appliedSkipRef.current = pendingSkip
+      skipToEndOfBlock()
     }
 
     const tick = () => {
@@ -881,6 +965,7 @@ export function StoryPlayer({
         goTo(i, next)
         i = next
       }
+      reportProgress(i, t)
       if (t + 0.001 < seqEndSec) return
       if (ttsActive) return
       if (loop) {
@@ -893,7 +978,8 @@ export function StoryPlayer({
         goTo(i, 0)
         i = 0
         setTimelineSec(0)
-        void playSequenceTts()
+        reportProgress(0, 0)
+        ttsChainTail = playSequenceTts()
         return
       }
       window.clearInterval(captionIv)
@@ -904,6 +990,7 @@ export function StoryPlayer({
     captionIv = window.setInterval(tick, 50)
     return () => {
       cancelled = true
+      skipFnRef.current = null
       window.clearTimeout(dissolveTimer)
       window.clearInterval(captionIv)
       for (const id of pendingCueTimers) window.clearTimeout(id)

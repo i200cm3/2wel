@@ -1,5 +1,6 @@
 import { query } from './db.js'
 import { hashPassword, verifyPassword } from './password.js'
+import { removeProjectMedia } from './projectMedia.mjs'
 import {
   applyDuePlanChanges,
   periodLinkCounts,
@@ -272,7 +273,15 @@ export async function setUserBlocked(actorId, targetId, blocked) {
 export async function deleteUserAccount(actorId, targetId) {
   const checked = await assertAdminTarget(actorId, targetId)
   if (!checked.ok) return checked
+  const { rows } = await query(`SELECT code FROM projects WHERE user_id = $1`, [targetId])
   await query(`DELETE FROM users WHERE id = $1`, [targetId])
+  for (const row of rows) {
+    try {
+      await removeProjectMedia(row.code)
+    } catch (err) {
+      console.error('removeProjectMedia failed', row.code, err)
+    }
+  }
   return { ok: true }
 }
 

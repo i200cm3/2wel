@@ -18,6 +18,7 @@ type Props = {
   onValueChange: (value: string) => void
   placeholder?: string
   emptyText?: string
+  disabled?: boolean
   'aria-label'?: string
 }
 
@@ -27,6 +28,7 @@ export function Combobox({
   onValueChange,
   placeholder = 'Выбрать…',
   emptyText = 'Ничего не найдено',
+  disabled = false,
   'aria-label': ariaLabel,
 }: Props) {
   const selected = items.find((item) => item.value === value) ?? null
@@ -38,12 +40,14 @@ export function Combobox({
       onValueChange={(item) => {
         if (item) onValueChange(item.value)
       }}
-      itemToStringValue={(item) => item.value}
+      itemToStringValue={(item) => item.label}
+      disabled={disabled}
     >
       <ComboboxInput
         className="w-full"
         placeholder={placeholder}
         aria-label={ariaLabel ?? placeholder}
+        disabled={disabled}
       />
       <ComboboxContent className="w-(--anchor-width)">
         <ComboboxEmpty>{emptyText}</ComboboxEmpty>

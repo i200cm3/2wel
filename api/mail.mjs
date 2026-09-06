@@ -112,6 +112,42 @@ export async function sendOtpMail(to, code, purpose) {
   return sendMail(otpMail({ to: address, code, purpose }))
 }
 
+export function demoGuestMail({ to, name, link, env = mailEnv() }) {
+  const guest = String(name ?? '').trim() || 'гость'
+  const text = [
+    `${guest}, здравствуйте!`,
+    '',
+    'Ваша персональная демо-страница 2wel:',
+    '',
+    link,
+    '',
+    'Откройте ссылку с телефона — так её обычно видит гость.',
+    '',
+    'Если письмо пришло случайно, просто удалите его.',
+  ].join('\n')
+  const safeLink = String(link).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+  const safeName = String(guest).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  const html = `<p>${safeName}, здравствуйте!</p>
+<p>Ваша персональная демо-страница 2wel:</p>
+<p><a href="${safeLink}">${safeLink}</a></p>
+<p>Откройте ссылку с телефона — так её обычно видит гость.</p>
+<p>Если письмо пришло случайно, просто удалите его.</p>`
+  return {
+    from: formatFrom(env),
+    to,
+    subject: 'Ваша демо-страница 2wel',
+    text,
+    html,
+  }
+}
+
+export async function sendDemoGuestMail(to, { name, link }) {
+  const address = String(to ?? '').trim()
+  if (!address) return { ok: false, skipped: true, error: 'no recipient' }
+  if (!link) return { ok: false, skipped: true, error: 'no link' }
+  return sendMail(demoGuestMail({ to: address, name, link }))
+}
+
 async function sendMail(message) {
   const env = mailEnv()
   if (!smtpReady(env)) return { ok: false, skipped: true, error: 'smtp not configured' }
