@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { EllipsisVertical, GripVertical, Play, Plus, Settings } from 'lucide-react'
+import { ChevronDown, EllipsisVertical, GripVertical, Play, Plus, Settings } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
 import {
   Dialog,
   DialogContent,
@@ -450,6 +455,7 @@ export function ConstructorV2({
   })
   const [summaryImportJson, setSummaryImportJson] = useState('')
   const [summaryImportError, setSummaryImportError] = useState<string | null>(null)
+  const [developerJsonOpen, setDeveloperJsonOpen] = useState(false)
   const [dragFlowId, setDragFlowId] = useState<string | null>(null)
   const [dropFlowIndex, setDropFlowIndex] = useState<number | null>(null)
   const flowDragFromGrip = useRef(false)
@@ -1775,7 +1781,7 @@ export function ConstructorV2({
                           size="sm"
                           onClick={() => setConfig(applyDerivedFlow(config, derivedFlowIds))}
                         >
-                          Применить mock-сборку к flow
+                          Записать этот порядок в шаблон
                         </Button>
                       ) : null}
                     </div>
@@ -1786,84 +1792,28 @@ export function ConstructorV2({
               {adaptiveEnabled ? (
                 <Card className="overflow-hidden xl:col-start-3">
                   <CardHeader>
-                    <CardTitle>Mock summary</CardTitle>
-                    {/* <CardDescription>{GUEST_ASSEMBLY_FIELDS_HINT}</CardDescription> */}
+                    <CardTitle>Профиль гостя</CardTitle>
+                    <CardDescription>
+                      Как при выдаче ссылки. Превью сборки обновится сразу.
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="grid gap-3">
-                    <div className="grid gap-2 rounded-lg border border-dashed p-3">
-                      <label className="grid gap-1 text-sm">
-                        <span className="text-muted-foreground">Импорт JSON</span>
-                        <Textarea
-                          value={summaryImportJson}
-                          onChange={(e) => {
-                            setSummaryImportJson(e.target.value)
-                            if (summaryImportError) setSummaryImportError(null)
-                          }}
-                          placeholder={`{\n  "guestName": "Иван",\n  "dates": "с 19 сентября",\n  "partyType": "solo",\n  "room": "single",\n  "topics": "room, food, price",\n  "objections": "dates-not-fixed, room-fit",\n  "confidence": "0.75",\n  "fillRemaining": "soft"\n}`}
-                          className="min-h-[140px] font-mono text-xs"
-                        />
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        <Button
-                          type="button"
-                          size="sm"
-                          onClick={() => {
-                            const result = parseGuestSummaryImport(summaryImportJson)
-                            if (!result.ok) {
-                              setSummaryImportError(result.error)
-                              return
-                            }
-                            setSummary(result.summary)
-                            setSummaryImportError(null)
-                            setSummaryImportJson(guestSummaryToImportJson(result.summary))
-                          }}
-                        >
-                          Импортировать
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          variant="outline"
-                          onClick={() => {
-                            setSummaryImportJson(guestSummaryToImportJson(summary))
-                            setSummaryImportError(null)
-                          }}
-                        >
-                          Подставить текущий
-                        </Button>
-                      </div>
-                      {summaryImportError ? (
-                        <p className="text-destructive text-xs">{summaryImportError}</p>
-                      ) : (
-                        <p className="text-muted-foreground text-xs">
-                          Лишние ключи (evidence, sources…) игнорируются. name → guestName, topics/objections можно массивом.
-                        </p>
-                      )}
-                    </div>
-                    <label className="grid gap-1 text-sm">
-                      <span className="text-muted-foreground">Дожим непокрытых тем</span>
-                      <NativeSelect
-                        value={summary.fillRemaining}
-                        onChange={(e) =>
-                          setSummary((prev) => ({
-                            ...prev,
-                            fillRemaining: e.target.value as GuestSummary['fillRemaining'],
-                          }))
-                        }
-                        className="w-full"
-                        title="Если после основной сборки осталось место — добавить блоки из групп, о которых ещё не говорили (лечение, питание, wellness…)"
-                      >
-                        <NativeSelectOption value="off">Выкл — только по параметрам гостя</NativeSelectOption>
-                        <NativeSelectOption value="soft">Мягкий — до 3 блоков</NativeSelectOption>
-                        <NativeSelectOption value="aggressive">До лимита блоков / секунд</NativeSelectOption>
-                      </NativeSelect>
-                    </label>
                     <label className="grid gap-1 text-sm">
                       <span className="text-muted-foreground">Имя гостя</span>
                       <Input
                         value={summary.guestName}
                         onChange={(e) => setSummary((prev) => ({ ...prev, guestName: e.target.value }))}
                         placeholder="Пусто — как будто amo не передала имя"
+                      />
+                    </label>
+                    <label className="grid gap-1 text-sm">
+                      <span className="text-muted-foreground">Тип компании</span>
+                      <SingleTagCombobox
+                        options={AUDIENCE_TAG_OPTIONS}
+                        value={summary.partyType}
+                        onValueChange={(partyType) => setSummary((prev) => ({ ...prev, partyType }))}
+                        placeholder="Выберите аудиторию…"
+                        aria-label="Тип компании"
                       />
                     </label>
                     <label className="grid gap-1 text-sm">
@@ -1882,16 +1832,6 @@ export function ConstructorV2({
                         value={summary.dates}
                         onChange={(e) => setSummary((prev) => ({ ...prev, dates: e.target.value }))}
                         placeholder="с 19 сентября на 14 дней"
-                      />
-                    </label>
-                    <label className="grid gap-1 text-sm">
-                      <span className="text-muted-foreground">Тип компании</span>
-                      <SingleTagCombobox
-                        options={AUDIENCE_TAG_OPTIONS}
-                        value={summary.partyType}
-                        onValueChange={(partyType) => setSummary((prev) => ({ ...prev, partyType }))}
-                        placeholder="Выберите аудиторию…"
-                        aria-label="Тип компании"
                       />
                     </label>
                     <label className="grid gap-1 text-sm">
@@ -1921,6 +1861,24 @@ export function ConstructorV2({
                       />
                     </label>
                     <label className="grid gap-1 text-sm">
+                      <span className="text-muted-foreground">Дожим непокрытых тем</span>
+                      <NativeSelect
+                        value={summary.fillRemaining}
+                        onChange={(e) =>
+                          setSummary((prev) => ({
+                            ...prev,
+                            fillRemaining: e.target.value as GuestSummary['fillRemaining'],
+                          }))
+                        }
+                        className="w-full"
+                        title="Если после основной сборки осталось место — добавить блоки из групп, о которых ещё не говорили (лечение, питание, wellness…)"
+                      >
+                        <NativeSelectOption value="off">Выкл — только по параметрам гостя</NativeSelectOption>
+                        <NativeSelectOption value="soft">Мягкий — до 3 блоков</NativeSelectOption>
+                        <NativeSelectOption value="aggressive">До лимита блоков / секунд</NativeSelectOption>
+                      </NativeSelect>
+                    </label>
+                    <label className="grid gap-1 text-sm">
                       <span className="text-muted-foreground">Уверенность</span>
                       <Input
                         type="number"
@@ -1934,6 +1892,74 @@ export function ConstructorV2({
                         placeholder="0.8"
                       />
                     </label>
+                    <Collapsible
+                      className="group/dev"
+                      open={developerJsonOpen}
+                      onOpenChange={(open) => {
+                        setDeveloperJsonOpen(open)
+                        if (open) {
+                          setSummaryImportJson(guestSummaryToImportJson(summary))
+                          setSummaryImportError(null)
+                        }
+                      }}
+                    >
+                      <CollapsibleTrigger className="text-muted-foreground flex w-full items-center justify-between gap-1 text-sm outline-none hover:text-foreground">
+                        Для разработчиков
+                        <ChevronDown className="size-3.5 transition-transform group-data-[open]/dev:rotate-180" />
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="overflow-hidden pt-2">
+                        <div className="grid gap-2 rounded-lg border border-dashed p-3">
+                          <label className="grid gap-1 text-sm">
+                            <span className="text-muted-foreground">JSON профиля</span>
+                            <Textarea
+                              value={summaryImportJson}
+                              onChange={(e) => {
+                                setSummaryImportJson(e.target.value)
+                                if (summaryImportError) setSummaryImportError(null)
+                              }}
+                              placeholder={`{\n  "guestName": "Иван",\n  "dates": "с 19 сентября",\n  "partyType": "solo",\n  "room": "single",\n  "topics": "room, food, price",\n  "objections": "dates-not-fixed, room-fit",\n  "confidence": "0.75",\n  "fillRemaining": "soft"\n}`}
+                              className="min-h-[140px] font-mono text-xs"
+                            />
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => {
+                                const result = parseGuestSummaryImport(summaryImportJson)
+                                if (!result.ok) {
+                                  setSummaryImportError(result.error)
+                                  return
+                                }
+                                setSummary(result.summary)
+                                setSummaryImportError(null)
+                                setSummaryImportJson(guestSummaryToImportJson(result.summary))
+                              }}
+                            >
+                              Импортировать
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setSummaryImportJson(guestSummaryToImportJson(summary))
+                                setSummaryImportError(null)
+                              }}
+                            >
+                              Подставить текущий
+                            </Button>
+                          </div>
+                          {summaryImportError ? (
+                            <p className="text-destructive text-xs">{summaryImportError}</p>
+                          ) : (
+                            <p className="text-muted-foreground text-xs">
+                              Лишние ключи (evidence, sources…) игнорируются. name → guestName, topics/objections можно массивом.
+                            </p>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
                   </CardContent>
                 </Card>
               ) : null}
