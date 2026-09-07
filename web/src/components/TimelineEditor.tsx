@@ -146,17 +146,17 @@ import {
   PX_PER_SEC_MIN,
   PX_PER_SEC_STEP,
   TIMELINE_LABEL_PX,
-  TRACK_ADD_GAP,
-  TRACK_ADD_PX,
   clipAtTime,
   copyText,
   cueEndSec,
+  fitTimelinePxPerSec,
   isModCode,
   isTypingTarget,
   packCuesLeftToRight,
   resolveCueOverlaps,
   sliderNumber,
   syncClipsToCues,
+  timelineAddTailPx,
 } from './editor/timelineMath'
 import './TimelineEditor.css'
 
@@ -1919,11 +1919,39 @@ export function TimelineEditor({
     [cues],
   )
   const timelineWidth = useMemo(() => {
-    const addTail = TRACK_ADD_GAP + TRACK_ADD_PX + 12
+    const addTail = timelineAddTailPx()
     const clipsPx = total * pxPerSec
     const cuesPx = lastCueEndSec * pxPerSec
     return Math.max(240, Math.max(clipsPx, cuesPx) + addTail)
   }, [total, lastCueEndSec, pxPerSec])
+
+  /** При открытии блока подогнать масштаб под длину контента (в пределах min/max). */
+  useLayoutEffect(() => {
+    const root = reelScrollRef.current
+    if (!root) return
+
+    const contentSec = Math.max(total, lastCueEndSec)
+    const applyFit = () => {
+      const width = root.clientWidth
+      if (width < 40) return false
+      const next =
+        contentSec > 0 ? fitTimelinePxPerSec(contentSec, width) : PX_PER_SEC_DEFAULT
+      zoomAnchorRef.current = null
+      pxPerSecRef.current = next
+      setPxPerSec(next)
+      root.scrollLeft = 0
+      return true
+    }
+
+    if (applyFit()) return
+    const ro = new ResizeObserver(() => {
+      if (applyFit()) ro.disconnect()
+    })
+    ro.observe(root)
+    return () => ro.disconnect()
+    // Только смена блока — не пересчитывать при правках длительности.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- seqId open only
+  }, [seqId])
 
   const blockPreviewSeq = blockPreviewId ? config.sequences[blockPreviewId] : null
   const filledBlockPreviewCues = useMemo(

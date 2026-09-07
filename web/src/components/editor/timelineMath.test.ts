@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { clipResizeFromDelta, syncClipsToCues } from './timelineMath.ts'
+import {
+  clipResizeFromDelta,
+  fitTimelinePxPerSec,
+  PX_PER_SEC_DEFAULT,
+  PX_PER_SEC_MAX,
+  PX_PER_SEC_MIN,
+  syncClipsToCues,
+} from './timelineMath.ts'
 import { normalizeClip, normalizeCue, type StoryClip, type StoryCue } from '../../types/story.ts'
 
 function video(patch: Partial<StoryClip> = {}): StoryClip {
@@ -100,5 +107,23 @@ describe('syncClipsToCues', () => {
     assert.equal(out[0]!.durationSec, 3.08)
     assert.equal(out[1]!.durationSec, 3.19)
     assert.equal(out[2]!.durationSec, 3.81)
+  })
+})
+
+describe('fitTimelinePxPerSec', () => {
+  it('zooms in for a short block within max', () => {
+    const px = fitTimelinePxPerSec(4, 800)
+    assert.ok(px > PX_PER_SEC_DEFAULT)
+    assert.ok(px <= PX_PER_SEC_MAX)
+  })
+
+  it('zooms out for a long block within min', () => {
+    const px = fitTimelinePxPerSec(120, 400)
+    assert.equal(px, PX_PER_SEC_MIN)
+  })
+
+  it('clamps to max for tiny content', () => {
+    const px = fitTimelinePxPerSec(0.5, 2000)
+    assert.equal(px, PX_PER_SEC_MAX)
   })
 })

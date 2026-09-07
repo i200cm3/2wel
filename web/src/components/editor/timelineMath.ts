@@ -17,6 +17,22 @@ export const TRACK_ADD_GAP = 8
 /** Шаг кадра для стрелок (30 fps). */
 export const FRAME_SEC = 1 / 30
 
+/** Хвост шкалы под кнопку «+» и отступы. */
+export function timelineAddTailPx() {
+  return TRACK_ADD_GAP + TRACK_ADD_PX + 12
+}
+
+/**
+ * Масштаб, чтобы блок (клипы + титры) уместился в видимую ширину reel.
+ * В пределах PX_PER_SEC_MIN…MAX.
+ */
+export function fitTimelinePxPerSec(contentSec: number, viewportPx: number): number {
+  const duration = Math.max(0.5, contentSec)
+  const usable = Math.max(80, viewportPx - TIMELINE_LABEL_PX - timelineAddTailPx())
+  const raw = usable / duration
+  return Math.min(PX_PER_SEC_MAX, Math.max(PX_PER_SEC_MIN, Math.round(raw)))
+}
+
 export const LIB_SRC_MIME = 'application/x-djinal-lib-src'
 export const BACKGROUND_MUSIC_SRC = '/media/music/ambient.mp3'
 
