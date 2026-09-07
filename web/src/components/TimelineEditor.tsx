@@ -178,6 +178,8 @@ type Props = {
   lastShareUrl?: string | null
   projectCode: string
   templateCode: string
+  /** Отображаемое имя шаблона (не brand объекта). */
+  templateName?: string
   /** Общая библиотека TTS с родителя — без повторной загрузки всех файлов. */
   ttsLibrary?: TtsLibrary
   onSave?: () => void
@@ -207,6 +209,7 @@ export function TimelineEditor({
   lastShareUrl = null,
   projectCode,
   templateCode,
+  templateName,
   ttsLibrary: sharedTtsLibrary,
   onSave,
   onPublish,
@@ -2125,7 +2128,9 @@ export function TimelineEditor({
       <header className="mb-4 flex shrink-0 items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-2">
           <div className="min-w-0">
-            <h1 className="truncate text-base font-medium">{config.brand.fullName}</h1>
+            <h1 className="truncate text-base font-medium">
+              {templateName?.trim() || templateCode}
+            </h1>
           </div>
           <Button
             type="button"

@@ -5,6 +5,7 @@ import { templateRowForUser, isPropertyConfig } from './cabinet.mjs'
 import { query } from './db.js'
 import { publicDir } from './env.js'
 import { optimizeImagesInDir } from './imageOptimize.mjs'
+import { mediaSrcsFromConfigs } from './projectMedia.mjs'
 
 const PUBLIC_FILE_MODE = 0o644
 const MEDIA_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.mp4', '.webm', '.mov', '.m4v'])
@@ -252,6 +253,46 @@ function addDirToZip(zip, root, archiveRoot) {
   return count
 }
 
+/** Файлы, на которые ссылается конфиг и которые есть на диске (для used-only export). */
+export function resolveUsedMediaFiles(code, config) {
+  const root = publicDir()
+  const projectRoot = path.resolve(root, 'media/projects', code)
+  const counts = { library: 0, music: 0, tts: 0, missing: 0 }
+  const files = []
+  for (const src of mediaSrcsFromConfigs([config], code)) {
+    const full = path.resolve(root, src.replace(/^\/+/, ''))
+    if (!isInside(projectRoot, full)) continue
+    const rel = path.relative(projectRoot, full).replace(/\\/g, '/')
+    const bucket = rel.split('/')[0]
+    if (bucket !== 'library' && bucket !== 'music' && bucket !== 'tts') continue
+    try {
+      if (!fs.existsSync(full) || !fs.statSync(full).isFile()) {
+        counts.missing += 1
+        continue
+      }
+    } catch {
+      counts.missing += 1
+      continue
+    }
+    files.push({ src, full, rel, bucket })
+    counts[bucket] += 1
+  }
+  files.sort((a, b) => a.rel.localeCompare(b.rel))
+  return { files, counts }
+}
+
+function addUsedMediaToZip(zip, code, config) {
+  const { files, counts } = resolveUsedMediaFiles(code, config)
+  for (const bucket of ['library', 'music', 'tts']) {
+    zip.addFile(`${bucket}/`, Buffer.alloc(0))
+  }
+  for (const file of files) {
+    const zipDir = path.posix.dirname(file.rel)
+    zip.addLocalFile(file.full, zipDir === '.' ? '' : zipDir)
+  }
+  return counts
+}
+
 export async function exportTemplateArchiveForUser(userId, projectCode, templateCode) {
   const found = await templateRowForUser(userId, projectCode, templateCode)
   if (!found) return { status: 404, error: 'template not found' }
@@ -264,21 +305,19 @@ export async function exportTemplateArchiveForUser(userId, projectCode, template
   if (!config) return { status: 400, error: 'В шаблоне нет PropertyConfig' }
 
   const code = found.project.code
-  const projectRoot = path.resolve(publicDir(), 'media/projects', code)
   const zip = new AdmZip()
   zip.addFile('property.json', Buffer.from(`${JSON.stringify(config, null, 2)}\n`, 'utf8'))
-  const libraryFiles = addDirToZip(zip, path.join(projectRoot, 'library'), 'library')
-  const musicFiles = addDirToZip(zip, path.join(projectRoot, 'music'), 'music')
-  const ttsFiles = addDirToZip(zip, path.join(projectRoot, 'tts'), 'tts')
+  const counts = addUsedMediaToZip(zip, code, config)
 
   return {
     status: 200,
     fileName: `${code}-${templateCode}-template.zip`,
     buffer: zip.toBuffer(),
     counts: {
-      library: libraryFiles,
-      music: musicFiles,
-      tts: ttsFiles,
+      library: counts.library,
+      music: counts.music,
+      tts: counts.tts,
+      missing: counts.missing,
     },
   }
 }

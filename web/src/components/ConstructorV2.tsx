@@ -107,6 +107,8 @@ type Props = {
   draftError?: string | null
   projectCode: string
   templateCode: string
+  /** Отображаемое имя шаблона (не brand объекта). */
+  templateName?: string
   isAdmin?: boolean
   onSave?: () => void
   onPublish?: () => void
@@ -426,6 +428,7 @@ export function ConstructorV2({
   draftError = null,
   projectCode,
   templateCode,
+  templateName,
   isAdmin = false,
   onSave,
   onPublish,
@@ -850,9 +853,8 @@ export function ConstructorV2({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="truncate text-base font-medium">
-            {config.brand.fullName} · Constructor V2
+            {templateName?.trim() || templateCode}
           </h1>
-          
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {hasDraft ? <Badge variant="outline">Черновик</Badge> : <Badge variant="secondary">В эфире</Badge>}

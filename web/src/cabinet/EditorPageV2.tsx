@@ -16,6 +16,7 @@ export function EditorPageV2() {
   const planId = project?.plan?.id
   const {
     config,
+    templateName,
     ready,
     loadError,
     hasDraft,
@@ -90,6 +91,7 @@ export function EditorPageV2() {
       draftError={draftError}
       projectCode={projectCode}
       templateCode={tplCode}
+      templateName={templateName}
       isAdmin={user.isAdmin}
       onSave={() => {
         void save().then((result) => {

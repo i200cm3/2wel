@@ -68,6 +68,7 @@ export function useTemplateEditor(projectCode: string, templateCode: string) {
   const [config, setConfig] = useState<PropertyConfig>(() =>
     normalizeProperty(structuredClone(DJINAL_PROPERTY)),
   )
+  const [templateName, setTemplateName] = useState(templateCode)
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [hasDraft, setHasDraft] = useState(false)
@@ -159,6 +160,7 @@ export function useTemplateEditor(projectCode: string, templateCode: string) {
     setLoadError(null)
     setDraftError(null)
     setDraftState('idle')
+    setTemplateName(templateCode)
     ;(async () => {
       try {
         const data = await fetchTemplateConfig(projectCode, templateCode)
@@ -178,6 +180,7 @@ export function useTemplateEditor(projectCode: string, templateCode: string) {
           return
         }
         setConfig(next)
+        setTemplateName(data.template?.name?.trim() || templateCode)
         setHasDraft(Boolean(draft) || usedLocalFail)
         setPublished(data.template?.status === 'published' && !usedLocalFail)
         if (usedLocalFail) {
@@ -351,6 +354,7 @@ export function useTemplateEditor(projectCode: string, templateCode: string) {
 
   return {
     config,
+    templateName,
     ready,
     loadError,
     hasDraft,

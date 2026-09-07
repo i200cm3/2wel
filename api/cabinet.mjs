@@ -31,7 +31,7 @@ import {
   copyStarterLibrary,
   copyStarterTts,
   ensureProjectMedia,
-  listOrphanProjectMedia,
+  listUnusedProjectMedia,
   mediaSrcsFromConfigs,
   projectMusicSrc,
   purgeProjectMediaSrcs,
@@ -654,19 +654,18 @@ async function insertTrialTemplate(project, { name } = {}) {
   throw new Error('Не удалось создать пробный шаблон')
 }
 
-/** Медиа удаляемого шаблона, на которые больше никто не ссылается. */
+/** Неиспользуемые медиа проекта после удаления этого шаблона (с учётом остальных). */
 async function orphanMediaForTemplate(project, row) {
   const code = project.code
-  const candidates = mediaSrcsFromConfigs([row.config, row.draft_config], code)
   const { rows: others } = await query(
     `SELECT config, draft_config FROM templates WHERE project_id = $1 AND id <> $2`,
     [project.id, row.id],
   )
-  const keep = new Set()
-  for (const other of others) {
-    for (const src of mediaSrcsFromConfigs([other.config, other.draft_config], code)) keep.add(src)
-  }
-  return listOrphanProjectMedia(code, candidates, keep)
+  const keep = mediaSrcsFromConfigs(
+    others.flatMap((item) => [item.config, item.draft_config]),
+    code,
+  )
+  return listUnusedProjectMedia(code, keep)
 }
 
 async function deleteTemplate(project, row, { purgeUnused = false } = {}) {
@@ -682,7 +681,6 @@ async function deleteTemplate(project, row, { purgeUnused = false } = {}) {
       error: `На шаблон ссылаются ${n} выдач. Сначала удалите их или оставьте шаблон.`,
     }
   }
-  const candidates = mediaSrcsFromConfigs([row.config, row.draft_config], project.code)
   if (row.is_default) {
     const next = existing.find((item) => item.code !== row.code)
     if (next) await setDefaultTemplate(project.id, next.code)
@@ -690,7 +688,7 @@ async function deleteTemplate(project, row, { purgeUnused = false } = {}) {
   await query(`DELETE FROM templates WHERE id = $1 AND project_id = $2`, [row.id, project.id])
 
   let purged = { deleted: 0, srcs: [] }
-  if (purgeUnused && candidates.size) {
+  if (purgeUnused) {
     const { rows: remaining } = await query(
       `SELECT config, draft_config FROM templates WHERE project_id = $1`,
       [project.id],
@@ -699,7 +697,7 @@ async function deleteTemplate(project, row, { purgeUnused = false } = {}) {
       remaining.flatMap((item) => [item.config, item.draft_config]),
       project.code,
     )
-    const orphans = listOrphanProjectMedia(project.code, candidates, keep)
+    const orphans = listUnusedProjectMedia(project.code, keep)
     if (orphans.length) purged = purgeProjectMediaSrcs(project.code, orphans)
   }
 

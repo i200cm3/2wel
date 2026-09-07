@@ -10,6 +10,8 @@ process.env.PUBLIC_DIR = tmp
 const {
   collectProjectMediaSrcs,
   listOrphanProjectMedia,
+  listProjectMediaOnDisk,
+  listUnusedProjectMedia,
   mediaSrcsFromConfigs,
   purgeProjectMediaSrcs,
   removeProjectMedia,
@@ -72,6 +74,27 @@ test('purgeProjectMediaSrcs deletes orphans and rebuilds library manifest', () =
   )
   assert.equal(manifest.total, 1)
   assert.equal(manifest.items[0].src, keep)
+})
+
+test('listUnusedProjectMedia drops never-referenced files when keep is empty', () => {
+  const code = 'c-unused'
+  const used = writeMedia(code, 'library/gallery/used.jpg')
+  const junk = writeMedia(code, 'library/gallery/junk.jpg')
+  writeMedia(code, 'tts/voice.mp3', 'audio')
+  const orphans = listUnusedProjectMedia(code, new Set([used]))
+  assert.deepEqual(orphans, [junk, `/media/projects/${code}/tts/voice.mp3`])
+  const allGone = listUnusedProjectMedia(code, new Set())
+  assert.equal(allGone.length, 3)
+})
+
+test('listProjectMediaOnDisk walks library music and tts', () => {
+  const code = 'c-disk'
+  writeMedia(code, 'library/a.jpg')
+  writeMedia(code, 'music/ambient.mp3')
+  writeMedia(code, 'tts/x.mp3')
+  const all = listProjectMediaOnDisk(code)
+  assert.equal(all.length, 3)
+  assert.ok(all.every((src) => src.startsWith(`/media/projects/${code}/`)))
 })
 
 test('removeProjectMedia deletes library music and tts under the project', async () => {

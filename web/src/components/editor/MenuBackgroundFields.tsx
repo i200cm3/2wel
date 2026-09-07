@@ -54,7 +54,7 @@ export function MenuBackgroundFields({ projectCode, bgSrc = '', onChange }: Prop
         </FieldDescription>
       </Field>
 
-      <div className="flex flex-wrap items-end gap-4">
+      <div className="flex flex-wrap items-start gap-4">
         <div
           className="relative w-full max-w-[140px] shrink-0 overflow-hidden rounded-xl bg-black"
           style={{ aspectRatio: '9 / 16' }}

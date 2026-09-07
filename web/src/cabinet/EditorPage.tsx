@@ -16,6 +16,7 @@ export function EditorPage() {
   const planId = project?.plan?.id
   const {
     config,
+    templateName,
     ready,
     loadError,
     hasDraft,
@@ -95,6 +96,7 @@ export function EditorPage() {
       lastShareUrl={lastShareUrl}
       projectCode={projectCode}
       templateCode={tplCode}
+      templateName={templateName}
       onSave={() => {
         void save().then((result) => {
           if (result) toast.success('Опубликовано — гости и CRM видят эту версию')

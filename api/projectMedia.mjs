@@ -403,6 +403,33 @@ export function listOrphanProjectMedia(code, candidateSrcs, keepSrcs) {
   return orphans.sort((a, b) => a.localeCompare(b))
 }
 
+const PROJECT_MEDIA_BUCKETS = ['library', 'music', 'tts']
+
+/** Все файлы library/music/tts проекта как `/media/projects/{code}/…`. */
+export function listProjectMediaOnDisk(code) {
+  if (!code || /[^a-z0-9-]/.test(code)) return []
+  const root = publicDir()
+  const projectRoot = path.resolve(root, 'media/projects', code)
+  if (!fs.existsSync(projectRoot)) return []
+  const out = []
+  for (const bucket of PROJECT_MEDIA_BUCKETS) {
+    const dir = path.join(projectRoot, bucket)
+    for (const file of walkMediaFiles(dir)) {
+      const rel = path.relative(projectRoot, file).replace(/\\/g, '/')
+      out.push(`/media/projects/${code}/${rel}`)
+    }
+  }
+  return out.sort((a, b) => a.localeCompare(b))
+}
+
+/**
+ * Файлы на диске, на которые не ссылается ни один из keepSrcs
+ * (обычно — config+draft оставшихся шаблонов).
+ */
+export function listUnusedProjectMedia(code, keepSrcs) {
+  return listOrphanProjectMedia(code, listProjectMediaOnDisk(code), keepSrcs)
+}
+
 function walkMediaFiles(dir) {
   if (!fs.existsSync(dir)) return []
   const out = []
