@@ -408,7 +408,7 @@ export function deleteTemplate(
   opts?: { purgeUnused?: boolean },
 ) {
   const q = opts?.purgeUnused ? '?purgeUnused=1' : ''
-  return apiSend<{ ok: true; replaced?: boolean; template?: Template; purgedMedia?: number }>(
+  return apiSend<{ ok: true; purgedMedia?: number }>(
     `/api/projects/${encodeURIComponent(projectCode)}/templates/${encodeURIComponent(templateCode)}${q}`,
     'DELETE',
   )
@@ -1037,8 +1037,50 @@ export function setAdminUserBlocked(userId: string, isBlocked: boolean) {
   )
 }
 
+export function setAdminUserRole(userId: string, isAdmin: boolean) {
+  return apiSend<{ ok: true; user: AdminUser }>(
+    `/api/admin/users/${encodeURIComponent(userId)}`,
+    'PATCH',
+    { isAdmin },
+  )
+}
+
 export function deleteAdminUser(userId: string) {
   return apiSend<{ ok: true }>(`/api/admin/users/${encodeURIComponent(userId)}`, 'DELETE')
+}
+
+export type GenerateCueCopyPayload = {
+  brand?: {
+    name?: string
+    fullName?: string
+    city?: string
+    site?: string
+  }
+  copyFacts?: string
+  block: {
+    label?: string
+    group?: string
+    subgroup?: string
+    audienceTags?: string[]
+    topicTags?: string[]
+    objectionTags?: string[]
+    slotFields?: string[]
+    title?: string
+    cues: Array<{ text?: string; ttsText?: string }>
+  }
+  cueIndex: number
+  updateTitle?: boolean
+}
+
+export type GenerateCueCopyResult = {
+  ok: true
+  title: string
+  cue: { text: string; ttsText: string }
+  model?: string
+}
+
+export function generateCueCopy(payload: GenerateCueCopyPayload) {
+  return apiSend<GenerateCueCopyResult>('/api/admin/generate-cue-copy', 'POST', payload)
 }
 
 export type AdminTtsUsageUser = {

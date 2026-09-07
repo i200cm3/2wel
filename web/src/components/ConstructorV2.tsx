@@ -44,6 +44,7 @@ import {
   type GuestSummary,
 } from '@/lib/assembly'
 import { downloadTemplateArchive, importTemplateArchive } from '@/lib/api'
+import { AiGenerationParamsPanel } from './editor/AiGenerationParamsPanel'
 import { MenuInspector } from './editor/MenuInspector'
 import { Presentation } from './Presentation'
 import { TimelineEditor } from './TimelineEditor'
@@ -106,6 +107,7 @@ type Props = {
   draftError?: string | null
   projectCode: string
   templateCode: string
+  isAdmin?: boolean
   onSave?: () => void
   onPublish?: () => void
   onRetryDraft?: () => void
@@ -424,6 +426,7 @@ export function ConstructorV2({
   draftError = null,
   projectCode,
   templateCode,
+  isAdmin = false,
   onSave,
   onPublish,
   onRetryDraft,
@@ -438,7 +441,10 @@ export function ConstructorV2({
     [emitChange],
   )
 
-  const [workspace, setWorkspace] = useState<'blocks' | 'assembly' | 'menus'>('blocks')
+  const [workspace, setWorkspace] = useState<'blocks' | 'assembly' | 'menus' | 'ai'>('blocks')
+  useEffect(() => {
+    if (!isAdmin && workspace === 'ai') setWorkspace('blocks')
+  }, [isAdmin, workspace])
   const [blockTab, setBlockTab] = useState<'block' | 'params'>('block')
   const [seqId, setSeqId] = useState(() => preferredEditorSeqId(config))
   const [blockLibraryQuery, setBlockLibraryQuery] = useState('')
@@ -990,6 +996,7 @@ export function ConstructorV2({
           <TabsTrigger value="blocks">Блоки</TabsTrigger>
           <TabsTrigger value="assembly">Сборка</TabsTrigger>
           <TabsTrigger value="menus">Меню</TabsTrigger>
+          {isAdmin ? <TabsTrigger value="ai">Параметры генерации</TabsTrigger> : null}
         </TabsList>
 
         <TabsContent
@@ -1142,6 +1149,7 @@ export function ConstructorV2({
               projectCode={projectCode}
               templateCode={templateCode}
               ttsLibrary={ttsLibrary}
+              isAdmin={isAdmin}
             />
           </TabsContent>
 
@@ -2173,6 +2181,7 @@ export function ConstructorV2({
                     menuCopy={previewMenu.menuCopy}
                     menuTheme={previewMenu.menuTheme}
                     menuLinks={previewMenu.menuLinks}
+                    menuBgSrc={previewMenu.menuBgSrc}
                     menuTtsText={previewMenu.menuTtsText}
                     menuTtsSrc={previewMenu.menuTtsSrc}
                     menuTtsHash={previewMenu.menuTtsHash}
@@ -2186,6 +2195,9 @@ export function ConstructorV2({
                     }
                     onBrandPatch={(patch) =>
                       setConfig((prev) => ({ ...prev, brand: { ...prev.brand, ...patch } }))
+                    }
+                    onMenuBgChange={(menuBgSrc) =>
+                      setConfig((prev) => updateMenu(prev, previewMenu.id, { menuBgSrc }))
                     }
                     onMenuThemePatch={(patch) =>
                       setConfig((prev) => {
@@ -2216,6 +2228,25 @@ export function ConstructorV2({
               )}
             </div>
         </TabsContent>
+
+        {isAdmin ? (
+          <TabsContent
+            value="ai"
+            className="min-h-0 flex-1 overflow-y-auto pr-1"
+          >
+            <Card className="overflow-hidden">
+              <CardContent className="p-4 sm:p-6">
+                <AiGenerationParamsPanel
+                  brand={config.brand}
+                  copyFacts={config.copyFacts}
+                  onCopyFactsChange={(copyFacts) =>
+                    setConfig((prev) => ({ ...prev, copyFacts }))
+                  }
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        ) : null}
 
       </Tabs>
 

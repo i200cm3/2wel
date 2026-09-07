@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { useOutletContext, useParams } from 'react-router-dom'
 import { CheckIcon } from 'lucide-react'
 import type { CabinetOutlet } from '@/cabinet/CabinetLayout'
@@ -13,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { fetchProjectPlan, type ProjectPlan } from '@/lib/api'
+import { adminSetProjectPlan, fetchProjectPlan, type ProjectPlan } from '@/lib/api'
 import {
   formatDay,
   formatPeriod,
@@ -40,10 +41,17 @@ function formatDt(value: string) {
 
 export function PlanPage() {
   const { code } = useParams()
-  const { project } = useOutletContext<CabinetOutlet>()
+  const { user, project } = useOutletContext<CabinetOutlet>()
   const projectCode = code || project?.code || ''
   const [data, setData] = useState<ProjectPlan | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [busyPlan, setBusyPlan] = useState<string | null>(null)
+
+  const reload = () =>
+    fetchProjectPlan(projectCode).then((next) => {
+      setData(next)
+      setError(null)
+    })
 
   useEffect(() => {
     if (!projectCode) return
@@ -61,6 +69,20 @@ export function PlanPage() {
       cancelled = true
     }
   }, [projectCode])
+
+  const setPlan = async (planId: string) => {
+    if (!projectCode || !user.isAdmin) return
+    setBusyPlan(planId)
+    try {
+      await adminSetProjectPlan(projectCode, planId)
+      await reload()
+      toast.success(`Тариф «${planTier(planId).name}» включён`)
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось сменить тариф')
+    } finally {
+      setBusyPlan(null)
+    }
+  }
 
   if (error && !data) return <p className="text-destructive p-6">{error}</p>
   if (!data) return <p className="text-muted-foreground p-6">Загрузка…</p>
@@ -96,17 +118,45 @@ export function PlanPage() {
             </div>
           </dl>
 
-          <p className="text-muted-foreground text-sm">
-            Пока оплата не подключена, тариф «Про» включает администратор 2wel.
-            Напишите в поддержку, если нужен конструктор после разговора (V2).
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            render={<a href={supportMailHref(`Тариф Про — ${project?.name ?? projectCode}`)} />}
-          >
-            Написать в поддержку
-          </Button>
+          {user.isAdmin ? (
+            <div className="space-y-2 rounded-lg border border-dashed p-3">
+              <p className="text-sm font-medium">Админ: сменить тариф</p>
+              <p className="text-muted-foreground text-sm">
+                Включение сразу, без оплаты. Конструктор V1 — «Старт», V2 — «Про».
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {data.plans.map((item) => (
+                  <Button
+                    key={item.id}
+                    size="sm"
+                    variant={item.current ? 'default' : 'outline'}
+                    disabled={Boolean(busyPlan) || item.current}
+                    onClick={() => void setPlan(item.id)}
+                  >
+                    {busyPlan === item.id
+                      ? 'Включаю…'
+                      : item.current
+                        ? `Сейчас «${item.name}»`
+                        : `Включить «${item.name}»`}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <p className="text-muted-foreground text-sm">
+                Пока оплата не подключена, тариф «Про» включает администратор 2wel. Напишите в
+                поддержку, если нужен конструктор после разговора (V2).
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                render={<a href={supportMailHref(`Тариф Про — ${project?.name ?? projectCode}`)} />}
+              >
+                Написать в поддержку
+              </Button>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -142,6 +192,14 @@ export function PlanPage() {
                     <CheckIcon className="text-primary size-4" />
                     Подключён
                   </p>
+                ) : user.isAdmin ? (
+                  <Button
+                    size="sm"
+                    disabled={Boolean(busyPlan)}
+                    onClick={() => void setPlan(item.id)}
+                  >
+                    {busyPlan === item.id ? 'Включаю…' : `Включить «${item.name}»`}
+                  </Button>
                 ) : (
                   <p className="text-muted-foreground text-sm">Включение через администратора</p>
                 )}

@@ -383,13 +383,7 @@ export function TemplatesPage() {
                                   data.purgedMedia && data.purgedMedia > 0
                                     ? `, очищено файлов: ${data.purgedMedia}`
                                     : ''
-                                if (data.replaced && data.template) {
-                                  toast.success(
-                                    `Удалён. Создан «${data.template.name}» (${data.template.code})${purged}`,
-                                  )
-                                } else {
-                                  toast.success(`Шаблон удалён${purged}`)
-                                }
+                                toast.success(`Шаблон удалён${purged}`)
                               })()
                                 .catch((err) => {
                                   toast.error(err instanceof Error ? err.message : 'Не удалось удалить')

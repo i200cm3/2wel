@@ -126,8 +126,11 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent } from '@/components/ui/card'
 import { EmailPreviewInspector } from './editor/EmailPreviewInspector'
 import { MenuInspector } from './editor/MenuInspector'
+import { AiGenerationParamsPanel } from './editor/AiGenerationParamsPanel'
 import { Presentation } from './Presentation'
 import { StoryPlayer } from './StoryPlayer'
 import { ClipInspector } from './editor/ClipInspector'
@@ -265,6 +268,7 @@ export function TimelineEditor({
   const slidePreviewClipsRef = useRef<StoryClip[] | null>(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [adminWorkspace, setAdminWorkspace] = useState<'editor' | 'ai'>('editor')
   const [blockPreviewId, setBlockPreviewId] = useState<string | null>(null)
   const [blockPreviewKey, setBlockPreviewKey] = useState(0)
   const [fullPreviewOpen, setFullPreviewOpen] = useState(false)
@@ -2071,6 +2075,14 @@ export function TimelineEditor({
           removeCue={removeCue}
           patchTheme={patchTheme}
           cuePreviewClip={cuePreviewClip}
+          isAdmin={isAdmin}
+          brand={config.brand}
+          copyFacts={config.copyFacts}
+          blockMeta={
+            sequence
+              ? (config.constructorV2?.sequenceMetaById?.[sequence.id] ?? undefined)
+              : undefined
+          }
         />
       ) : null}
 
@@ -2488,6 +2500,32 @@ export function TimelineEditor({
         </DialogContent>
       </Dialog>
 
+      {!isBlockPanel && isAdmin ? (
+        <Tabs
+          value={adminWorkspace}
+          onValueChange={(value) => value && setAdminWorkspace(value as typeof adminWorkspace)}
+          className="shrink-0"
+        >
+          <TabsList>
+            <TabsTrigger value="editor">Редактор</TabsTrigger>
+            <TabsTrigger value="ai">Параметры генерации</TabsTrigger>
+          </TabsList>
+        </Tabs>
+      ) : null}
+
+      {!isBlockPanel && isAdmin && adminWorkspace === 'ai' ? (
+        <Card className="min-h-0 flex-1 overflow-hidden">
+          <CardContent className="h-full min-h-0 overflow-y-auto p-4 sm:p-6">
+            <AiGenerationParamsPanel
+              brand={config.brand}
+              copyFacts={config.copyFacts}
+              onCopyFactsChange={(copyFacts) =>
+                onChange((prev) => ({ ...prev, copyFacts }))
+              }
+            />
+          </CardContent>
+        </Card>
+      ) : (
       <div
         className={`grid min-h-0 flex-1 items-stretch gap-4 ${
           isBlockPanel
@@ -2893,6 +2931,7 @@ export function TimelineEditor({
               menuCopy={selectedMenu.menuCopy}
               menuTheme={selectedMenu.menuTheme}
               menuLinks={selectedMenu.menuLinks}
+              menuBgSrc={selectedMenu.menuBgSrc}
               menuTtsText={selectedMenu.menuTtsText}
               menuTtsSrc={selectedMenu.menuTtsSrc}
               menuTtsHash={selectedMenu.menuTtsHash}
@@ -2911,6 +2950,12 @@ export function TimelineEditor({
               }
               onBrandPatch={(patch) =>
                 onChange((prev) => ({ ...prev, brand: { ...prev.brand, ...patch } }))
+              }
+              onMenuBgChange={(menuBgSrc) =>
+                onChange((prev) => {
+                  const id = selectedMenuIdRef.current
+                  return id ? updateMenu(prev, id, { menuBgSrc }) : prev
+                })
               }
               onMenuThemePatch={(patch) =>
                 onChange((prev) => {
@@ -2944,6 +2989,7 @@ export function TimelineEditor({
           ) : null}
         </main>
       </div>
+      )}
 
       {!isBlockPanel && fullPreviewOpen ? (
         <div

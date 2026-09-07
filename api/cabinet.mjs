@@ -654,15 +654,7 @@ async function insertTrialTemplate(project, { name } = {}) {
   throw new Error('Не удалось создать пробный шаблон')
 }
 
-function trialTemplateMediaSrcs(projectCode) {
-  const config = rewriteConfigMedia(
-    trialPresentationConfig({ id: projectCode, musicSrc: projectMusicSrc(projectCode) }),
-    projectCode,
-  )
-  return mediaSrcsFromConfigs([config], projectCode)
-}
-
-/** Медиа удаляемого шаблона, на которые больше никто не ссылается (с учётом будущего trial). */
+/** Медиа удаляемого шаблона, на которые больше никто не ссылается. */
 async function orphanMediaForTemplate(project, row) {
   const code = project.code
   const candidates = mediaSrcsFromConfigs([row.config, row.draft_config], code)
@@ -673,9 +665,6 @@ async function orphanMediaForTemplate(project, row) {
   const keep = new Set()
   for (const other of others) {
     for (const src of mediaSrcsFromConfigs([other.config, other.draft_config], code)) keep.add(src)
-  }
-  if (others.length === 0) {
-    for (const src of trialTemplateMediaSrcs(code)) keep.add(src)
   }
   return listOrphanProjectMedia(code, candidates, keep)
 }
@@ -699,12 +688,6 @@ async function deleteTemplate(project, row, { purgeUnused = false } = {}) {
     if (next) await setDefaultTemplate(project.id, next.code)
   }
   await query(`DELETE FROM templates WHERE id = $1 AND project_id = $2`, [row.id, project.id])
-  let replaced = false
-  let template = null
-  if (existing.length <= 1) {
-    template = await insertTrialTemplate(project)
-    replaced = true
-  }
 
   let purged = { deleted: 0, srcs: [] }
   if (purgeUnused && candidates.size) {
@@ -722,7 +705,6 @@ async function deleteTemplate(project, row, { purgeUnused = false } = {}) {
 
   return {
     status: 200,
-    ...(replaced ? { replaced: true, template } : {}),
     purgedMedia: purged.deleted,
   }
 }
@@ -1414,7 +1396,6 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
       json(res, 200, {
         ok: true,
         purgedMedia: removed.purgedMedia ?? 0,
-        ...(removed.replaced ? { replaced: true, template: removed.template } : {}),
       })
       return true
     }

@@ -9,7 +9,7 @@ import { useTemplateEditor } from '@/hooks/useTemplateEditor'
 import { constructorForPlan, editorPathForPlan } from '@/lib/plans'
 
 export function EditorPageV2() {
-  const { project } = useOutletContext<CabinetOutlet>()
+  const { user, project } = useOutletContext<CabinetOutlet>()
   const { code, templateCode } = useParams()
   const projectCode = code?.trim() ?? ''
   const tplCode = templateCode?.trim() ?? ''
@@ -90,6 +90,7 @@ export function EditorPageV2() {
       draftError={draftError}
       projectCode={projectCode}
       templateCode={tplCode}
+      isAdmin={user.isAdmin}
       onSave={() => {
         void save().then((result) => {
           if (result) toast.success('Опубликовано — гости и CRM видят эту версию')

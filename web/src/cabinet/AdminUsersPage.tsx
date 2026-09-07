@@ -27,6 +27,7 @@ import {
   fetchAdminUser,
   searchAdminUsers,
   setAdminUserBlocked,
+  setAdminUserRole,
   type AdminUser,
   type AdminUserWorkspace,
 } from '@/lib/api'
@@ -53,7 +54,7 @@ export function AdminUsersPage() {
   }
 
   if (userId) {
-    return <AdminUserDetail userId={userId} />
+    return <AdminUserDetail userId={userId} currentUserId={user.id} />
   }
 
   return <AdminUsersSearch currentUserId={user.id} />
@@ -106,6 +107,31 @@ function AdminUsersSearch({ currentUserId }: { currentUserId: string }) {
     }
   }
 
+  const setRole = async (item: AdminUser, isAdmin: boolean) => {
+    const label = item.name || item.login
+    if (isAdmin) {
+      if (
+        !confirm(
+          `Сделать «${label}» администратором системы? Появится доступ к пользователям, тарифам и расходу TTS.`,
+        )
+      ) {
+        return
+      }
+    } else if (!confirm(`Снять права администратора у «${label}»?`)) {
+      return
+    }
+    setBusyId(item.id)
+    try {
+      const data = await setAdminUserRole(item.id, isAdmin)
+      setUsers((prev) => prev?.map((u) => (u.id === item.id ? { ...u, ...data.user } : u)) ?? null)
+      toast.success(isAdmin ? 'Админ выдан' : 'Админ снят')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось изменить роль')
+    } finally {
+      setBusyId(null)
+    }
+  }
+
   const removeUser = async (item: AdminUser) => {
     const label = item.name || item.login
     if (
@@ -132,7 +158,8 @@ function AdminUsersSearch({ currentUserId }: { currentUserId: string }) {
       <div className="flex flex-col gap-1">
         <h1 className="text-lg font-semibold">Пользователи</h1>
         <p className="text-muted-foreground text-sm">
-          Поиск по имени, почте или логину. Клик по строке открывает аккаунт.
+          Поиск по имени, почте или логину. Клик по строке открывает аккаунт: там же смена
+          тарифа объекта. Админа системы можно выдать и снять в меню строки.
         </p>
       </div>
 
@@ -223,6 +250,17 @@ function AdminUsersSearch({ currentUserId }: { currentUserId: string }) {
                           <DropdownMenuItem onClick={() => navigate(`/app/users/${item.id}`)}>
                             Открыть аккаунт
                           </DropdownMenuItem>
+                          {item.id !== currentUserId ? (
+                            item.isAdmin ? (
+                              <DropdownMenuItem onClick={() => void setRole(item, false)}>
+                                Снять админа
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem onClick={() => void setRole(item, true)}>
+                                Сделать админом
+                              </DropdownMenuItem>
+                            )
+                          ) : null}
                           <DropdownMenuSeparator />
                           {item.isBlocked ? (
                             <DropdownMenuItem
@@ -264,10 +302,11 @@ function AdminUsersSearch({ currentUserId }: { currentUserId: string }) {
   )
 }
 
-function AdminUserDetail({ userId }: { userId: string }) {
+function AdminUserDetail({ userId, currentUserId }: { userId: string; currentUserId: string }) {
   const [workspace, setWorkspace] = useState<AdminUserWorkspace | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [planBusy, setPlanBusy] = useState<string | null>(null)
+  const [roleBusy, setRoleBusy] = useState(false)
 
   const reload = () =>
     fetchAdminUser(userId).then((data) => {
@@ -301,6 +340,33 @@ function AdminUserDetail({ userId }: { userId: string }) {
       toast.error(err instanceof Error ? err.message : 'Не удалось сменить тариф')
     } finally {
       setPlanBusy(null)
+    }
+  }
+
+  const setRole = async (isAdmin: boolean) => {
+    const target = workspace?.user
+    if (!target) return
+    const label = target.name || target.login
+    if (isAdmin) {
+      if (
+        !confirm(
+          `Сделать «${label}» администратором системы? Появится доступ к пользователям, тарифам и расходу TTS.`,
+        )
+      ) {
+        return
+      }
+    } else if (!confirm(`Снять права администратора у «${label}»?`)) {
+      return
+    }
+    setRoleBusy(true)
+    try {
+      const data = await setAdminUserRole(target.id, isAdmin)
+      setWorkspace((prev) => (prev ? { ...prev, user: { ...prev.user, ...data.user } } : prev))
+      toast.success(isAdmin ? 'Админ выдан' : 'Админ снят')
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Не удалось изменить роль')
+    } finally {
+      setRoleBusy(false)
     }
   }
 
@@ -340,9 +406,27 @@ function AdminUserDetail({ userId }: { userId: string }) {
           </p>
           <p className="text-muted-foreground text-xs">Создан {formatDt(user.createdAt)}</p>
         </div>
-        <Button variant="outline" size="sm" nativeButton={false} render={<Link to="/app/users" />}>
-          К списку
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          {user.id !== currentUserId ? (
+            user.isAdmin ? (
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={roleBusy}
+                onClick={() => void setRole(false)}
+              >
+                Снять админа
+              </Button>
+            ) : (
+              <Button size="sm" disabled={roleBusy} onClick={() => void setRole(true)}>
+                Сделать админом
+              </Button>
+            )
+          ) : null}
+          <Button variant="outline" size="sm" nativeButton={false} render={<Link to="/app/users" />}>
+            К списку
+          </Button>
+        </div>
       </div>
 
       {projects.length === 0 ? (
@@ -371,37 +455,52 @@ function AdminUserDetail({ userId }: { userId: string }) {
                         {project.stats.opens} открытий
                       </CardDescription>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={currentPlan.id === 'pro' ? 'default' : 'secondary'}>
-                        {currentPlan.name} · {currentPlan.constructor === 'v2' ? 'V2' : 'V1'}
-                      </Badge>
-                      {PLAN_TIERS.map((tier) => (
+                    <div className="flex flex-col items-stretch gap-2 sm:items-end">
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <Badge variant={currentPlan.id === 'pro' ? 'default' : 'secondary'}>
+                          {currentPlan.name} · {currentPlan.constructor === 'v2' ? 'V2' : 'V1'}
+                        </Badge>
                         <Button
-                          key={tier.id}
-                          variant={tier.id === currentPlan.id ? 'default' : 'outline'}
+                          variant="outline"
                           size="sm"
-                          disabled={planBusy === project.code || tier.id === currentPlan.id}
-                          onClick={() => void setPlan(project.code, tier.id)}
+                          nativeButton={false}
+                          render={<Link to={`/app/projects/${project.code}`} />}
                         >
-                          {tier.id === currentPlan.id ? `Тариф «${tier.name}»` : `Включить «${tier.name}»`}
+                          Аналитика
                         </Button>
-                      ))}
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        nativeButton={false}
-                        render={<Link to={`/app/projects/${project.code}`} />}
-                      >
-                        Аналитика
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        nativeButton={false}
-                        render={<Link to={`/app/projects/${project.code}/templates`} />}
-                      >
-                        Шаблоны
-                      </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          nativeButton={false}
+                          render={<Link to={`/app/projects/${project.code}/templates`} />}
+                        >
+                          Шаблоны
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          nativeButton={false}
+                          render={<Link to={`/app/projects/${project.code}/plan`} />}
+                        >
+                          Тариф
+                        </Button>
+                      </div>
+                      <div className="flex flex-wrap items-center justify-end gap-2">
+                        <span className="text-muted-foreground text-xs">Сменить тариф:</span>
+                        {PLAN_TIERS.map((tier) => (
+                          <Button
+                            key={tier.id}
+                            variant={tier.id === currentPlan.id ? 'default' : 'outline'}
+                            size="sm"
+                            disabled={planBusy === project.code || tier.id === currentPlan.id}
+                            onClick={() => void setPlan(project.code, tier.id)}
+                          >
+                            {tier.id === currentPlan.id
+                              ? `Сейчас «${tier.name}»`
+                              : `Включить «${tier.name}»`}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </CardHeader>

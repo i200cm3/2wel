@@ -560,6 +560,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
       for (const clip of property.sequences[id]?.clips ?? []) push(clip.src)
     }
     for (const menu of Object.values(property.menus ?? {})) {
+      if (menu.menuBgSrc) push(menu.menuBgSrc)
       for (const branch of menu.branches) {
         for (const clip of property.sequences[branch.sequenceId]?.clips ?? []) push(clip.src)
       }
@@ -717,6 +718,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
             menuCopy={activeMenu.menuCopy}
             menuTheme={activeMenu.menuTheme}
             menuLinks={activeMenu.menuLinks}
+            bgSrc={activeMenu.menuBgSrc}
             ttsSrc={menuVisitTtsSrc}
             ttsVolume={ttsVol}
             ttsAudioRef={ttsAudioRef}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
-import { Copy, Lock, LockOpen, Mic, Play, Square, Trash2, Type } from 'lucide-react'
+import { Copy, Lock, LockOpen, Mic, Play, Sparkles, Square, Trash2, Type } from 'lucide-react'
 import { StoryPlayer } from '@/components/StoryPlayer'
 import { TtsFileSelect } from '@/components/TtsFileSelect'
 import { Button } from '@/components/ui/button'
@@ -18,12 +18,16 @@ import {
 import { ttsPlaybackUrl } from '@/lib/ttsUrl'
 import {
   captionBarStyle,
+  defaultBlockMeta,
+  type BlockMeta,
+  type PropertyBrand,
   type PropertyTheme,
   type StoryClip,
   type StoryCue,
   type StorySequence,
 } from '@/types/story'
 import { CaptionThemeFields } from './CaptionThemeFields'
+import { CueCopyGenerateDialog } from './CueCopyGenerateDialog'
 import {
   inspectorFieldsClass,
   inspectorGridClass,
@@ -55,6 +59,10 @@ type Props = {
   removeCue: (cueId: string) => void
   patchTheme: (patch: Partial<PropertyTheme>) => void
   cuePreviewClip: StoryClip | null
+  isAdmin?: boolean
+  brand?: PropertyBrand
+  copyFacts?: string
+  blockMeta?: BlockMeta
 }
 
 export function CueInspector({
@@ -80,6 +88,10 @@ export function CueInspector({
   removeCue,
   patchTheme,
   cuePreviewClip,
+  isAdmin = false,
+  brand,
+  copyFacts = '',
+  blockMeta,
 }: Props) {
   const [ttsBusy, setTtsBusy] = useState(false)
   const [ttsGenMessage, setTtsGenMessage] = useState<string | null>(null)
@@ -87,6 +99,7 @@ export function CueInspector({
   const [ttsPreviewPlaying, setTtsPreviewPlaying] = useState(false)
   /** Пока есть сгенерированный TTS — поле текста заблокировано, пока не снимут замок. */
   const [ttsUnlocked, setTtsUnlocked] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
   const ttsPreviewAudioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
@@ -138,6 +151,12 @@ export function CueInspector({
   const hasGeneratedTts = Boolean(selectedCue.ttsSrc)
   const ttsPersonalized = ttsTextNeedsGuestName(selectedCue.ttsText)
   const ttsLocked = hasGeneratedTts && !ttsUnlocked && !ttsPersonalized
+  const cueIndex = Math.max(
+    0,
+    filledCues.findIndex((cue) => cue.id === selectedCue.id),
+  )
+  const canUseAi = isAdmin && Boolean(brand) && filledCues.length > 0
+  const resolvedMeta = blockMeta ?? defaultBlockMeta()
 
   const buildTtsFromCaption = useCallback(
     () =>
@@ -245,6 +264,14 @@ export function CueInspector({
       </div>
       <div className={inspectorFieldsClass}>
         <div className="flex min-w-0 flex-col gap-3">
+          {canUseAi ? (
+            <div className="flex justify-end">
+              <Button type="button" variant="outline" size="sm" onClick={() => setAiOpen(true)}>
+                <Sparkles data-icon="inline-start" />
+                ИИ · титр
+              </Button>
+            </div>
+          ) : null}
           <Field orientation="horizontal" data-disabled={!previewClip || undefined}>
             <Switch
               id="editor-show-title"
@@ -529,6 +556,29 @@ export function CueInspector({
           </div>
         </div>
       </div>
+      {canUseAi && brand ? (
+        <CueCopyGenerateDialog
+          open={aiOpen}
+          onOpenChange={setAiOpen}
+          brand={brand}
+          copyFacts={copyFacts}
+          sequence={sequence}
+          blockMeta={resolvedMeta}
+          cues={filledCues}
+          cueIndex={cueIndex}
+          onApply={(draft) => {
+            if (draft.title !== (sequenceTitle ?? '')) {
+              onSequenceTitleChange(draft.title)
+            }
+            updateCue(selectedCue.id, {
+              text: draft.text,
+              ttsText: draft.ttsText,
+            })
+            setTtsUnlocked(true)
+            setTtsGenMessage('Текст обновлён ИИ — при необходимости перегенерируйте озвучку')
+          }}
+        />
+      ) : null}
     </div>
   )
 }

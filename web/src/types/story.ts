@@ -585,6 +585,16 @@ export type PropertyTheme = {
   titleFontSize: number
   /** Размер текста, px */
   textFontSize: number
+  /** Начертание заголовка */
+  titleBold: boolean
+  titleItalic: boolean
+  titleUnderline: boolean
+  titleStroke: boolean
+  /** Начертание титров */
+  textBold: boolean
+  textItalic: boolean
+  textUnderline: boolean
+  textStroke: boolean
   /** Громкость фоновой музыки 0..1 */
   musicVolume: number
   /** Громкость озвучки слайда 0..1 */
@@ -601,6 +611,14 @@ export const DEFAULT_THEME: PropertyTheme = {
   textFont: 'manrope',
   titleFontSize: 28,
   textFontSize: 15,
+  titleBold: true,
+  titleItalic: false,
+  titleUnderline: false,
+  titleStroke: false,
+  textBold: false,
+  textItalic: false,
+  textUnderline: false,
+  textStroke: false,
   musicVolume: 0.22,
   ttsVolume: 1,
 }
@@ -609,9 +627,17 @@ export type MenuTheme = {
   titleFont: StoryFontId
   titleFontSize: number
   titleColor: string
+  titleBold: boolean
+  titleItalic: boolean
+  titleUnderline: boolean
+  titleStroke: boolean
   textFont: StoryFontId
   textFontSize: number
   textColor: string
+  textBold: boolean
+  textItalic: boolean
+  textUnderline: boolean
+  textStroke: boolean
   kickerColor: string
   kickerFontSize: number
   buttonBg: string
@@ -634,9 +660,17 @@ export const DEFAULT_MENU_THEME: MenuTheme = {
   titleFont: 'cormorant',
   titleFontSize: 36,
   titleColor: '#e8dfd0',
+  titleBold: true,
+  titleItalic: false,
+  titleUnderline: false,
+  titleStroke: false,
   textFont: 'manrope',
   textFontSize: 14,
   textColor: '#e8dfd0',
+  textBold: false,
+  textItalic: false,
+  textUnderline: false,
+  textStroke: false,
   kickerColor: '#c4a574',
   kickerFontSize: 11,
   buttonBg: '#e8dfd0',
@@ -657,9 +691,17 @@ export function normalizeMenuTheme(theme?: Partial<MenuTheme> | null): MenuTheme
     titleFont: normalizeFont(theme?.titleFont, DEFAULT_MENU_THEME.titleFont),
     titleFontSize: normalizeFontSize(theme?.titleFontSize, DEFAULT_MENU_THEME.titleFontSize, 18, 56),
     titleColor: normalizeHex(theme?.titleColor, DEFAULT_MENU_THEME.titleColor),
+    titleBold: normalizeBool(theme?.titleBold, DEFAULT_MENU_THEME.titleBold),
+    titleItalic: normalizeBool(theme?.titleItalic, DEFAULT_MENU_THEME.titleItalic),
+    titleUnderline: normalizeBool(theme?.titleUnderline, DEFAULT_MENU_THEME.titleUnderline),
+    titleStroke: normalizeBool(theme?.titleStroke, DEFAULT_MENU_THEME.titleStroke),
     textFont: normalizeFont(theme?.textFont, DEFAULT_MENU_THEME.textFont),
     textFontSize: normalizeFontSize(theme?.textFontSize, DEFAULT_MENU_THEME.textFontSize, 10, 24),
     textColor: normalizeHex(theme?.textColor, DEFAULT_MENU_THEME.textColor),
+    textBold: normalizeBool(theme?.textBold, DEFAULT_MENU_THEME.textBold),
+    textItalic: normalizeBool(theme?.textItalic, DEFAULT_MENU_THEME.textItalic),
+    textUnderline: normalizeBool(theme?.textUnderline, DEFAULT_MENU_THEME.textUnderline),
+    textStroke: normalizeBool(theme?.textStroke, DEFAULT_MENU_THEME.textStroke),
     kickerColor: normalizeHex(theme?.kickerColor, DEFAULT_MENU_THEME.kickerColor),
     kickerFontSize: normalizeFontSize(
       theme?.kickerFontSize,
@@ -686,15 +728,86 @@ export function normalizeMenuTheme(theme?: Partial<MenuTheme> | null): MenuTheme
   }
 }
 
+export type TextStyleFlag = 'bold' | 'italic' | 'underline' | 'stroke'
+
+export type TextStyleState = {
+  bold: boolean
+  italic: boolean
+  underline: boolean
+  stroke: boolean
+}
+
+export function textStyleFlags(style: TextStyleState): TextStyleFlag[] {
+  const out: TextStyleFlag[] = []
+  if (style.bold) out.push('bold')
+  if (style.italic) out.push('italic')
+  if (style.underline) out.push('underline')
+  if (style.stroke) out.push('stroke')
+  return out
+}
+
+export function textStyleFromFlags(flags: readonly string[]): TextStyleState {
+  const set = new Set(flags)
+  return {
+    bold: set.has('bold'),
+    italic: set.has('italic'),
+    underline: set.has('underline'),
+    stroke: set.has('stroke'),
+  }
+}
+
+/** CSS-значения начертания: заголовок bold → 600 (как раньше), текст bold → 700. */
+export function textStyleCssVars(
+  style: TextStyleState,
+  kind: 'title' | 'text',
+): { weight: string; style: string; decoration: string; stroke: string } {
+  return {
+    weight: style.bold ? (kind === 'title' ? '600' : '700') : '400',
+    style: style.italic ? 'italic' : 'normal',
+    decoration: style.underline ? 'underline' : 'none',
+    stroke: style.stroke
+      ? kind === 'title'
+        ? '1.35px #0a100e'
+        : '1px #0a100e'
+      : '0 transparent',
+  }
+}
+
 export function menuThemeStyle(theme?: Partial<MenuTheme> | null): Record<string, string> {
   const t = normalizeMenuTheme(theme)
+  const titleStyle = textStyleCssVars(
+    {
+      bold: t.titleBold,
+      italic: t.titleItalic,
+      underline: t.titleUnderline,
+      stroke: t.titleStroke,
+    },
+    'title',
+  )
+  const textStyle = textStyleCssVars(
+    {
+      bold: t.textBold,
+      italic: t.textItalic,
+      underline: t.textUnderline,
+      stroke: t.textStroke,
+    },
+    'text',
+  )
   return {
     '--menu-title-font': storyFontCss(t.titleFont, DEFAULT_MENU_THEME.titleFont),
     '--menu-title-size': `${t.titleFontSize}px`,
     '--menu-title-color': t.titleColor,
+    '--menu-title-weight': titleStyle.weight,
+    '--menu-title-style': titleStyle.style,
+    '--menu-title-decoration': titleStyle.decoration,
+    '--menu-title-stroke': titleStyle.stroke,
     '--menu-text-font': storyFontCss(t.textFont, DEFAULT_MENU_THEME.textFont),
     '--menu-text-size': `${t.textFontSize}px`,
     '--menu-text-color': t.textColor,
+    '--menu-text-weight': textStyle.weight,
+    '--menu-text-style': textStyle.style,
+    '--menu-text-decoration': textStyle.decoration,
+    '--menu-text-stroke': textStyle.stroke,
     '--menu-kicker-color': t.kickerColor,
     '--menu-kicker-size': `${t.kickerFontSize}px`,
     '--menu-btn-bg': t.buttonBg,
@@ -755,6 +868,10 @@ export type PropertyConfig = {
   brand: PropertyBrand
   defaultGuestName: string
   greetingSubtitle: string
+  /**
+   * Факты об объекте для ИИ-генерации титров/заголовков (ручной ввод, без fetch с сайта).
+   */
+  copyFacts?: string
   sequences: Record<string, StorySequence>
   /** Порядок фаз до меню */
   flow: string[]
@@ -812,6 +929,8 @@ export type MenuScreenConfig = {
   menuCopy?: MenuCopy
   menuTheme?: MenuTheme
   menuLinks?: MenuLink[]
+  /** Фон меню (фото из медиатеки проекта). */
+  menuBgSrc?: string
   /** Текст для синтеза озвучки меню (как ttsText у титра). */
   menuTtsText?: string
   menuTtsSrc?: string
@@ -824,6 +943,10 @@ const HEX_RE = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i
 function normalizeHex(value: unknown, fallback: string): string {
   if (typeof value === 'string' && HEX_RE.test(value.trim())) return value.trim()
   return fallback
+}
+
+function normalizeBool(value: unknown, fallback: boolean): boolean {
+  return typeof value === 'boolean' ? value : fallback
 }
 
 function normalizeFont(value: unknown, fallback: StoryFontId): StoryFontId {
@@ -1000,6 +1123,14 @@ export function normalizeTheme(theme?: Partial<PropertyTheme> | null): PropertyT
     textFont: normalizeFont(theme?.textFont, DEFAULT_THEME.textFont),
     titleFontSize: normalizeFontSize(theme?.titleFontSize, DEFAULT_THEME.titleFontSize, 14, 56),
     textFontSize: normalizeFontSize(theme?.textFontSize, DEFAULT_THEME.textFontSize, 10, 32),
+    titleBold: normalizeBool(theme?.titleBold, DEFAULT_THEME.titleBold),
+    titleItalic: normalizeBool(theme?.titleItalic, DEFAULT_THEME.titleItalic),
+    titleUnderline: normalizeBool(theme?.titleUnderline, DEFAULT_THEME.titleUnderline),
+    titleStroke: normalizeBool(theme?.titleStroke, DEFAULT_THEME.titleStroke),
+    textBold: normalizeBool(theme?.textBold, DEFAULT_THEME.textBold),
+    textItalic: normalizeBool(theme?.textItalic, DEFAULT_THEME.textItalic),
+    textUnderline: normalizeBool(theme?.textUnderline, DEFAULT_THEME.textUnderline),
+    textStroke: normalizeBool(theme?.textStroke, DEFAULT_THEME.textStroke),
     musicVolume: normalizeUnit(theme?.musicVolume, DEFAULT_THEME.musicVolume),
     ttsVolume: normalizeUnit(theme?.ttsVolume, DEFAULT_THEME.ttsVolume),
   }
@@ -1026,6 +1157,24 @@ export function captionBarStyle(
   theme?: Partial<PropertyTheme> | null,
 ): Record<string, string> {
   const t = normalizeTheme(theme)
+  const titleStyle = textStyleCssVars(
+    {
+      bold: t.titleBold,
+      italic: t.titleItalic,
+      underline: t.titleUnderline,
+      stroke: t.titleStroke,
+    },
+    'title',
+  )
+  const textStyle = textStyleCssVars(
+    {
+      bold: t.textBold,
+      italic: t.textItalic,
+      underline: t.textUnderline,
+      stroke: t.textStroke,
+    },
+    'text',
+  )
   const typography = {
     '--story-title-color': t.titleColor,
     '--story-text-color': t.textColor,
@@ -1033,6 +1182,14 @@ export function captionBarStyle(
     '--story-text-font': storyFontCss(t.textFont, DEFAULT_THEME.textFont),
     '--story-title-size': `${t.titleFontSize}px`,
     '--story-text-size': `${t.textFontSize}px`,
+    '--story-title-weight': titleStyle.weight,
+    '--story-title-style': titleStyle.style,
+    '--story-title-decoration': titleStyle.decoration,
+    '--story-title-stroke': titleStyle.stroke,
+    '--story-text-weight': textStyle.weight,
+    '--story-text-style': textStyle.style,
+    '--story-text-decoration': textStyle.decoration,
+    '--story-text-stroke': textStyle.stroke,
   }
   if (t.captionBarOpacity <= 0) {
     return {
@@ -1248,6 +1405,10 @@ export function createMenuScreen(
     typeof partial?.menuTtsHash === 'string' && partial.menuTtsHash.trim()
       ? partial.menuTtsHash.trim()
       : undefined
+  const menuBgSrc =
+    typeof partial?.menuBgSrc === 'string' && partial.menuBgSrc.trim()
+      ? partial.menuBgSrc.trim()
+      : undefined
   return {
     id,
     label,
@@ -1255,6 +1416,7 @@ export function createMenuScreen(
     menuCopy: normalizeMenuCopy(partial?.menuCopy),
     menuTheme: normalizeMenuTheme(partial?.menuTheme),
     menuLinks: normalizeMenuLinks(partial?.menuLinks),
+    ...(menuBgSrc ? { menuBgSrc } : {}),
     menuTtsText,
     menuTtsSrc,
     menuTtsHash,
@@ -1324,6 +1486,8 @@ function normalizeMenuScreen(
         : undefined
   const rawFirstOnly =
     o.menuTtsFirstOnly !== undefined ? o.menuTtsFirstOnly !== false : legacy?.menuTtsFirstOnly !== false
+  const rawBg =
+    typeof o.menuBgSrc === 'string' && o.menuBgSrc.trim() ? o.menuBgSrc.trim() : undefined
   return createMenuScreen({
     id,
     label,
@@ -1331,6 +1495,7 @@ function normalizeMenuScreen(
     menuCopy: rawCopy as MenuCopy | undefined,
     menuTheme: rawTheme as MenuTheme | undefined,
     menuLinks: rawLinks as MenuLink[] | undefined,
+    menuBgSrc: rawBg,
     menuTtsText: rawTtsText,
     menuTtsSrc: rawTts,
     menuTtsHash: rawTtsHash,
@@ -1599,6 +1764,8 @@ export function normalizeProperty(config: PropertyConfig): PropertyConfig {
     }
   }
   const main = menus[defaultMenuId]
+  const copyFactsRaw = typeof config.copyFacts === 'string' ? config.copyFacts : ''
+  const copyFacts = copyFactsRaw.trim() ? copyFactsRaw : undefined
   return {
     ...config,
     theme: normalizeTheme(config.theme),
@@ -1616,6 +1783,7 @@ export function normalizeProperty(config: PropertyConfig): PropertyConfig {
       typeof config.musicSrc === 'string' && config.musicSrc.trim()
         ? config.musicSrc.trim()
         : undefined,
+    ...(copyFacts ? { copyFacts } : { copyFacts: undefined }),
     emailPreview: normalizeEmailPreview(config.emailPreview),
     shareId:
       typeof config.shareId === 'string' && /^[a-z0-9]{3,16}$/i.test(config.shareId)

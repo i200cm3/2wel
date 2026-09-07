@@ -27,6 +27,7 @@ import {
   type PropertyBrand,
   type PropertyBranch,
 } from '@/types/story'
+import { MenuBackgroundFields } from './MenuBackgroundFields'
 import { MenuContactFields } from './MenuContactFields'
 import { MenuCopyFields } from './MenuCopyFields'
 import { MenuLinksFields } from './MenuLinksFields'
@@ -50,6 +51,7 @@ type Props = {
   menuCopy?: MenuCopy
   menuTheme?: MenuTheme
   menuLinks?: MenuLink[]
+  menuBgSrc?: string
   menuTtsText?: string
   menuTtsSrc?: string
   menuTtsHash?: string
@@ -62,6 +64,7 @@ type Props = {
   refreshTts: () => void
   onMenuCopyChange: (copy: MenuCopy) => void
   onBrandPatch: (patch: Partial<PropertyBrand>) => void
+  onMenuBgChange?: (src: string | undefined) => void
   onMenuThemePatch: (patch: Partial<MenuTheme>) => void
   onMenuLinksChange: (links: MenuLink[]) => void
   onMenuTtsPatch: (patch: {
@@ -81,6 +84,7 @@ export function MenuInspector({
   menuCopy,
   menuTheme,
   menuLinks,
+  menuBgSrc,
   menuTtsText,
   menuTtsSrc,
   menuTtsHash,
@@ -93,6 +97,7 @@ export function MenuInspector({
   refreshTts,
   onMenuCopyChange,
   onBrandPatch,
+  onMenuBgChange,
   onMenuThemePatch,
   onMenuLinksChange,
   onMenuTtsPatch,
@@ -181,13 +186,14 @@ export function MenuInspector({
           <div className={`app is-player is-embedded${isLandscape ? ' is-landscape' : ''}`}>
             <div className="phone">
               <MenuScreen
-                key={`menu-live-${ttsPreviewKey}`}
+                key={`menu-live-${ttsPreviewKey}-${menuBgSrc ?? 'default'}`}
                 brandName={brand.fullName}
                 guestName={guestName}
                 branches={branches}
                 menuCopy={menuCopy}
                 menuTheme={menuTheme}
                 menuLinks={menuLinks}
+                bgSrc={menuBgSrc}
                 ttsSrc={ttsPreviewKey > 0 ? menuTtsSrc : undefined}
                 ttsVolume={ttsVolume}
                 editable
@@ -208,6 +214,13 @@ export function MenuInspector({
       </div>
       <div className="flex min-w-0 flex-col gap-4 pb-8 min-[901px]:h-full min-[901px]:min-h-0 min-[901px]:overflow-y-auto min-[901px]:overscroll-contain min-[901px]:[scrollbar-gutter:stable]">
         <MenuCopyFields copy={menuCopy} brandName={brand.fullName} onChange={onMenuCopyChange} />
+        {onMenuBgChange ? (
+          <MenuBackgroundFields
+            projectCode={projectCode}
+            bgSrc={menuBgSrc}
+            onChange={onMenuBgChange}
+          />
+        ) : null}
         <MenuContactFields brand={brand} onPatch={onBrandPatch} />
         <MenuLinksFields
           links={menuLinks}

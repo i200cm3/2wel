@@ -208,12 +208,17 @@ export function rewriteConfigMedia(config, code) {
     for (const [id, menu] of Object.entries(config.menus)) {
       if (!menu || typeof menu !== 'object') continue
       const rawTts = menu.menuTtsSrc
+      const rawBg = menu.menuBgSrc
       menus[id] = {
         ...menu,
         menuTtsSrc:
           typeof rawTts === 'string' && rawTts.trim()
             ? rewriteSrc(rawTts.trim(), code)
             : rawTts,
+        menuBgSrc:
+          typeof rawBg === 'string' && rawBg.trim()
+            ? rewriteSrc(rawBg.trim(), code)
+            : rawBg,
       }
     }
   }

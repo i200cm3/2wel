@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from 'react'
 import { fillName, resolveMenuCopy } from '../content'
 import { ttsPlaybackUrl } from '../lib/ttsUrl'
 import {
@@ -22,6 +22,8 @@ type Props = {
   menuCopy?: MenuCopy
   menuTheme?: MenuTheme
   menuLinks?: MenuLink[]
+  /** Фон меню из медиатеки шаблона */
+  bgSrc?: string
   /** Озвучка при появлении меню */
   ttsSrc?: string
   ttsVolume?: number
@@ -83,6 +85,7 @@ export function MenuScreen({
   menuCopy,
   menuTheme,
   menuLinks,
+  bgSrc,
   ttsSrc,
   ttsVolume = 1,
   ttsAudioRef,
@@ -100,6 +103,11 @@ export function MenuScreen({
   onTtsPlayingChangeRef.current = onTtsPlayingChange
   const { kicker, title, hint } = resolveMenuCopy(menuCopy, brandName, guestName)
   const theme = normalizeMenuTheme(menuTheme)
+  const photo = bgSrc?.trim()
+  const rootStyle = {
+    ...menuThemeStyle(theme),
+    ...(photo ? { '--menu-photo': `url(${JSON.stringify(photo)})` } : {}),
+  } as CSSProperties
   const links = normalizeMenuLinks(menuLinks)
   const themeRef = useRef(theme)
   themeRef.current = theme
@@ -121,12 +129,13 @@ export function MenuScreen({
     }
     setFontsReady(false)
     const family = titleFontCss.split(',')[0]?.trim() || "'Cormorant Garamond'"
-    void fonts.load(`600 ${theme.titleFontSize}px ${family}`).then(mark).catch(mark)
+    const weight = theme.titleBold ? '600' : '400'
+    void fonts.load(`${weight} ${theme.titleFontSize}px ${family}`).then(mark).catch(mark)
     void fonts.ready.then(mark).catch(mark)
     return () => {
       cancelled = true
     }
-  }, [theme.titleFontSize, titleFontCss])
+  }, [theme.titleBold, theme.titleFontSize, titleFontCss])
 
   useEffect(() => {
     const audio = ttsRef.current
@@ -270,7 +279,7 @@ export function MenuScreen({
     <div
       ref={menuRef}
       className={`menu${fontsReady ? ' is-fonts-ready' : ''}${editable ? ' is-editable' : ''}`}
-      style={menuThemeStyle(theme)}
+      style={rootStyle}
       onPointerMove={(e) => {
         if (dragRef.current?.pointerId === e.pointerId) applyDrag(e.clientX, e.clientY)
       }}

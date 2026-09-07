@@ -10,6 +10,7 @@ import {
   clearSessionCookie,
 } from './auth.js'
 import { createProjectForUser, handleCabinetApi, projectForUser } from './cabinet.mjs'
+import { generateCueCopy } from './cueCopyGenerate.mjs'
 import { adminSetProjectPlan } from './plans.mjs'
 import { parseProjectCode } from './projectCode.mjs'
 import { query } from './db.js'
@@ -35,6 +36,7 @@ import {
   publicUser,
   registerUser,
   searchUsers,
+  setUserAdmin,
   setUserBlocked,
   setUserPassword,
 } from './users.mjs'
@@ -725,11 +727,15 @@ const server = http.createServer(async (req, res) => {
             json(res, 400, { error: 'invalid json' })
             return
           }
-          if (typeof payload.isBlocked !== 'boolean') {
-            json(res, 400, { error: 'Укажите isBlocked: true|false' })
+          const hasAdmin = typeof payload.isAdmin === 'boolean'
+          const hasBlocked = typeof payload.isBlocked === 'boolean'
+          if (hasAdmin === hasBlocked) {
+            json(res, 400, { error: 'Укажите isAdmin или isBlocked: true|false' })
             return
           }
-          const updated = await setUserBlocked(session.userId, targetId, payload.isBlocked)
+          const updated = hasAdmin
+            ? await setUserAdmin(session.userId, targetId, payload.isAdmin)
+            : await setUserBlocked(session.userId, targetId, payload.isBlocked)
           if (!updated.ok) {
             json(res, updated.status, { error: updated.error })
             return
@@ -782,6 +788,31 @@ const server = http.createServer(async (req, res) => {
           return
         }
         json(res, 200, { ok: true, ...changed.plan })
+        return
+      }
+      if ((url === '/api/admin/generate-cue-copy' || url === '/api/admin/generate-cue-copy/') && req.method === 'POST') {
+        const raw = await readBuffer(req, MAX_JSON_BYTES)
+        let payload = {}
+        try {
+          payload = JSON.parse(raw.toString('utf8') || '{}')
+        } catch {
+          json(res, 400, { error: 'invalid json' })
+          return
+        }
+        const generated = await generateCueCopy(payload)
+        if (!generated.ok) {
+          json(res, generated.status || 502, {
+            error: generated.error || 'generate failed',
+            ...(generated.detail ? { detail: generated.detail } : {}),
+          })
+          return
+        }
+        json(res, 200, {
+          ok: true,
+          title: generated.title,
+          cue: generated.cue,
+          model: generated.model,
+        })
         return
       }
       json(res, 404, { error: 'not found' })

@@ -252,6 +252,50 @@ async function assertAdminTarget(actorId, targetId) {
   return { ok: true, target }
 }
 
+const USER_RETURNING = `id, login, email, name, is_admin, is_blocked, created_at,
+       (SELECT count(*)::int
+        FROM templates t
+        JOIN projects p ON p.id = t.project_id
+        WHERE p.user_id = users.id) AS template_count`
+
+/**
+ * Правила смены системной роли. lastAdminCount — число админов до изменения.
+ * @returns {string | null}
+ */
+export function adminRoleChangeError({ actorId, targetId, makingAdmin, targetIsAdmin, adminCount }) {
+  if (!targetId || targetId === actorId) return 'Нельзя менять роль своего аккаунта'
+  if (!makingAdmin && targetIsAdmin && Number(adminCount) <= 1) {
+    return 'Нельзя снять последнего администратора'
+  }
+  return null
+}
+
+export async function setUserAdmin(actorId, targetId, isAdmin) {
+  const next = Boolean(isAdmin)
+  const target = await findUserById(targetId)
+  if (!target) return { ok: false, status: 404, error: 'Пользователь не найден' }
+  const { rows: counts } = await query(`SELECT count(*)::int AS n FROM users WHERE is_admin = true`)
+  const error = adminRoleChangeError({
+    actorId,
+    targetId,
+    makingAdmin: next,
+    targetIsAdmin: isAdminUser(target),
+    adminCount: Number(counts[0]?.n ?? 0),
+  })
+  if (error) return { ok: false, status: 400, error }
+  const { rows } = await query(
+    `UPDATE users
+     SET is_admin = $2,
+         is_blocked = CASE WHEN $2 THEN false ELSE is_blocked END,
+         updated_at = now()
+     WHERE id = $1
+     RETURNING ${USER_RETURNING}`,
+    [targetId, next],
+  )
+  if (!rows[0]) return { ok: false, status: 404, error: 'Пользователь не найден' }
+  return { ok: true, user: mapAdminUser(rows[0]) }
+}
+
 export async function setUserBlocked(actorId, targetId, blocked) {
   const checked = await assertAdminTarget(actorId, targetId)
   if (!checked.ok) return checked
@@ -259,11 +303,7 @@ export async function setUserBlocked(actorId, targetId, blocked) {
     `UPDATE users
      SET is_blocked = $2, updated_at = now()
      WHERE id = $1
-     RETURNING id, login, email, name, is_admin, is_blocked, created_at,
-       (SELECT count(*)::int
-        FROM templates t
-        JOIN projects p ON p.id = t.project_id
-        WHERE p.user_id = users.id) AS template_count`,
+     RETURNING ${USER_RETURNING}`,
     [targetId, Boolean(blocked)],
   )
   if (!rows[0]) return { ok: false, status: 404, error: 'Пользователь не найден' }

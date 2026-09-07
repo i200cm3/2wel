@@ -375,11 +375,16 @@ html.is-player-presentation #root {
   margin: 0;
   width: 100%;
   font-family: var(--story-title-font, 'Cormorant Garamond', Georgia, serif);
-  font-weight: 600;
+  font-weight: var(--story-title-weight, 600);
+  font-style: var(--story-title-style, normal);
+  text-decoration: var(--story-title-decoration, none);
+  text-underline-offset: 0.12em;
   font-size: var(--story-title-size, 28px);
   line-height: 1.15;
   letter-spacing: 0.01em;
   color: var(--story-title-color, var(--sand));
+  -webkit-text-stroke: var(--story-title-stroke, 0 transparent);
+  paint-order: stroke fill;
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
   overflow-wrap: anywhere;
   word-break: break-word;
@@ -398,9 +403,15 @@ html.is-player-presentation #root {
   margin: 0;
   max-width: none;
   font-family: var(--story-text-font, 'Manrope', 'Segoe UI', sans-serif);
+  font-weight: var(--story-text-weight, 400);
+  font-style: var(--story-text-style, normal);
+  text-decoration: var(--story-text-decoration, none);
+  text-underline-offset: 0.12em;
   color: var(--story-text-color, var(--sand));
   font-size: var(--story-text-size, 15px);
   line-height: 1.35;
+  -webkit-text-stroke: var(--story-text-stroke, 0 transparent);
+  paint-order: stroke fill;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
@@ -461,7 +472,7 @@ html.is-player-presentation #root {
   inset: 0;
   background:
     linear-gradient(180deg, rgba(13, 20, 17, 0.35), rgba(13, 20, 17, 0.88)),
-    url('/media/projects/djinal/library/gallery/about/01.jpg') center / cover;
+    var(--menu-photo, url('/media/projects/djinal/library/gallery/about/01.jpg')) center / cover;
 }
 
 .menu-inner {
@@ -532,7 +543,12 @@ html.is-player-presentation #root {
   margin: 0;
   font-family: var(--menu-title-font, 'Cormorant Garamond', Georgia, serif);
   font-size: var(--menu-title-size, 36px);
-  font-weight: 600;
+  font-weight: var(--menu-title-weight, 600);
+  font-style: var(--menu-title-style, normal);
+  text-decoration: var(--menu-title-decoration, none);
+  text-underline-offset: 0.12em;
+  -webkit-text-stroke: var(--menu-title-stroke, 0 transparent);
+  paint-order: stroke fill;
   line-height: 1.05;
   color: var(--menu-title-color, var(--sand));
   /* Пока грузится веб-шрифт — невидимый, без скачка с Manrope/Georgia */
@@ -547,6 +563,12 @@ html.is-player-presentation #root {
   margin: 10px 0 18px;
   font-family: var(--menu-text-font, 'Manrope', 'Segoe UI', sans-serif);
   font-size: var(--menu-text-size, 14px);
+  font-weight: var(--menu-text-weight, 400);
+  font-style: var(--menu-text-style, normal);
+  text-decoration: var(--menu-text-decoration, none);
+  text-underline-offset: 0.12em;
+  -webkit-text-stroke: var(--menu-text-stroke, 0 transparent);
+  paint-order: stroke fill;
   color: color-mix(in srgb, var(--menu-text-color, var(--sand)) 72%, transparent);
 }
 

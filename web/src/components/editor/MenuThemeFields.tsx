@@ -14,6 +14,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Slider } from '@/components/ui/slider'
+import { TextStyleToggle } from './TextStyleToggle'
 import { sliderNumber } from './timelineMath'
 
 function SizeField({
@@ -119,6 +120,36 @@ export function MenuThemeFields({
                 label="Текст"
                 value={t.textFont}
                 onChange={(textFont) => onPatch({ textFont })}
+              />
+              <TextStyleToggle
+                label="Начертание заголовка"
+                bold={t.titleBold}
+                italic={t.titleItalic}
+                underline={t.titleUnderline}
+                stroke={t.titleStroke}
+                onChange={(next) =>
+                  onPatch({
+                    titleBold: next.bold,
+                    titleItalic: next.italic,
+                    titleUnderline: next.underline,
+                    titleStroke: next.stroke,
+                  })
+                }
+              />
+              <TextStyleToggle
+                label="Начертание текста"
+                bold={t.textBold}
+                italic={t.textItalic}
+                underline={t.textUnderline}
+                stroke={t.textStroke}
+                onChange={(next) =>
+                  onPatch({
+                    textBold: next.bold,
+                    textItalic: next.italic,
+                    textUnderline: next.underline,
+                    textStroke: next.stroke,
+                  })
+                }
               />
             </div>
           </AccordionContent>
