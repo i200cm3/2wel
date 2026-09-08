@@ -21,6 +21,7 @@ import {
   AudioLinesIcon,
   PlugIcon,
   UsersIcon,
+  UsersRoundIcon,
 } from "lucide-react"
 import { Link, useParams } from "react-router-dom"
 
@@ -48,6 +49,7 @@ export function AppSidebar({
   const navSettings = projectCode
     ? [
         { title: "Голос", url: `${base}/voice`, icon: <MicIcon /> },
+        { title: "Команда", url: `${base}/team`, icon: <UsersRoundIcon /> },
         { title: "Интеграции", url: `${base}/integrations`, icon: <PlugIcon /> },
         { title: "Тариф", url: `${base}/plan`, icon: <GaugeIcon /> },
       ]

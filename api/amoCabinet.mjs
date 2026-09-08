@@ -10,6 +10,7 @@ import {
 import { deleteAmoConnection, getAmoConnection } from './amoConnections.mjs'
 import { listAmoStatusMaps, replaceAmoStatusMaps } from './amoStatusMaps.mjs'
 import { listTemplates, projectForUser } from './cabinet.mjs'
+import { canManageProject } from './members.mjs'
 
 export async function handleAmoCabinet(req, res, url, method, json, userId, extras = {}) {
   const connect = url.match(/^\/api\/projects\/([^/]+)\/amocrm\/connect\/?$/)
@@ -17,6 +18,10 @@ export async function handleAmoCabinet(req, res, url, method, json, userId, extr
     const project = await projectForUser(userId, decodeURIComponent(connect[1]))
     if (!project) {
       json(res, 404, { error: 'project not found' })
+      return true
+    }
+    if (!canManageProject(project)) {
+      json(res, 403, { error: 'Интеграцию подключает владелец объекта' })
       return true
     }
     if (method !== 'POST') {
@@ -48,6 +53,10 @@ export async function handleAmoCabinet(req, res, url, method, json, userId, extr
       return true
     }
     if (method === 'PUT') {
+      if (!canManageProject(project)) {
+        json(res, 403, { error: 'Интеграцию настраивает владелец объекта' })
+        return true
+      }
       const body = extras.body && typeof extras.body === 'object' ? extras.body : {}
       const templates = await listTemplates(project.id)
       const codes = new Set(templates.map((item) => item.code))
@@ -103,6 +112,10 @@ export async function handleAmoCabinet(req, res, url, method, json, userId, extr
   }
 
   if (method === 'DELETE') {
+    if (!canManageProject(project)) {
+      json(res, 403, { error: 'Интеграцию отключает владелец объекта' })
+      return true
+    }
     const conn = await getAmoConnection(project.id)
     if (conn) {
       await unsubscribeAmoWebhook(conn, conn.webhookDestination, amoRedirectUri(req))

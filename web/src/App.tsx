@@ -10,11 +10,13 @@ import { LoginPage } from '@/cabinet/LoginPage'
 import { RegisterPage } from '@/cabinet/RegisterPage'
 import { ForgotPage } from '@/cabinet/ForgotPage'
 import { ResetPage } from '@/cabinet/ResetPage'
+import { JoinPage } from '@/cabinet/JoinPage'
 import { AccountPage } from '@/cabinet/AccountPage'
 import { AdminUsersPage } from '@/cabinet/AdminUsersPage'
 import { AdminTtsUsagePage } from '@/cabinet/AdminTtsUsagePage'
 import { AppIndex, OverviewPage } from '@/cabinet/OverviewPage'
 import { PlanPage } from '@/cabinet/PlanPage'
+import { TeamPage } from '@/cabinet/TeamPage'
 import { TemplatesPage } from '@/cabinet/TemplatesPage'
 import { VoicePage } from '@/cabinet/VoicePage'
 import { PlayerLoading } from '@/components/PlayerLoading'
@@ -76,6 +78,7 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/join" element={<JoinPage />} />
         <Route path="/forgot" element={<ForgotPage />} />
         <Route path="/reset" element={<ResetPage />} />
         <Route
@@ -107,6 +110,7 @@ export default function App() {
           <Route path="projects/:code/api" element={<ApiToIntegrations />} />
           <Route path="projects/:code/integrations" element={<IntegrationsPage />} />
           <Route path="projects/:code/voice" element={<VoicePage />} />
+          <Route path="projects/:code/team" element={<TeamPage />} />
           <Route path="projects/:code/plan" element={<PlanPage />} />
         </Route>
         <Route path="/" element={<HomePage />} />

@@ -3,6 +3,7 @@ import { useOutletContext, useParams, useSearchParams } from 'react-router-dom'
 import { Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { CabinetOutlet } from '@/cabinet/CabinetLayout'
+import { canManageProject } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -56,6 +57,7 @@ export function IntegrationsPage() {
   const { code } = useParams()
   const { project } = useOutletContext<CabinetOutlet>()
   const projectCode = code || project?.code || ''
+  const canManage = canManageProject(project)
   const [params, setParams] = useSearchParams()
   const [data, setData] = useState<AmoConnection | null>(null)
   const [keys, setKeys] = useState<ProjectApiKey[] | null>(null)
@@ -155,6 +157,7 @@ export function IntegrationsPage() {
           <CardDescription>
             Подключите аккаунт к amoCRM. Ссылка на ролик пишется в поле сделки «Ссылка для
             презентации».
+            {canManage ? '' : ' Менять подключение может только владелец объекта.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
@@ -195,7 +198,7 @@ export function IntegrationsPage() {
               <div className="flex flex-wrap gap-2">
                 <Button
                   type="button"
-                  disabled={pending || !data.configured}
+                  disabled={pending || !data.configured || !canManage}
                   onClick={() => {
                     if (!projectCode) return
                     setPending(true)
@@ -214,7 +217,7 @@ export function IntegrationsPage() {
                 <Button
                   type="button"
                   variant="destructive"
-                  disabled={pending}
+                  disabled={pending || !canManage}
                   onClick={() => {
                     if (!projectCode) return
                     if (!window.confirm('Отключить AmoCRM у этого объекта?')) return
@@ -237,7 +240,7 @@ export function IntegrationsPage() {
               <p className="text-muted-foreground">Ещё не подключено.</p>
               <Button
                 type="button"
-                disabled={pending || !data.configured}
+                disabled={pending || !data.configured || !canManage}
                 onClick={() => {
                   if (!projectCode) return
                   setPending(true)
@@ -388,6 +391,7 @@ export function IntegrationsPage() {
                     type="button"
                     variant="outline"
                     size="sm"
+                    disabled={!canManage}
                     onClick={() => {
                       const first = publishedTemplates[0]
                       if (!first) return
@@ -408,7 +412,7 @@ export function IntegrationsPage() {
                   <Button
                     type="button"
                     size="sm"
-                    disabled={pendingMap}
+                    disabled={pendingMap || !canManage}
                     onClick={() => {
                       if (!projectCode) return
                       const incomplete = mapDraft.some((item) => !item.statusId)
@@ -520,10 +524,10 @@ export function IntegrationsPage() {
                 value={name}
                 onChange={(event) => setName(event.target.value)}
                 placeholder="CRM"
-                disabled={pendingKey}
+                disabled={pendingKey || !canManage}
               />
             </label>
-            <Button type="submit" disabled={pendingKey}>
+            <Button type="submit" disabled={pendingKey || !canManage}>
               {pendingKey ? 'Создание…' : 'Создать ключ'}
             </Button>
           </form>
@@ -565,7 +569,7 @@ export function IntegrationsPage() {
                               type="button"
                               variant="destructive"
                               size="sm"
-                              disabled={revokingId === key.id || deletingId === key.id}
+                              disabled={revokingId === key.id || deletingId === key.id || !canManage}
                               onClick={() => {
                                 if (!projectCode) return
                                 if (!window.confirm(`Отозвать ключ ${key.prefix}…?`)) return
@@ -590,7 +594,7 @@ export function IntegrationsPage() {
                             size="icon-sm"
                             title="Удалить ключ"
                             aria-label={`Удалить ключ ${key.prefix}`}
-                            disabled={deletingId === key.id || revokingId === key.id}
+                            disabled={deletingId === key.id || revokingId === key.id || !canManage}
                             onClick={() => {
                               if (!projectCode) return
                               if (

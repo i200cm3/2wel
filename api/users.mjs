@@ -182,10 +182,15 @@ export async function getUserWorkspace(userId) {
        p.id, p.code, p.name, p.type, p.status, p.created_at, p.updated_at, ${planColumns('p')},
        (SELECT count(*) FROM templates t WHERE t.project_id = p.id)::int AS templates,
        (SELECT count(*) FROM links l WHERE l.project_id = p.id)::int AS links,
-       (SELECT coalesce(sum(l.open_count), 0) FROM links l WHERE l.project_id = p.id)::int AS opens
+       (SELECT coalesce(sum(l.open_count), 0) FROM links l WHERE l.project_id = p.id)::int AS opens,
+       CASE WHEN p.user_id = $1 THEN 'owner' ELSE 'member' END AS access_role
      FROM projects p
      WHERE p.user_id = $1
-     ORDER BY p.created_at DESC`,
+        OR EXISTS (
+          SELECT 1 FROM project_members m
+          WHERE m.project_id = p.id AND m.user_id = $1
+        )
+     ORDER BY CASE WHEN p.user_id = $1 THEN 0 ELSE 1 END, p.created_at DESC`,
     [userId],
   )
 
@@ -235,6 +240,7 @@ export async function getUserWorkspace(userId) {
         opens: Number(row.opens ?? 0),
       },
       plan: planSummary(row, periodLinks.get(row.id) ?? 0),
+      role: row.access_role || 'owner',
       templates: templatesByProject.get(row.id) ?? [],
     })),
   }

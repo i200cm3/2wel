@@ -128,6 +128,8 @@ export type Project = {
   skipTtsOnLinkIssue?: boolean
   /** В гостевой презентации в титрах показывать текст TTS вместо короткого caption. */
   captionsFromTts?: boolean
+  /** owner — владелец, member — сотрудник, admin — системный администратор. */
+  role?: 'owner' | 'member' | 'admin'
   stats: {
     templates: number
     links: number
@@ -305,6 +307,56 @@ export type LinkStats = {
 
 export function fetchProjects() {
   return apiGet<{ ok: true; projects: Project[] }>('/api/projects')
+}
+
+export function canManageProject(project?: { role?: string } | null) {
+  return Boolean(project) && project?.role !== 'member'
+}
+
+export type ProjectTeamMember = {
+  id: string
+  email: string | null
+  name: string
+  login: string
+  role: 'owner' | 'member'
+  joinedAt: string
+}
+
+export type ProjectTeamInvite = {
+  id: string
+  email: string | null
+  createdAt: string
+  expiresAt: string
+  usedAt: string | null
+  token?: string
+  url?: string
+}
+
+export function fetchProjectTeam(projectCode: string) {
+  return apiGet<{ ok: true; members: ProjectTeamMember[]; invites: ProjectTeamInvite[] }>(
+    `/api/projects/${encodeURIComponent(projectCode)}/team`,
+  )
+}
+
+export function inviteProjectMember(projectCode: string, email: string) {
+  return apiSend<{
+    ok: true
+    added: boolean
+    member?: ProjectTeamMember
+    invite?: ProjectTeamInvite
+    mailed?: boolean
+  }>(`/api/projects/${encodeURIComponent(projectCode)}/team`, 'POST', { email })
+}
+
+export function removeProjectMember(projectCode: string, userId: string) {
+  return apiSend<{ ok: true }>(
+    `/api/projects/${encodeURIComponent(projectCode)}/team/${encodeURIComponent(userId)}`,
+    'DELETE',
+  )
+}
+
+export function leaveProject(projectCode: string) {
+  return apiSend<{ ok: true }>(`/api/projects/${encodeURIComponent(projectCode)}/team/leave`, 'POST')
 }
 
 export function createProject(payload: { name: string; code?: string }) {
@@ -754,7 +806,7 @@ export async function fetchPublicLink(publicId: string): Promise<PublicPlayback 
 export async function requestDemoGuest(payload: {
   name: string
   email: string
-}): Promise<{ ok: true; url: string; mailed: boolean }> {
+}): Promise<{ ok: true; mailed: boolean; reused: boolean }> {
   const res = await fetch('/api/public/demo', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -763,14 +815,14 @@ export async function requestDemoGuest(payload: {
   })
   const data = (await res.json().catch(() => ({}))) as {
     ok?: boolean
-    url?: string
     mailed?: boolean
+    reused?: boolean
     error?: string
   }
-  if (!res.ok || !data.ok || !data.url) {
+  if (!res.ok || !data.ok) {
     throw new ApiError(data.error || `HTTP ${res.status}`, res.status)
   }
-  return { ok: true, url: data.url, mailed: Boolean(data.mailed) }
+  return { ok: true, mailed: Boolean(data.mailed), reused: Boolean(data.reused) }
 }
 
 export type PublicEventType = 'autoplay' | 'menu' | 'whatsapp' | 'topic' | 'contact'

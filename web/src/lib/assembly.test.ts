@@ -143,13 +143,52 @@ describe('deriveFlowIds · adaptive slots', () => {
 
     assert.deepEqual(flow, [
       'intro',
-      'greeting',
       'family_with_kids',
       'rooms_family',
       'objection_price',
+      'food_family',
       'next_step_ask_price',
       'cta_whatsapp',
     ])
+    assert.equal(flow.includes('greeting'), false)
+  })
+
+  it('starts with dated intro when dates exist and generic intro when they do not', () => {
+    const config = adaptiveConfig()
+    config.sequences.intro_by_dates = sequence('intro_by_dates')
+    config.constructorV2!.sequenceMetaById.intro_by_dates = meta({
+      group: 'intro',
+      subgroup: 'by-dates',
+      priority: 8,
+      requiresFields: ['dates'],
+    })
+    config.constructorV2!.assembly.alwaysStartIds = ['intro', 'intro_by_dates', 'greeting']
+
+    const withDates = deriveFlowIds(config, {
+      guestName: 'Анна',
+      dates: 'июнь',
+      partyType: 'family',
+      topics: 'room, food',
+      objections: 'price',
+      confidence: '0.8',
+      room: '',
+    })
+    assert.equal(withDates[0], 'intro_by_dates')
+    assert.equal(withDates.includes('intro'), false)
+    assert.equal(withDates.includes('greeting'), false)
+
+    const withoutDates = deriveFlowIds(config, {
+      guestName: 'Анна',
+      dates: '',
+      partyType: 'family',
+      topics: 'room, food',
+      objections: 'price',
+      confidence: '0.8',
+      room: '',
+    })
+    assert.equal(withoutDates[0], 'intro')
+    assert.equal(withoutDates.includes('intro_by_dates'), false)
+    assert.equal(withoutDates.includes('greeting'), false)
   })
 
   it('soft-fills uncovered groups when budget remains', () => {
@@ -268,6 +307,7 @@ describe('requiresFields · guest parameters', () => {
       ...config.sequences.greeting,
       cues: [{ id: 'c1', startSec: 0, durationSec: 5, ttsText: 'Здравствуйте, {name}!' }],
     }
+    config.constructorV2!.assembly.alwaysStartIds = ['greeting']
     config.constructorV2!.sequenceMetaById.greeting = meta({
       group: 'intro',
       priority: 5,

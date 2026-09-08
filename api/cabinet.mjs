@@ -9,6 +9,8 @@ import {
   extractGuestSummaryFromRawText,
 } from './guestSummaryExtract.mjs'
 import { guestLinkUrl } from './publicUrl.mjs'
+import { projectJoinUrl } from './access.mjs'
+import { sendTeamInviteMail } from './mail.mjs'
 import { ensureGuestHost } from './guestSsl.mjs'
 import { linkEventStats, projectEventStats } from './events.mjs'
 import { createApiKey, deleteApiKey, listApiKeys, revokeApiKey } from './keys.mjs'
@@ -54,30 +56,44 @@ import {
   planColumns,
   planSummary,
 } from './plans.mjs'
+import {
+  canManageProject,
+  inviteOrAddMember,
+  leaveProject,
+  listProjectTeam,
+  removeProjectMember,
+} from './members.mjs'
 
 const CODE_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
+
+const PROJECT_SELECT = `id, code, name, user_id, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, ${planColumns()}`
 
 export async function projectForUser(userId, code) {
   if (!code || !CODE_RE.test(code)) return null
   const { rows } = await query(
-    `SELECT id, code, name, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, ${planColumns()}
-     FROM projects WHERE user_id = $1 AND code = $2`,
+    `SELECT ${PROJECT_SELECT},
+            CASE
+              WHEN user_id = $1 THEN 'owner'
+              WHEN EXISTS (
+                SELECT 1 FROM project_members m
+                WHERE m.project_id = projects.id AND m.user_id = $1
+              ) THEN 'member'
+              ELSE NULL
+            END AS access_role
+     FROM projects WHERE code = $2`,
     [userId, code],
   )
-  if (rows[0]) return rows[0]
+  const row = rows[0]
+  if (!row) return null
+  if (row.access_role) return row
 
   const { rows: admins } = await query(`SELECT is_admin FROM users WHERE id = $1`, [userId])
   if (!admins[0]?.is_admin) return null
-
-  const { rows: anyRows } = await query(
-    `SELECT id, code, name, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, ${planColumns()}
-     FROM projects WHERE code = $1`,
-    [code],
-  )
-  return anyRows[0] ?? null
+  return { ...row, access_role: 'admin' }
 }
 
 function mapProject(row, stats, periodLinks) {
+  const role = row.access_role || row.role || 'owner'
   return {
     id: row.id,
     code: row.code,
@@ -88,6 +104,7 @@ function mapProject(row, stats, periodLinks) {
     updatedAt: row.updated_at,
     skipTtsOnLinkIssue: Boolean(row.skip_tts_on_link_issue),
     captionsFromTts: Boolean(row.captions_from_tts),
+    role,
     stats: {
       templates: Number(stats?.templates ?? 0),
       links: Number(stats?.links ?? 0),
@@ -118,10 +135,15 @@ export async function listProjects(userId) {
        p.id, p.code, p.name, p.type, p.status, p.created_at, p.updated_at, p.skip_tts_on_link_issue, p.captions_from_tts, ${planColumns('p')},
        (SELECT count(*) FROM templates t WHERE t.project_id = p.id)::int AS templates,
        (SELECT count(*) FROM links l WHERE l.project_id = p.id)::int AS links,
-       (SELECT coalesce(sum(l.open_count), 0) FROM links l WHERE l.project_id = p.id)::int AS opens
+       (SELECT coalesce(sum(l.open_count), 0) FROM links l WHERE l.project_id = p.id)::int AS opens,
+       CASE WHEN p.user_id = $1 THEN 'owner' ELSE 'member' END AS access_role
      FROM projects p
      WHERE p.user_id = $1
-     ORDER BY p.created_at DESC`,
+        OR EXISTS (
+          SELECT 1 FROM project_members m
+          WHERE m.project_id = p.id AND m.user_id = $1
+        )
+     ORDER BY CASE WHEN p.user_id = $1 THEN 0 ELSE 1 END, p.created_at DESC`,
     [userId],
   )
   const periodLinks = await periodLinkCounts(rows)
@@ -1264,6 +1286,104 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
     return true
   }
 
+  const teamLeaveMatch = url.match(/^\/api\/projects\/([^/]+)\/team\/leave\/?$/)
+  if (teamLeaveMatch) {
+    const project = await projectForUser(userId, decodeURIComponent(teamLeaveMatch[1]))
+    if (!project) {
+      json(res, 404, { error: 'project not found' })
+      return true
+    }
+    if (method !== 'POST') {
+      json(res, 405, { error: 'method not allowed' })
+      return true
+    }
+    const left = await leaveProject({
+      projectId: project.id,
+      ownerId: project.user_id,
+      userId,
+    })
+    if (!left.ok) {
+      json(res, left.status, { error: left.error })
+      return true
+    }
+    json(res, 200, { ok: true })
+    return true
+  }
+
+  const teamOneMatch = url.match(/^\/api\/projects\/([^/]+)\/team\/([^/]+)\/?$/)
+  if (teamOneMatch) {
+    const project = await projectForUser(userId, decodeURIComponent(teamOneMatch[1]))
+    if (!project) {
+      json(res, 404, { error: 'project not found' })
+      return true
+    }
+    if (!canManageProject(project)) {
+      json(res, 403, { error: 'Командой управляет владелец объекта' })
+      return true
+    }
+    if (method !== 'DELETE') {
+      json(res, 405, { error: 'method not allowed' })
+      return true
+    }
+    const removed = await removeProjectMember({
+      projectId: project.id,
+      ownerId: project.user_id,
+      userId: decodeURIComponent(teamOneMatch[2]),
+    })
+    if (!removed.ok) {
+      json(res, removed.status, { error: removed.error })
+      return true
+    }
+    json(res, 200, { ok: true })
+    return true
+  }
+
+  const teamMatch = url.match(/^\/api\/projects\/([^/]+)\/team\/?$/)
+  if (teamMatch) {
+    const project = await projectForUser(userId, decodeURIComponent(teamMatch[1]))
+    if (!project) {
+      json(res, 404, { error: 'project not found' })
+      return true
+    }
+    if (method === 'GET' || method === 'HEAD') {
+      json(res, 200, { ok: true, ...(await listProjectTeam(project.id)) })
+      return true
+    }
+    if (method === 'POST') {
+      if (!canManageProject(project)) {
+        json(res, 403, { error: 'Приглашать в объект может только владелец' })
+        return true
+      }
+      const invited = await inviteOrAddMember({
+        project,
+        actorId: userId,
+        email: body?.email,
+      })
+      if (!invited.ok) {
+        json(res, invited.status, { error: invited.error })
+        return true
+      }
+      if (invited.added) {
+        json(res, 200, { ok: true, added: true, member: invited.member })
+        return true
+      }
+      const joinUrl = projectJoinUrl(req, invited.invite.token)
+      const mailed = await sendTeamInviteMail(invited.invite.email, {
+        projectName: project.name,
+        link: joinUrl,
+      })
+      json(res, 200, {
+        ok: true,
+        added: false,
+        invite: { ...invited.invite, url: joinUrl },
+        mailed: Boolean(mailed?.ok),
+      })
+      return true
+    }
+    json(res, 405, { error: 'method not allowed' })
+    return true
+  }
+
   if (url.includes('/amocrm')) {
     const { handleAmoCabinet } = await import('./amoCabinet.mjs')
     if (await handleAmoCabinet(req, res, url, method, json, userId, extras)) return true
@@ -1718,6 +1838,10 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
       return true
     }
     if (method === 'POST') {
+      if (!canManageProject(project)) {
+        json(res, 403, { error: 'Тариф меняет владелец объекта' })
+        return true
+      }
       const changed = await changeProjectPlan(project, userId, body?.plan)
       if (changed.error) {
         json(res, changed.status, { error: changed.error })
@@ -1737,6 +1861,10 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
     const project = await projectForUser(userId, projectCode)
     if (!project) {
       json(res, 404, { error: 'project not found' })
+      return true
+    }
+    if (!canManageProject(project)) {
+      json(res, 403, { error: 'Ключи API выдаёт владелец объекта' })
       return true
     }
     if (method === 'POST') {
@@ -1775,6 +1903,10 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
       return true
     }
     if (method === 'POST') {
+      if (!canManageProject(project)) {
+        json(res, 403, { error: 'Ключи API выдаёт владелец объекта' })
+        return true
+      }
       const name = typeof body?.name === 'string' ? body.name.trim() : ''
       const created = await createApiKey(project.id, name)
       json(res, 200, { ok: true, key: created })
@@ -1794,6 +1926,12 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
     const project = await projectForUser(userId, projectCode)
     if (!project) {
       json(res, 404, { error: 'project not found' })
+      return true
+    }
+    const wantsIdentity =
+      typeof body?.name === 'string' || typeof body?.code === 'string'
+    if (wantsIdentity && !canManageProject(project)) {
+      json(res, 403, { error: 'Менять название и адрес может только владелец объекта' })
       return true
     }
     const updated = await updateProjectForUser(project, body)

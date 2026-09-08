@@ -450,6 +450,7 @@ function AdminUserDetail({ userId, currentUserId }: { userId: string; currentUse
                       </CardTitle>
                       <CardDescription>
                         <code className="text-xs">{project.code}</code>
+                        {project.role === 'member' ? ' · сотрудник' : ''}
                         {' · '}
                         {project.stats.templates} шабл. · {project.stats.links} ссылок ·{' '}
                         {project.stats.opens} открытий

@@ -53,7 +53,11 @@ import {
   publicRegistration,
   registrationMode,
 } from './access.mjs'
-import { issueEmailOtp, isOtpPurpose, verifyEmailOtp } from './otp.mjs'
+import {
+  acceptProjectInvite,
+  inviteEmailMismatch,
+  peekProjectInvite,
+} from './members.mjs'
 import { getAdminTtsUsageOverview } from './ttsUsage.mjs'
 import { createDemoGuestLead } from './demoLead.mjs'
 
@@ -256,7 +260,7 @@ const server = http.createServer(async (req, res) => {
         json(res, result.status || 500, { error: result.error || 'demo failed' })
         return
       }
-      json(res, 200, { ok: true, url: result.url, mailed: result.mailed })
+      json(res, 200, { ok: true, mailed: result.mailed, reused: Boolean(result.reused) })
       return
     }
 
@@ -332,6 +336,106 @@ const server = http.createServer(async (req, res) => {
 
     if (url === '/api/auth/registration' && (req.method === 'GET' || req.method === 'HEAD')) {
       json(res, 200, { ok: true, ...publicRegistration() })
+      return
+    }
+
+    if (url === '/api/auth/join' && (req.method === 'GET' || req.method === 'HEAD')) {
+      const peeked = await peekProjectInvite(queryOf(req).get('invite') || queryOf(req).get('token'))
+      if (!peeked.ok) {
+        json(res, 400, { error: peeked.error })
+        return
+      }
+      json(res, 200, {
+        ok: true,
+        projectName: peeked.projectName,
+        projectCode: peeked.projectCode,
+        email: peeked.email,
+        existingUser: peeked.existingUser,
+        expiresAt: peeked.expiresAt,
+      })
+      return
+    }
+
+    if (url === '/api/auth/join' && req.method === 'POST') {
+      const ip = clientIp(req)
+      const raw = await readBuffer(req, MAX_JSON_BYTES)
+      let payload = {}
+      try {
+        payload = JSON.parse(raw.toString('utf8') || '{}')
+      } catch {
+        json(res, 400, { error: 'invalid json' })
+        return
+      }
+      const inviteToken = String(payload.invite ?? payload.inviteToken ?? '').trim()
+      const session = readSession(requestSessionToken(req))
+      if (session) {
+        const actor = await findUserById(session.userId)
+        if (!actor || isBlockedUser(actor)) {
+          json(res, 401, { error: 'unauthorized' })
+          return
+        }
+        const accepted = await acceptProjectInvite({
+          token: inviteToken,
+          userId: actor.id,
+          email: actor.email || actor.login,
+        })
+        if (!accepted.ok) {
+          json(res, accepted.status, { error: accepted.error })
+          return
+        }
+        json(res, 200, {
+          ok: true,
+          projectCode: accepted.projectCode,
+          projectName: accepted.projectName,
+        })
+        return
+      }
+      const limited = consumeRateLimit(`register:${ip}`, { windowMs: 60 * 60 * 1000, max: 5 })
+      if (!limited.ok) {
+        rateLimited(res, json, limited.retryAfterSec, 'Слишком много регистраций с этого адреса. Подождите.')
+        return
+      }
+      const peeked = await peekProjectInvite(inviteToken)
+      if (!peeked.ok) {
+        json(res, 400, { error: peeked.error })
+        return
+      }
+      const email = payload?.email ?? payload?.login
+      if (inviteEmailMismatch(peeked.email, email)) {
+        json(res, 403, { error: 'Приглашение выдано на другой email' })
+        return
+      }
+      if (peeked.existingUser) {
+        json(res, 409, { error: 'Аккаунт с этой почтой уже есть. Войдите, чтобы присоединиться.' })
+        return
+      }
+      const result = await registerUser({
+        email,
+        password: payload?.password,
+        name: peeked.projectName,
+      })
+      if (!result.ok) {
+        json(res, result.status, { error: result.error })
+        return
+      }
+      const accepted = await acceptProjectInvite({
+        token: inviteToken,
+        userId: result.user.id,
+        email: result.user.email,
+      })
+      if (!accepted.ok) {
+        json(res, accepted.status, { error: accepted.error })
+        return
+      }
+      await issueEmailOtp(result.user.email, 'register')
+      json(res, 200, {
+        ok: true,
+        needsOtp: true,
+        purpose: 'register',
+        email: result.user.email,
+        projectCode: accepted.projectCode,
+        projectName: accepted.projectName,
+      })
       return
     }
 
@@ -901,14 +1005,7 @@ const server = http.createServer(async (req, res) => {
         return
       }
       let body
-      if (
-        (req.method === 'PUT' || req.method === 'POST' || req.method === 'PATCH') &&
-        (/\/templates/.test(url) ||
-          /\/links(\/|$)/.test(url) ||
-          /\/keys\/?$/.test(url) ||
-          /^\/api\/projects\/?$/.test(url) ||
-          /^\/api\/projects\/[^/]+\/?$/.test(url))
-      ) {
+      if (req.method === 'PUT' || req.method === 'POST' || req.method === 'PATCH') {
         const raw = await readBuffer(req, MAX_JSON_BYTES)
         try {
           body = JSON.parse(raw.toString('utf8') || '{}')

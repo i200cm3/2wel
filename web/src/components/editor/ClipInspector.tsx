@@ -99,7 +99,7 @@ export function ClipInspector({
   }
 
   return (
-    <div ref={inspectorRef} className={`${inspectorShellClass} ${inspectorGridClass}`}>
+    <div ref={inspectorRef} className={`${inspectorShellClass} ${inspectorGridClass} items-start`}>
       <div className={`${inspectorStageClass}${slidePreview ? ' is-preview' : ''}`}>
         <div
           className={`editor-crop-drop${libDropOnPreview ? ' is-lib-drop' : ''}`}

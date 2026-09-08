@@ -27,7 +27,7 @@ export function DemoGuestDialog({ className, onOpenChange }: Props) {
   const [email, setEmail] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [done, setDone] = useState<{ url: string; mailed: boolean } | null>(null)
+  const [done, setDone] = useState<{ mailed: boolean; reused: boolean } | null>(null)
 
   const resetForm = () => {
     setName('')
@@ -40,7 +40,6 @@ export function DemoGuestDialog({ className, onOpenChange }: Props) {
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
     onOpenChange?.(next)
-    // Всегда чистая форма при открытии/закрытии — не оставляем экран «ссылка готова».
     resetForm()
   }
 
@@ -51,11 +50,10 @@ export function DemoGuestDialog({ className, onOpenChange }: Props) {
     setError(null)
     void requestDemoGuest({ name: name.trim(), email: email.trim() })
       .then((result) => {
-        setDone(result)
-        window.open(result.url, '_blank', 'noopener,noreferrer')
+        setDone({ mailed: result.mailed, reused: result.reused })
       })
       .catch((err) => {
-        setError(err instanceof ApiError ? err.message : 'Не удалось открыть демо')
+        setError(err instanceof ApiError ? err.message : 'Не удалось отправить демо')
       })
       .finally(() => setPending(false))
   }
@@ -65,42 +63,32 @@ export function DemoGuestDialog({ className, onOpenChange }: Props) {
       <DialogTrigger
         render={<button type="button" className={cn(className)} />}
       >
-        Открыть демо гостя
+        Получить демо презентации
       </DialogTrigger>
       <DialogContent className="sm:max-w-sm">
         {done ? (
           <>
             <DialogHeader>
-              <DialogTitle>Демо готово</DialogTitle>
+              <DialogTitle>Ссылка отправлена</DialogTitle>
               <DialogDescription>
                 {done.mailed
-                  ? 'Ссылка открыта и продублирована на вашу почту.'
-                  : 'Ссылка открыта в новой вкладке. Письмо не отправилось — сохраните адрес ниже.'}
+                  ? done.reused
+                    ? 'На эту почту уже выдавали демо — отправили ту же ссылку. Имя в презентации не меняется.'
+                    : 'Проверьте почту — там демо-презентация гостя.'
+                  : 'Запрос принят. Если письма нет, напишите на support@2wel.ru.'}
               </DialogDescription>
             </DialogHeader>
-            <p className="break-all text-sm">
-              <a
-                className="text-primary underline-offset-4 hover:underline"
-                href={done.url}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {done.url}
-              </a>
-            </p>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => resetForm()}>
-                Другое имя
-              </Button>
               <DialogClose render={<Button type="button">Закрыть</Button>} />
             </DialogFooter>
           </>
         ) : (
           <form onSubmit={onSubmit}>
             <DialogHeader>
-              <DialogTitle>Персональное демо</DialogTitle>
+              <DialogTitle>Демо презентации</DialogTitle>
               <DialogDescription>
-                Укажите имя и email — откроем гостевую страницу и отправим ссылку на почту.
+                Имя и email — пришлём ссылку на почту. Повторно на тот же email уйдёт та же
+                ссылка: имя в ней уже не меняется.
               </DialogDescription>
             </DialogHeader>
             <FieldGroup className="py-2">
@@ -138,7 +126,7 @@ export function DemoGuestDialog({ className, onOpenChange }: Props) {
                 Отмена
               </DialogClose>
               <Button type="submit" disabled={pending || !name.trim() || !email.trim()}>
-                {pending ? 'Готовим…' : 'Открыть демо'}
+                {pending ? 'Отправляем…' : 'Отправить ссылку'}
               </Button>
             </DialogFooter>
           </form>

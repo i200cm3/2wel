@@ -81,3 +81,19 @@ describe('otpMail', () => {
     assert.match(mail.html, /0421/)
   })
 })
+
+describe('teamInviteMail', () => {
+  it('кладёт название объекта и ссылку', async () => {
+    const { teamInviteMail } = await import('./mail.mjs')
+    const mail = teamInviteMail({
+      to: 'content@plaza.spa',
+      projectName: 'Plaza',
+      link: 'https://2wel.ru/join?invite=abc',
+      env: { from: 'support@2wel.ru', fromName: '2wel' },
+    })
+    assert.match(mail.subject, /Plaza/)
+    assert.match(mail.text, /сотрудника/)
+    assert.match(mail.text, /https:\/\/2wel.ru\/join\?invite=abc/)
+    assert.equal(mail.to, 'content@plaza.spa')
+  })
+})

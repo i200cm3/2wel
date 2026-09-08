@@ -14,6 +14,7 @@ const RESERVED_PATHS = new Set([
   'login',
   'app',
   'register',
+  'join',
   'dashboard',
   'api',
   'properties',
@@ -29,7 +30,7 @@ export function propertyIdFromUrl() {
   return q?.trim() || 'djinal'
 }
 
-/** Короткий id из пути: /a7k */
+/** Короткий id из пути: /a7kx */
 export function shareIdFromPath(pathname = window.location.pathname): string | null {
   const part = pathname.replace(/^\/+|\/+$/g, '').split('/')[0] ?? ''
   if (!part || RESERVED_PATHS.has(part.toLowerCase())) return null
@@ -37,7 +38,7 @@ export function shareIdFromPath(pathname = window.location.pathname): string | n
   return part.toLowerCase()
 }
 
-export function generateShareId(length = 3): string {
+export function generateShareId(length = 4): string {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789'
   const bytes = new Uint8Array(length)
   crypto.getRandomValues(bytes)

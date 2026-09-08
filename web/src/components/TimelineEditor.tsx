@@ -2932,7 +2932,7 @@ export function TimelineEditor({
         ) : null}
 
         <main
-          className={`bg-card min-h-0 overflow-x-hidden overscroll-contain rounded-xl border p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-[900px]:max-h-none max-[900px]:overflow-visible ${
+          className={`bg-card min-h-0 overflow-x-clip overscroll-contain rounded-xl border p-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden max-[900px]:max-h-none max-[900px]:overflow-visible ${
             !isBlockPanel && menuSelected
               ? 'flex min-h-0 flex-col overflow-hidden'
               : 'overflow-y-auto'

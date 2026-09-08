@@ -20,7 +20,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import type { CabinetOutlet } from '@/cabinet/CabinetLayout'
-import { checkProjectCode, patchProject } from '@/lib/api'
+import { checkProjectCode, patchProject, canManageProject } from '@/lib/api'
 import {
   changePassword,
   createInvite,
@@ -48,6 +48,7 @@ function inviteUrl(token: string) {
 export function AccountPage() {
   const { projects, project, reloadProjects } = useOutletContext<CabinetOutlet>()
   const object = project ?? projects[0] ?? null
+  const canManageObject = canManageProject(object)
   const [registration, setRegistration] = useState<RegistrationInfo | null>(null)
   const [invites, setInvites] = useState<Invite[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -141,7 +142,9 @@ export function AccountPage() {
           <CardHeader>
             <CardTitle className="font-sans">Объект</CardTitle>
             <CardDescription>
-              Название видят сотрудники в кабинете. Адрес — то, что открывает гость в SMS и WhatsApp.
+              {canManageObject
+                ? 'Название видят сотрудники в кабинете. Адрес — то, что открывает гость в SMS и WhatsApp.'
+                : 'Название и адрес объекта меняет владелец.'}{' '}
               Ссылки выглядят так: <code>https://{codePreview || 'plaza'}.{GUEST_BASE_DOMAIN}/xxxx</code>
             </CardDescription>
           </CardHeader>
@@ -175,7 +178,7 @@ export function AccountPage() {
                   placeholder="Санаторий Плаза"
                   required
                   maxLength={80}
-                  disabled={pendingObject}
+                  disabled={pendingObject || !canManageObject}
                 />
               </label>
               <Field data-invalid={codeInvalid || undefined}>
@@ -192,7 +195,7 @@ export function AccountPage() {
                     autoCapitalize="off"
                     autoCorrect="off"
                     spellCheck={false}
-                    disabled={pendingObject}
+                    disabled={pendingObject || !canManageObject}
                     aria-invalid={codeInvalid || undefined}
                     aria-describedby="object-code-hint"
                     className="font-mono"
@@ -206,12 +209,14 @@ export function AccountPage() {
                     : `Латиница, цифры и дефис. Это не сайт отеля, а короткая ссылка гостю: ${guestExample}`}
                 </FieldDescription>
               </Field>
+              {canManageObject ? (
               <Button
                 type="submit"
                 disabled={pendingObject || checkingCode || codeInvalid || !objectName.trim()}
               >
                 {pendingObject ? 'Настраиваю адрес…' : 'Сохранить'}
               </Button>
+              ) : null}
             </form>
           </CardContent>
         </Card>

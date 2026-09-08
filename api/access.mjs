@@ -116,19 +116,31 @@ export async function consumePasswordReset(token) {
   return { ok: true, userId: row.user_id }
 }
 
-export function resetUrl(req, token) {
+export function publicOrigin(req) {
   loadEnv()
   const fromEnv = String(process.env.PUBLIC_ORIGIN ?? '').trim().replace(/\/$/, '')
-  if (fromEnv) return `${fromEnv}/reset?token=${encodeURIComponent(token)}`
+  if (fromEnv) return fromEnv
   const raw = req?.headers?.host
   const host = Array.isArray(raw) ? raw[0] : raw
   if (host) {
     const protoHeader = req.headers?.['x-forwarded-proto']
     const protoRaw = Array.isArray(protoHeader) ? protoHeader[0] : protoHeader
     const proto = String(protoRaw || 'http').split(',')[0].trim() || 'http'
-    return `${proto}://${host}/reset?token=${encodeURIComponent(token)}`
+    return `${proto}://${host}`
   }
   const domain = String(process.env.DOMAIN ?? '').trim().replace(/^https?:\/\//, '')
-  if (domain) return `https://${domain}/reset?token=${encodeURIComponent(token)}`
+  if (domain) return `https://${domain}`
+  return ''
+}
+
+export function resetUrl(req, token) {
+  const origin = publicOrigin(req)
+  if (origin) return `${origin}/reset?token=${encodeURIComponent(token)}`
   return `/reset?token=${encodeURIComponent(token)}`
+}
+
+export function projectJoinUrl(req, token) {
+  const origin = publicOrigin(req)
+  if (origin) return `${origin}/join?invite=${encodeURIComponent(token)}`
+  return `/join?invite=${encodeURIComponent(token)}`
 }

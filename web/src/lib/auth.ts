@@ -251,6 +251,48 @@ export function createInvite(email?: string) {
   return authJson<{ ok: true; invite: Invite }>('/api/auth/invites', 'POST', { email: email ?? '' })
 }
 
+export type JoinInviteInfo = {
+  projectName: string
+  projectCode: string
+  email: string | null
+  existingUser: boolean
+  expiresAt: string
+}
+
+export async function fetchJoinInvite(token: string): Promise<JoinInviteInfo> {
+  const res = await fetch(`/api/auth/join?invite=${encodeURIComponent(token)}`, {
+    credentials: 'include',
+    cache: 'no-store',
+  })
+  const data = (await res.json().catch(() => ({}))) as JoinInviteInfo & { ok?: boolean; error?: string }
+  if (!res.ok || !data.ok) throw new Error(data.error || 'Приглашение недействительно')
+  return data
+}
+
+export async function acceptJoinInvite(
+  token: string,
+  extras?: { email?: string; password?: string; remember?: boolean },
+): Promise<{ projectCode: string | null; needsOtp?: boolean; email?: string }> {
+  const res = await fetch('/api/auth/join', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ invite: token, ...extras }),
+  })
+  const data = (await res.json().catch(() => ({}))) as {
+    ok?: boolean
+    error?: string
+    needsOtp?: boolean
+    email?: string
+    projectCode?: string
+  }
+  if (!res.ok || !data.ok) throw new Error(data.error || 'Не удалось принять приглашение')
+  if (data.needsOtp && data.email) {
+    return { projectCode: data.projectCode ?? null, needsOtp: true, email: data.email }
+  }
+  return { projectCode: data.projectCode ?? null }
+}
+
 export async function fetchSessionUser(): Promise<SessionUser | null> {
   const hadLegacy = Boolean(getEditorToken())
   let res = await authFetch('/api/auth/me', { cache: 'no-store' })

@@ -1,0 +1,6915 @@
+{
+  "id": "adm",
+  "flow": [
+    "intro_generic",
+    "intro_by_dates"
+  ],
+  "brand": {
+    "city": "Кисловодск",
+    "name": "Плаза СПА",
+    "site": "https://kislovodsk.plaza.spa/",
+    "address": "проспект Ленина, 26-28",
+    "fullName": "Санаторий «Плаза СПА»",
+    "phoneTel": "+78793226088",
+    "phoneDisplay": "+7 (87932) 2-60-88",
+    "whatsAppNumber": ""
+  },
+  "menus": {
+    "main": {
+      "id": "main",
+      "label": "Главное меню",
+      "branches": [
+        {
+          "id": "about",
+          "label": "О санатории",
+          "sequenceId": "about_positioning"
+        },
+        {
+          "id": "rooms",
+          "label": "Размещение",
+          "sequenceId": "rooms_comfort"
+        },
+        {
+          "id": "treatment",
+          "label": "Лечение",
+          "sequenceId": "treatment_start"
+        },
+        {
+          "id": "food",
+          "label": "Питание",
+          "sequenceId": "food_buffet"
+        },
+        {
+          "id": "wellness",
+          "label": "Бассейн и СПА",
+          "sequenceId": "wellness_pool"
+        },
+        {
+          "id": "leisure",
+          "label": "Досуг",
+          "sequenceId": "leisure_evening"
+        }
+      ],
+      "menuCopy": {
+        "showKicker": false,
+        "kicker": "Санаторий «Плаза СПА» · Кисловодск",
+        "showTitle": false,
+        "title": "{name}, что важно для вашей поездки?",
+        "showHint": true,
+        "hint": "Выберите тему или загрузите адаптивную сборку под гостя"
+      },
+      "menuTheme": {
+        "titleFont": "cormorant",
+        "titleFontSize": 34,
+        "titleColor": "#f4ead8",
+        "titleBold": true,
+        "titleItalic": false,
+        "titleUnderline": false,
+        "titleStroke": false,
+        "textFont": "manrope",
+        "textFontSize": 13,
+        "textColor": "#f4ead8",
+        "textBold": false,
+        "textItalic": false,
+        "textUnderline": false,
+        "textStroke": false,
+        "kickerColor": "#c8ad78",
+        "kickerFontSize": 11,
+        "buttonBg": "#f4ead8",
+        "buttonText": "#17130f",
+        "contactBg": "#c8ad78",
+        "contactText": "#17130f",
+        "buttonsX": 0.11383649553571429,
+        "buttonsY": 0.04038923330455937,
+        "buttonsW": 0.8013309151785715,
+        "buttonFontSize": 12,
+        "buttonPadY": 8,
+        "buttonGap": 9,
+        "buttonRadius": 14
+      },
+      "menuLinks": [
+        {
+          "id": "menu-link-email",
+          "label": "Написать на bron@plaza.spa",
+          "href": "mailto:bron@plaza.spa?subject=Запрос%20по%20заезду%20{brand}&body=Здравствуйте!%20Меня%20зовут%20{name}.%20Хочу%20уточнить%20детали%20заезда.",
+          "bg": "#c8ad78",
+          "textColor": "#17130f"
+        },
+        {
+          "id": "menu-link-tel",
+          "label": "Позвонить",
+          "href": "tel:{tel}",
+          "bg": "#34c759",
+          "textColor": "#ffffff"
+        },
+        {
+          "id": "menu-link-site",
+          "label": "Сайт",
+          "href": "https://kislovodsk.plaza.spa/",
+          "bg": "#f4ead8",
+          "textColor": "#17130f"
+        }
+      ],
+      "menuBgSrc": "/media/projects/adm/library/_rejected-lowres/gallery/intro/05.webp",
+      "menuTtsFirstOnly": true
+    }
+  },
+  "theme": {
+    "orientation": "portrait",
+    "captionBarColor": "#14110c",
+    "captionBarOpacity": 0,
+    "titleColor": "#f4ead8",
+    "textColor": "#ffffff",
+    "titleFont": "cormorant",
+    "textFont": "montserrat",
+    "titleFontSize": 28,
+    "textFontSize": 23,
+    "titleBold": true,
+    "titleItalic": false,
+    "titleUnderline": false,
+    "titleStroke": false,
+    "textBold": true,
+    "textItalic": false,
+    "textUnderline": false,
+    "textStroke": false,
+    "musicVolume": 0.2,
+    "ttsVolume": 1
+  },
+  "branches": [
+    {
+      "id": "about",
+      "label": "О санатории",
+      "sequenceId": "about_positioning"
+    },
+    {
+      "id": "rooms",
+      "label": "Размещение",
+      "sequenceId": "rooms_comfort"
+    },
+    {
+      "id": "treatment",
+      "label": "Лечение",
+      "sequenceId": "treatment_start"
+    },
+    {
+      "id": "food",
+      "label": "Питание",
+      "sequenceId": "food_buffet"
+    },
+    {
+      "id": "wellness",
+      "label": "Бассейн и СПА",
+      "sequenceId": "wellness_pool"
+    },
+    {
+      "id": "leisure",
+      "label": "Досуг",
+      "sequenceId": "leisure_evening"
+    }
+  ],
+  "menuCopy": {
+    "showKicker": false,
+    "kicker": "Санаторий «Плаза СПА» · Кисловодск",
+    "showTitle": false,
+    "title": "{name}, что важно для вашей поездки?",
+    "showHint": true,
+    "hint": "Выберите тему или загрузите адаптивную сборку под гостя"
+  },
+  "musicSrc": "/media/projects/adm/music/ambient.mp3",
+  "copyFacts": "«Плаза СПА», Кисловодск, пр. Ленина 26-28.\n5★ санаторный комплекс, 240 номеров (Стандарт\n\n22 м²\nот 21 800 ₽\nДелюкс\n\n40 м²\nот 30 200 ₽\nЛюкс премиум\n\n40 м²\nот 38 800 ₽\nЛюкс премиум с балконом\n\n61 м²\nот 50 400 ₽\nАпартаменты\n\n40 м²\nот 38 800 ₽\nАпартаменты «Япония»\n\n93 м²\nот 67 400 ₽\nАпартаменты «Азия»\n\n93 м²\nот 67 400 ₽\nАпартаменты «Америка»\n\n116 м²\nот 84 200 ₽\nАпартаменты президентские «Европа»\n\n116 м²\nот 84 200 ₽\nАпартаменты президентские «Африка».\nЛечение по назначению врача: сердце, спина, дыхание, ЖКТ.\nВ пакет: минеральная вода, консультации, процедуры.\nБассейн, сауна, тренажёры. Два ресторана: «Роял», «Панорама».",
+  "menuLinks": [
+    {
+      "id": "menu-link-email",
+      "label": "Написать на bron@plaza.spa",
+      "href": "mailto:bron@plaza.spa?subject=Запрос%20по%20заезду%20{brand}&body=Здравствуйте!%20Меня%20зовут%20{name}.%20Хочу%20уточнить%20детали%20заезда.",
+      "bg": "#c8ad78",
+      "textColor": "#17130f"
+    },
+    {
+      "id": "menu-link-tel",
+      "label": "Позвонить",
+      "href": "tel:{tel}",
+      "bg": "#34c759",
+      "textColor": "#ffffff"
+    },
+    {
+      "id": "menu-link-site",
+      "label": "Сайт",
+      "href": "https://kislovodsk.plaza.spa/",
+      "bg": "#f4ead8",
+      "textColor": "#17130f"
+    }
+  ],
+  "menuTheme": {
+    "titleFont": "cormorant",
+    "titleFontSize": 34,
+    "titleColor": "#f4ead8",
+    "titleBold": true,
+    "titleItalic": false,
+    "titleUnderline": false,
+    "titleStroke": false,
+    "textFont": "manrope",
+    "textFontSize": 13,
+    "textColor": "#f4ead8",
+    "textBold": false,
+    "textItalic": false,
+    "textUnderline": false,
+    "textStroke": false,
+    "kickerColor": "#c8ad78",
+    "kickerFontSize": 11,
+    "buttonBg": "#f4ead8",
+    "buttonText": "#17130f",
+    "contactBg": "#c8ad78",
+    "contactText": "#17130f",
+    "buttonsX": 0.11383649553571429,
+    "buttonsY": 0.04038923330455937,
+    "buttonsW": 0.8013309151785715,
+    "buttonFontSize": 12,
+    "buttonPadY": 8,
+    "buttonGap": 9,
+    "buttonRadius": 14
+  },
+  "sequences": {
+    "cta_call": {
+      "id": "cta_call",
+      "cues": [
+        {
+          "id": "cue-cta_call-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Позвоните в бронирование по номеру +7 (87932) 2-60-88.",
+          "ttsText": "Наберите номер на экране, и вам ответит служба бронирования.",
+          "showText": true
+        },
+        {
+          "id": "cue-cta_call-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "В одном разговоре уточним даты, категорию номера и лечение.",
+          "ttsText": "За один звонок можно закрыть даты, номер и состав путёвки.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "cta_call-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "cta_call-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "CTA: звонок",
+      "title": "Звонок",
+      "endButtons": [
+        {
+          "id": "btn-cta_call-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "food_diet": {
+      "id": "food_diet",
+      "cues": [
+        {
+          "id": "cue-food_diet-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "На общей линии каждый день есть лёгкие и диетические блюда.",
+          "ttsText": "Диетический стол здесь не выглядит больничным и стоит рядом с обычными блюдами.",
+          "showText": true
+        },
+        {
+          "id": "cue-food_diet-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "В лечебной программе кухня собирает рацион по назначениям врача.",
+          "ttsText": "Если вы едете на программу, меню соберут отдельно под ваши рекомендации.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "food_diet-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/food/06.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "food_diet-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/food/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Диетическое питание",
+      "title": "Диета",
+      "endButtons": [
+        {
+          "id": "btn-food_diet-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_view": {
+      "id": "rooms_view",
+      "cues": [
+        {
+          "id": "cue-rooms_view-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Люкс премиум с балконом стоит на седьмом этаже.",
+          "ttsText": "Если хотите начинать день на воздухе, берите категорию с балконом.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_view-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "В тематических апартаментах бывают террасы и другой масштаб утра.",
+          "ttsText": "В апартаментах балкон уже часть жилья, а не маленькая дверь к фасаду.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "rooms_view-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "rooms_view-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Номер с атмосферой",
+      "title": "Балкон",
+      "endButtons": [
+        {
+          "id": "btn-rooms_view-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "food_buffet": {
+      "id": "food_buffet",
+      "cues": [
+        {
+          "id": "cue-food_buffet-01",
+          "startSec": 0.0,
+          "durationSec": 4.5,
+          "text": "В ресторане «Панорама» каждый день собирают шведский стол четырнадцати кухонь.",
+          "ttsText": "Основной стол накрывают в «Панораме»: много выбора и свободная посадка.",
+          "showText": true
+        },
+        {
+          "id": "cue-food_buffet-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Завтрак, обед и ужин стоят в удобные часы между процедурами.",
+          "ttsText": "Приёмы пищи совпадают с ритмом лечения, поэтому день не ломается из-за обеда.",
+          "showText": true
+        },
+        {
+          "id": "cue-food_buffet-03",
+          "startSec": 9.0,
+          "durationSec": 4.5,
+          "text": "Если хочется тише, вас ждут в ресторане «Роял» с подачей от шефа.",
+          "ttsText": "В «Роял» подают авторское меню, когда важны тишина и спокойный ужин.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "food_buffet-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/food/08-img_9373-1728x1080.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.5,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.5
+        },
+        {
+          "id": "food_buffet-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/food/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        },
+        {
+          "id": "food_buffet-03",
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "src": "/media/projects/adm/library/gallery/food/04.jpg",
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "pan-left",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        }
+      ],
+      "label": "Питание: рестораны",
+      "title": "Питание",
+      "endButtons": [
+        {
+          "id": "btn-food_buffet-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "food_family": {
+      "id": "food_family",
+      "cues": [
+        {
+          "id": "cue-food_family-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "В зале «Панорама» для детей устроен свой уголок.",
+          "ttsText": "Ребёнку проще досидеть обед, когда рядом есть уголок, а вы сидите рядом.",
+          "showText": true
+        },
+        {
+          "id": "cue-food_family-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Юным гостям ставят второй завтрак и полдник сверх взрослого расписания.",
+          "ttsText": "Дополнительные приёмы пищи помогают детям не ждать взрослого ритма.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "food_family-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/food/03.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "food_family-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/food/08-img_9373-1728x1080.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Питание для семьи",
+      "title": "Дети",
+      "endButtons": [
+        {
+          "id": "btn-food_family-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_mix": {
+      "id": "purpose_mix",
+      "cues": [
+        {
+          "id": "cue-purpose_mix-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Утро можно отдать лечебнице, а день оставить парку, воде или концерту.",
+          "ttsText": "Процедуры не забирают весь день, если их ставят в первую половину.",
+          "showText": true
+        },
+        {
+          "id": "cue-purpose_mix-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Так получается лечиться и не жить в ощущении больничной палаты.",
+          "ttsText": "Вечер остаётся отпуском: вы здесь ради пользы, но не ради больничного режима.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "purpose_mix-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/02.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "purpose_mix-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/03.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Цель: лечение плюс отдых",
+      "title": "Баланс",
+      "endButtons": [
+        {
+          "id": "btn-purpose_mix-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_quiet": {
+      "id": "rooms_quiet",
+      "cues": [
+        {
+          "id": "cue-rooms_quiet-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Если вам важен сон, напишите об этом до заезда.",
+          "ttsText": "Тишину можно заложить в бронь, а не надеяться, что повезёт с соседями.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_quiet-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "При расселении поставим номер дальше от шумных зон, в доме с тихими холлами.",
+          "ttsText": "Сюда едут восстанавливаться, поэтому коридоры затихают рано.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "rooms_quiet-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "rooms_quiet-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Тихий номер",
+      "title": "Тишина",
+      "endButtons": [
+        {
+          "id": "btn-rooms_quiet-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "cta_whatsapp": {
+      "id": "cta_whatsapp",
+      "cues": [
+        {
+          "id": "cue-cta_whatsapp-01",
+          "startSec": 0.0,
+          "durationSec": 4.2,
+          "text": "Напишите нам, и мы пришлём расчёт на ваши даты.",
+          "ttsText": "{name}, напишите нам: подберём номер и пришлём точный расчёт.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "cta_whatsapp-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/02.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.2,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "CTA: связь",
+      "title": "Связь",
+      "endButtons": [
+        {
+          "id": "btn-cta_whatsapp-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "rooms_deluxe": {
+      "id": "rooms_deluxe",
+      "cues": [
+        {
+          "id": "cue-rooms_deluxe-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Делюкс сохраняет те же двадцать два метра, но стоит выше, на этажах с четвёртого по седьмой.",
+          "ttsText": "Это тот же метраж стандарта, только выше и спокойнее.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_deluxe-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Сюда часто возвращаются, когда не нужна лишняя площадь, а нужны тишина и свет.",
+          "ttsText": "Категорию берут и вдвоём, и в одиночку, если важен этаж, а не вторая комната.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "rooms_deluxe-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "rooms_deluxe-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Делюкс",
+      "title": "Делюкс",
+      "endButtons": [
+        {
+          "id": "btn-rooms_deluxe-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_double": {
+      "id": "rooms_double",
+      "cues": [
+        {
+          "id": "cue-rooms_double-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Для двоих поставим широкую кровать или две раздельные, как вам привычно спать.",
+          "ttsText": "Скажите, как вы спите, и мы не оставим это на случайный остаток.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_double-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Номер собираем так, чтобы утром было удобно обоим, а не только на фотографии.",
+          "ttsText": "Для пары важны и кровать, и то, как вы расходитесь утром по комнате.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "rooms_double-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "rooms_double-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Для двоих",
+      "title": "Вдвоём",
+      "endButtons": [
+        {
+          "id": "btn-rooms_double-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_family": {
+      "id": "rooms_family",
+      "cues": [
+        {
+          "id": "cue-rooms_family-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "С детьми лучше брать две комнаты: люкс от сорока метров или апартаменты.",
+          "ttsText": "Семье нужна вторая комната, чтобы ночь и день не проходили в одном пространстве.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_family-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Детскую кроватку, стульчик и коляску поставим по запросу.",
+          "ttsText": "Детские вещи везти с собой не обязательно, их дадут на месте.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "rooms_family-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "rooms_family-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Семейный формат",
+      "title": "Семья",
+      "endButtons": [
+        {
+          "id": "btn-rooms_family-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_luxury": {
+      "id": "rooms_luxury",
+      "cues": [
+        {
+          "id": "cue-rooms_luxury-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "В люксе от сорока метров спальня отделена от гостиной.",
+          "ttsText": "Две комнаты меняют ритм дня: ночь в спальне, день не на застеленной кровати.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_luxury-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "В апартаментах и люксе с балконом питание в «Роял» уже входит в заезд.",
+          "ttsText": "В старших категориях ужин в «Роял» не нужно докупать отдельно.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "rooms_luxury-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "rooms_luxury-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Люкс и апартаменты",
+      "title": "Люкс",
+      "endButtons": [
+        {
+          "id": "btn-rooms_luxury-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_single": {
+      "id": "rooms_single",
+      "cues": [
+        {
+          "id": "cue-rooms_single-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Для поездки одному обычно хватает стандарта или делюкса.",
+          "ttsText": "Одному не нужна лишняя площадь, нужен свой спокойный ритм.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_single-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Категорию выбираете вы, а более тихую комнату подберёт размещение при заезде.",
+          "ttsText": "Мы закрепим категорию, а конкретную комнату соберут под тишину уже на месте.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "rooms_single-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "rooms_single-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Одноместный сценарий",
+      "title": "Один",
+      "endButtons": [
+        {
+          "id": "btn-rooms_single-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "solo_support": {
+      "id": "solo_support",
+      "cues": [
+        {
+          "id": "cue-solo_support-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Консьерж на связи круглосуточно и поможет с трансфером, экскурсией или бытом.",
+          "ttsText": "Если едете один, бытовые вопросы закрывают за вас, а не оставляют на самостоятельный поиск.",
+          "showText": true
+        },
+        {
+          "id": "cue-solo_support-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Можно держать тишину или выйти к досугу: в одиночку здесь не приходится быть менеджером поездки.",
+          "ttsText": "Вы выбираете, насколько день будет тихим или живым, и дом под это подстраивается.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "solo_support-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/02.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "solo_support-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/03.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Один гость",
+      "title": "Один",
+      "endButtons": [
+        {
+          "id": "btn-solo_support-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "wellness_spa": {
+      "id": "wellness_spa",
+      "cues": [
+        {
+          "id": "cue-wellness_spa-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Бассейн и термы открыты с семи утра до одиннадцати вечера.",
+          "ttsText": "Вы выбираете своё окно в течение дня, а не подстраиваетесь под короткий сеанс.",
+          "showText": true
+        },
+        {
+          "id": "cue-wellness_spa-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Рядом зал, пилатес и йога, если захочется движения без детской анимации.",
+          "ttsText": "СПА можно совместить с тихим движением, когда вода уже не нужна.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "wellness_spa-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "wellness_spa-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/07.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "СПА",
+      "title": "СПА",
+      "endButtons": [
+        {
+          "id": "btn-wellness_spa-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "greeting_warm": {
+      "id": "greeting_warm",
+      "cues": [
+        {
+          "id": "cue-greeting_warm-01",
+          "startSec": 0.0,
+          "durationSec": 4.2,
+          "text": "Здравствуйте, {name}.",
+          "ttsText": "Здравствуйте, {name}.",
+          "showText": true
+        },
+        {
+          "id": "cue-greeting_warm-02",
+          "startSec": 4.2,
+          "durationSec": 4.2,
+          "text": "Мы подготовили короткое знакомство с санаторием «Плаза СПА».",
+          "showText": true,
+          "ttsText": "Рады представить вам санаторий «Плаза СПА» в Кисловодске."
+        },
+        {
+          "id": "cue-greeting_warm-03",
+          "startSec": 8.4,
+          "durationSec": 4.0,
+          "text": "Дальше расскажем, где вы будете жить, как проходит лечение и чем можно заняться.",
+          "ttsText": "Сейчас коротко покажем дом, лечение и отдых, чтобы вы примерили поездку на себя.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "greeting_warm-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/07-psk5.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.2,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.2
+        },
+        {
+          "id": "greeting_warm-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/08-plaza_cameras.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        },
+        {
+          "id": "greeting_warm-03",
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "src": "/media/projects/adm/library/gallery/about/02.webp",
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "pan-left",
+          "animSec": 4,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4
+        }
+      ],
+      "label": "Приветствие (дубль, выкл.)",
+      "title": "Приветствие",
+      "endButtons": [
+        {
+          "id": "btn-greeting_warm-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "intro_generic": {
+      "id": "intro_generic",
+      "cues": [
+        {
+          "id": "cue-si1o6np",
+          "startSec": 0.0,
+          "durationSec": 3.8,
+          "text": "Здравствуйте, {name}.",
+          "ttsText": "Здравствуйте, {name}.",
+          "showText": true
+        },
+        {
+          "id": "cue-intro_generic-02",
+          "startSec": 3.8,
+          "durationSec": 3.8,
+          "text": "Если даты ещё не выбраны, начнём с знакомства с санаторием.",
+          "ttsText": "Если дни ещё не выбраны, сначала покажем сам санаторий.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "intro_generic-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/07-psk5.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 3.8,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 3.8
+        },
+        {
+          "id": "intro_generic-01-dup1",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/07-psk5.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 3.8,
+          "showTitle": false,
+          "transition": "cut",
+          "durationSec": 3.8
+        }
+      ],
+      "label": "Intro: дат нет",
+      "title": "Без дат"
+    },
+    "rooms_comfort": {
+      "id": "rooms_comfort",
+      "cues": [
+        {
+          "id": "cue-rooms_comfort-01",
+          "startSec": 0.0,
+          "durationSec": 4.5,
+          "text": "В санатории двести сорок номеров, от спокойного стандарта до апартаментов.",
+          "ttsText": "Номерной фонд широкий, поэтому можно жить просто или очень просторно.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_comfort-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "В базовых категориях можно выбрать одну широкую кровать или две раздельные.",
+          "ttsText": "Кровать лучше назвать сразу, чтобы не решать это уже при заселении.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_comfort-03",
+          "startSec": 9.0,
+          "durationSec": 4.5,
+          "text": "Формат жилья подбирают под поездку, а не наоборот.",
+          "ttsText": "Мы смотрим, кто едет, и предлагаем категорию под ваш состав.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "rooms_comfort-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.5,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.5
+        },
+        {
+          "id": "rooms_comfort-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        },
+        {
+          "id": "rooms_comfort-03",
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "pan-left",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        }
+      ],
+      "label": "Номера: общий комфорт",
+      "title": "Номера",
+      "endButtons": [
+        {
+          "id": "btn-rooms_comfort-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "wellness_pool": {
+      "id": "wellness_pool",
+      "cues": [
+        {
+          "id": "cue-wellness_pool-01",
+          "startSec": 0.0,
+          "durationSec": 4.5,
+          "text": "Бассейн двадцать пять метров, с гидромассажем и отдельной водой для детей.",
+          "ttsText": "В воду можно прийти и поплавать, и просто снять нагрузку после процедур.",
+          "showText": true
+        },
+        {
+          "id": "cue-wellness_pool-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Рядом финская сауна с солью и хаммам, чтобы закончить день теплом.",
+          "ttsText": "Сауна и хаммам остаются в том же контуре, и вечером никуда не нужно выходить.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "wellness_pool-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/06.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.5,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.5
+        },
+        {
+          "id": "wellness_pool-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        }
+      ],
+      "label": "Wellness: бассейн",
+      "title": "Бассейн",
+      "endButtons": [
+        {
+          "id": "btn-wellness_pool-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "intro_by_dates": {
+      "id": "intro_by_dates",
+      "cues": [
+        {
+          "id": "cue-intro_by_dates-01",
+          "startSec": 0.0,
+          "durationSec": 4.4,
+          "text": "Мы смотрим именно ваши даты и свободные категории номеров.",
+          "ttsText": "Берём выбранный период и сразу показываем, какие номера ещё можно взять.",
+          "showText": true
+        },
+        {
+          "id": "cue-intro_by_dates-02",
+          "startSec": 4.4,
+          "durationSec": 4.2,
+          "text": "После этого подскажем, какой формат заезда на этот срок уместнее.",
+          "ttsText": "Дальше станет понятно: лечение, короткий отдых или спокойное сочетание того и другого.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "intro_by_dates-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/place/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.4,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.4
+        },
+        {
+          "id": "intro_by_dates-02",
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "src": "/media/projects/adm/library/gallery/about/06.webp",
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "pan-left",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Intro: даты есть",
+      "title": "Ваши даты",
+      "endButtons": [
+        {
+          "id": "btn-intro_by_dates-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "leisure_active": {
+      "id": "leisure_active",
+      "cues": [
+        {
+          "id": "cue-leisure_active-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "В зале ждут тренажёры, йога и растяжка без обязательных групповых занятий.",
+          "ttsText": "День может быть живым: вы заходите в зал, когда сами этого хотите.",
+          "showText": true
+        },
+        {
+          "id": "cue-leisure_active-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Для прогулок в парке есть палки, вечером можно сесть за бильярд.",
+          "ttsText": "В парк берут палки для ходьбы, а вечером остаётся большой бильярдный стол.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "leisure_active-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/06.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "leisure_active-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Активный досуг",
+      "title": "Активность",
+      "endButtons": [
+        {
+          "id": "btn-leisure_active-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "rooms_standard": {
+      "id": "rooms_standard",
+      "cues": [
+        {
+          "id": "cue-rooms_standard-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Стандарт занимает двадцать два метра на третьем этаже.",
+          "ttsText": "Это спокойная базовая категория, если люкс вам не нужен.",
+          "showText": true
+        },
+        {
+          "id": "cue-rooms_standard-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Номер рассчитан на двоих, в нём душ, телевизор и чайный сет.",
+          "ttsText": "Места хватает двоим, при необходимости можно добавить ещё одно спальное место.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "rooms_standard-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "rooms_standard-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Стандарт",
+      "title": "Стандарт",
+      "endButtons": [
+        {
+          "id": "btn-rooms_standard-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "couple_wellness": {
+      "id": "couple_wellness",
+      "cues": [
+        {
+          "id": "cue-couple_wellness-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Бассейн, сауна и хаммам открыты для вас в течение дня.",
+          "ttsText": "Вы можете провести день в воде и термах, не подстраиваясь под группу.",
+          "showText": true
+        },
+        {
+          "id": "cue-couple_wellness-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Рядом зал и йога, если захочется движения вдвоём.",
+          "ttsText": "Когда появится настроение, рядом ждут зал и занятия йогой.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "couple_wellness-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "couple_wellness-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/07.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Wellness для пары",
+      "title": "СПА",
+      "endButtons": [
+        {
+          "id": "btn-couple_wellness-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "cta_get_options": {
+      "id": "cta_get_options",
+      "cues": [
+        {
+          "id": "cue-cta_get_options-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Мы пришлём два-три варианта на ваши даты.",
+          "ttsText": "Подготовим короткую подборку, чтобы вам было из чего выбрать.",
+          "showText": true
+        },
+        {
+          "id": "cue-cta_get_options-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "В каждом будет категория номера, состав путёвки и стоимость.",
+          "ttsText": "Сравните спокойно и напишите, какой вариант вам ближе.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "cta_get_options-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "cta_get_options-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "CTA: варианты",
+      "title": "Варианты",
+      "endButtons": [
+        {
+          "id": "btn-cta_get_options-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "leisure_evening": {
+      "id": "leisure_evening",
+      "cues": [
+        {
+          "id": "cue-leisure_evening-01",
+          "startSec": 0.0,
+          "durationSec": 4.5,
+          "text": "По вечерам в лобби звучит живая музыка или показывают кино.",
+          "ttsText": "После ужина дом не затихает: в лобби поют, играют на рояле или ставят фильм.",
+          "showText": true
+        },
+        {
+          "id": "cue-leisure_evening-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Иногда на своей сцене проходят концерты, и никуда не нужно выезжать.",
+          "ttsText": "Когда бывают концерты, вы остаётесь в санатории и не ищете вечер в городе.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "leisure_evening-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.5,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.5
+        },
+        {
+          "id": "leisure_evening-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/03.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        }
+      ],
+      "label": "Досуг: вечер",
+      "title": "Вечер",
+      "endButtons": [
+        {
+          "id": "btn-leisure_evening-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_price": {
+      "id": "objection_price",
+      "cues": [
+        {
+          "id": "cue-objection_price-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "В путёвке уже лежат проживание, шведский стол, бассейн, сауны и досуг.",
+          "ttsText": "Вечером не придётся платить отдельно за стол, воду и сауну: это уже внутри цены.",
+          "showText": true
+        },
+        {
+          "id": "cue-objection_price-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Если важна сумма, подберём другую категорию номера или более спокойные даты.",
+          "ttsText": "Можно сохранить поездку и уменьшить чек за счёт категории или сезона.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "objection_price-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "objection_price-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Возражение: цена",
+      "title": "Цена",
+      "endButtons": [
+        {
+          "id": "btn-objection_price-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "territory_walks": {
+      "id": "territory_walks",
+      "cues": [
+        {
+          "id": "cue-territory_walks-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Свой вход ведёт сразу на терренкуры Кисловодского парка.",
+          "ttsText": "От дверей санатория несколько шагов, и вы уже на маршрутах парка.",
+          "showText": true
+        },
+        {
+          "id": "cue-territory_walks-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Город стоит в долине, поэтому ветра меньше и пешком хочется выходить чаще.",
+          "ttsText": "Прогулка здесь не отдельная экскурсия, а часть обычного дня.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "territory_walks-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/place/03.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "territory_walks-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/place/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Прогулки",
+      "title": "Прогулки",
+      "endButtons": [
+        {
+          "id": "btn-territory_walks-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_start": {
+      "id": "treatment_start",
+      "cues": [
+        {
+          "id": "cue-treatment_start-01",
+          "startSec": 0.0,
+          "durationSec": 4.5,
+          "text": "В день заезда вас смотрит терапевт и назначает обследования.",
+          "ttsText": "Курс начинается с врача, потому что без осмотра нельзя понять, что вам можно.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_start-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Нарзан, грязь и физио появляются уже по плану, а не первой попавшейся ванной.",
+          "ttsText": "Дальше назначения складываются в спокойную схему, а не в набор случайных кабинетов.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_start-03",
+          "startSec": 9.0,
+          "durationSec": 4.5,
+          "text": "В день ставят от трёх до семи процедур и оставляют паузы между ними.",
+          "ttsText": "Паузы нужны, чтобы день оставался переносимым и не превращался в гонку.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "treatment_start-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.5,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.5
+        },
+        {
+          "id": "treatment_start-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        },
+        {
+          "id": "treatment_start-03",
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/05.jpg",
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "pan-left",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        }
+      ],
+      "label": "Лечение: старт",
+      "title": "Лечение",
+      "endButtons": [
+        {
+          "id": "btn-treatment_start-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "family_with_kids": {
+      "id": "family_with_kids",
+      "cues": [
+        {
+          "id": "cue-family_with_kids-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Детский клуб принимает ребят с четырёх лет и открыт с девяти утра.",
+          "ttsText": "С девяти утра детей ждут в клубе: присмотр, игры и творчество.",
+          "showText": true
+        },
+        {
+          "id": "cue-family_with_kids-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "При необходимости педиатр подберёт мягкие процедуры без взрослого графика.",
+          "ttsText": "Если нужно лечение, педиатр назначит водные процедуры и ингаляции без перегруза.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "family_with_kids-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "family_with_kids-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "С детьми",
+      "title": "Семья",
+      "endButtons": [
+        {
+          "id": "btn-family_with_kids-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "about_positioning": {
+      "id": "about_positioning",
+      "cues": [
+        {
+          "id": "cue-about_positioning-01",
+          "startSec": 0.0,
+          "durationSec": 4.5,
+          "text": "«Плаза СПА» стоит у входа в Национальный парк, на проспекте Ленина.",
+          "ttsText": "Санаторий расположен в Кисловодске, прямо у Национального парка.",
+          "showText": true
+        },
+        {
+          "id": "cue-about_positioning-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "От номера до аллей терренкура несколько минут пешком.",
+          "ttsText": "Утром вы выходите на терренкур от своего крыльца, без дороги через город.",
+          "showText": true
+        },
+        {
+          "id": "cue-about_positioning-03",
+          "startSec": 9.0,
+          "durationSec": 4.5,
+          "text": "Лечебница, бювет, бассейн и два ресторана собраны в одном доме.",
+          "ttsText": "День проходит здесь же: врач, минеральная вода, бассейн и стол рядом.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "about_positioning-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/03.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.5,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.5
+        },
+        {
+          "id": "about_positioning-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        },
+        {
+          "id": "about_positioning-03",
+          "to": {
+            "x": 0.38,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "src": "/media/projects/adm/library/gallery/about/05.jpg",
+          "from": {
+            "x": 0.62,
+            "y": 0.5,
+            "scale": 1.14
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "pan-left",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        }
+      ],
+      "label": "О санатории: позиционирование",
+      "title": "Расположение",
+      "endButtons": [
+        {
+          "id": "btn-about_positioning-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "couple_quiet_rest": {
+      "id": "couple_quiet_rest",
+      "cues": [
+        {
+          "id": "cue-couple_quiet_rest-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Для вас двоих готовят спокойный номер и вечер без чужой программы.",
+          "ttsText": "Мы подберём номер, в котором вам двоим будет тихо и удобно.",
+          "showText": true
+        },
+        {
+          "id": "cue-couple_quiet_rest-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Утро можно начать в парке, а день провести в своём темпе.",
+          "ttsText": "Парк, вода и ужин остаются рядом, без обязательной анимации.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "couple_quiet_rest-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "couple_quiet_rest-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Пара",
+      "title": "Вдвоём",
+      "endButtons": [
+        {
+          "id": "btn-couple_quiet_rest-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "family_activities": {
+      "id": "family_activities",
+      "cues": [
+        {
+          "id": "cue-family_activities-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Для детей с утра до вечера работают анимация и мастер-классы.",
+          "ttsText": "Пока вы отдыхаете, детей занимают игры, конкурсы и аниматоры.",
+          "showText": true
+        },
+        {
+          "id": "cue-family_activities-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Подросткам открыт отдельный клуб с игровыми приставками.",
+          "ttsText": "Для старших есть своё пространство с PlayStation, без программы малышей.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "family_activities-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "family_activities-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/03.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Семейный досуг",
+      "title": "Досуг",
+      "endButtons": [
+        {
+          "id": "btn-family_activities-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_compare": {
+      "id": "objection_compare",
+      "cues": [
+        {
+          "id": "cue-objection_compare-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Сравнивайте не звёзды на вывеске, а то, где проходит ваш день.",
+          "ttsText": "Имеет смысл смотреть, сколько времени уйдёт на дорогу между парком, врачом и ужином.",
+          "showText": true
+        },
+        {
+          "id": "cue-objection_compare-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Здесь парк у входа, а лечебница, стол и СПА собраны в одном доме.",
+          "ttsText": "В «Плаза СПА» этот контур уже собран, и на этом обычно расходятся предложения.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "objection_compare-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/07-psk5.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "objection_compare-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/08-plaza_cameras.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Сравнение с конкурентом",
+      "title": "Сравнение",
+      "endButtons": [
+        {
+          "id": "btn-objection_compare-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_long_stay": {
+      "id": "purpose_long_stay",
+      "cues": [
+        {
+          "id": "cue-purpose_long_stay-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "На заезд от двух недель обычно берут люкс с отдельной гостиной.",
+          "ttsText": "На долгий срок нужна вторая комната, чтобы день не проходил на кровати.",
+          "showText": true
+        },
+        {
+          "id": "cue-purpose_long_stay-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Врачу хватает времени провести курс спокойно, без гонки за пять дней.",
+          "ttsText": "Длинный заезд даёт лечению ритм, а вам более домашний быт.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "purpose_long_stay-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/16-plaza_room_deluxe_01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "purpose_long_stay-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/17-plaza-luxe-486-photo-01-1-copy.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Длинный курс",
+      "title": "Курс",
+      "endButtons": [
+        {
+          "id": "btn-purpose_long_stay-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_distance": {
+      "id": "objection_distance",
+      "cues": [
+        {
+          "id": "cue-objection_distance-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Вас встретят в аэропорту Минеральных Вод и довезут до входа.",
+          "ttsText": "Водитель будет у прилёта с табличкой и поможет с багажом до санатория.",
+          "showText": true
+        },
+        {
+          "id": "cue-objection_distance-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "С железнодорожного вокзала Кисловодска трансфер тоже можно заказать.",
+          "ttsText": "Если едете поездом, заберём от вокзала, и искать такси не придётся.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "objection_distance-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/place/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "objection_distance-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/place/03.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Возражение: дорога",
+      "title": "Дорога",
+      "endButtons": [
+        {
+          "id": "btn-objection_distance-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_food_fit": {
+      "id": "objection_food_fit",
+      "cues": [
+        {
+          "id": "cue-objection_food_fit-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "На линии «Панорамы» каждый день есть диетические и вегетарианские блюда.",
+          "ttsText": "Если есть ограничения в еде, их закрывают уже на общем шведском столе.",
+          "showText": true
+        },
+        {
+          "id": "cue-objection_food_fit-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "В лечебной программе стол собирают по назначениям, а не «как у всех».",
+          "ttsText": "На программе диетолог и кухня соберут отдельное меню под ваши рекомендации.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "objection_food_fit-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/food/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "objection_food_fit-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/food/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Подойдёт ли питание",
+      "title": "Питание",
+      "endButtons": [
+        {
+          "id": "btn-objection_food_fit-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_room_fit": {
+      "id": "objection_room_fit",
+      "cues": [
+        {
+          "id": "cue-objection_room_fit-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Категории идут от двадцати двух до ста шестнадцати метров.",
+          "ttsText": "Смотрим, кто едет, и предлагаем формат от компактного стандарта до апартаментов.",
+          "showText": true
+        },
+        {
+          "id": "cue-objection_room_fit-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Этаж, вид и детскую кровать можно заложить в бронь до заезда.",
+          "ttsText": "Пожелания лучше сказать заранее, чтобы не решать это уже на ресепшен.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "objection_room_fit-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "objection_room_fit-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Подойдёт ли номер",
+      "title": "Номер",
+      "endButtons": [
+        {
+          "id": "btn-objection_room_fit-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_rest_reset": {
+      "id": "purpose_rest_reset",
+      "cues": [
+        {
+          "id": "cue-purpose_rest_reset-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "От трёх ночей можно приехать выспаться и сменить воздух, без полного курса.",
+          "ttsText": "Короткий заезд имеет смысл, если задача — перезагрузка, а не лечение.",
+          "showText": true
+        },
+        {
+          "id": "cue-purpose_rest_reset-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Бассейн, парк и стол работают сами, и вам не нужно отчитываться кабинетам.",
+          "ttsText": "День складывается из воды, прогулки и спокойной еды, без графика врача.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "purpose_rest_reset-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/14-bassein_plz_001-1620x1080.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "purpose_rest_reset-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Цель: отдых и перезагрузка",
+      "title": "Отдых",
+      "endButtons": [
+        {
+          "id": "btn-purpose_rest_reset-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_short_stay": {
+      "id": "purpose_short_stay",
+      "cues": [
+        {
+          "id": "cue-purpose_short_stay-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "За три-четыре ночи успеваете выспаться, спокойно поесть и побыть в воде.",
+          "ttsText": "Даже короткий визит уже чувствуется, если не тратить его на сборы и поиски.",
+          "showText": true
+        },
+        {
+          "id": "cue-purpose_short_stay-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Заселение простое, поэтому первый день не уходит на ориентацию.",
+          "ttsText": "Вы довольно быстро входите в ритм дома и начинаете отдыхать с первого вечера.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "purpose_short_stay-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "purpose_short_stay-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Короткий заезд",
+      "title": "Уикенд",
+      "endButtons": [
+        {
+          "id": "btn-purpose_short_stay-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "senior_calm_rhythm": {
+      "id": "senior_calm_rhythm",
+      "cues": [
+        {
+          "id": "cue-senior_calm_rhythm-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Процедуры ставят с паузами, чтобы оставалось время поесть и пройтись.",
+          "ttsText": "День не превращается в гонку по корпусу, если назначения распределены спокойно.",
+          "showText": true
+        },
+        {
+          "id": "cue-senior_calm_rhythm-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Терапевт смотрит самочувствие и не заполняет день лишними кабинетами.",
+          "ttsText": "Врач корректирует нагрузку, когда курс даётся тяжелее, чем ждали.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "senior_calm_rhythm-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "senior_calm_rhythm-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Старшие гости",
+      "title": "Ритм",
+      "endButtons": [
+        {
+          "id": "btn-senior_calm_rhythm-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "next_step_ask_price": {
+      "id": "next_step_ask_price",
+      "cues": [
+        {
+          "id": "cue-next_step_ask_price-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Напишите даты и состав гостей, и мы посчитаем категорию номера.",
+          "ttsText": "Достаточно сказать, когда и с кем вы едете, чтобы собрать путёвку.",
+          "showText": true
+        },
+        {
+          "id": "cue-next_step_ask_price-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "В расчёте будет видно, что входит в стоимость и какая сумма выходит.",
+          "ttsText": "Вы увидите состав и цену заранее, без сюрпризов уже на месте.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "next_step_ask_price-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/06.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "next_step_ask_price-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Следующий шаг: расчёт",
+      "title": "Расчёт",
+      "endButtons": [
+        {
+          "id": "btn-next_step_ask_price-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "next_step_pick_room": {
+      "id": "next_step_pick_room",
+      "cues": [
+        {
+          "id": "cue-next_step_pick_room-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Подскажем по площади, кроватям и этажу под ваш состав.",
+          "ttsText": "Сначала поймём, кто едет и что важно в номере, и только потом предложим варианты.",
+          "showText": true
+        },
+        {
+          "id": "cue-next_step_pick_room-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Когда выберете категорию, мы закрепим её в бронировании.",
+          "ttsText": "Фиксируем категорию заранее, чтобы к заезду она не разъехалась.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "next_step_pick_room-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/18-rooms_luxe_none_balcone_001-min.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "next_step_pick_room-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/13-plaza_room_luxe_006.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Следующий шаг: номер",
+      "title": "Номер",
+      "endButtons": [
+        {
+          "id": "btn-next_step_pick_room-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "price_what_included": {
+      "id": "price_what_included",
+      "cues": [
+        {
+          "id": "cue-price_what_included-01",
+          "startSec": 0.0,
+          "durationSec": 4.5,
+          "text": "В стоимость входят номер, завтрак, обед, ужин, бассейн, сауны и вечерняя программа.",
+          "ttsText": "Базовая путёвка уже собирает проживание, стол и воду, без кассы на каждом шагу.",
+          "showText": true
+        },
+        {
+          "id": "cue-price_what_included-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Санаторный тариф добавляет назначения и наблюдение личного терапевта.",
+          "ttsText": "Если берёте лечение, внутри будут процедуры и врач, который ведёт курс.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "price_what_included-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/06.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.5,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.5
+        },
+        {
+          "id": "price_what_included-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        }
+      ],
+      "label": "Цена: что входит",
+      "title": "Путёвка",
+      "endButtons": [
+        {
+          "id": "btn-price_what_included-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "cta_whatsapp_generic": {
+      "id": "cta_whatsapp_generic",
+      "cues": [
+        {
+          "id": "cue-cta_whatsapp_generic-01",
+          "startSec": 0.0,
+          "durationSec": 4.2,
+          "text": "Напишите нам, и мы пришлём расчёт на ваши даты.",
+          "ttsText": "Напишите нам: подберём номер и пришлём точный расчёт на ваши даты.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "cta_whatsapp_generic-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/02.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.2,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "CTA: связь (без имени)",
+      "title": "Связь",
+      "endButtons": [
+        {
+          "id": "btn-cta_whatsapp_generic-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "location_where_is_it": {
+      "id": "location_where_is_it",
+      "cues": [
+        {
+          "id": "cue-location_where_is_it-01",
+          "startSec": 0.0,
+          "durationSec": 4.5,
+          "text": "Санаторий стоит на проспекте Ленина, в спокойной части Кисловодска.",
+          "ttsText": "Вы живёте в тихой части курорта, недалеко от центра и парка.",
+          "showText": true
+        },
+        {
+          "id": "cue-location_where_is_it-02",
+          "startSec": 4.5,
+          "durationSec": 4.5,
+          "text": "Свой выход ведёт сразу на терренкуры Национального парка.",
+          "ttsText": "Утром выходите к аллеям от крыльца, а не через весь город.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "location_where_is_it-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/place/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.5,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.5
+        },
+        {
+          "id": "location_where_is_it-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/place/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.5,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.5
+        }
+      ],
+      "label": "Локация",
+      "title": "Парк",
+      "endButtons": [
+        {
+          "id": "btn-location_where_is_it-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_family_fit": {
+      "id": "objection_family_fit",
+      "cues": [
+        {
+          "id": "cue-objection_family_fit-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Пока вы на процедурах, дети заняты в клубе, на анимации или в детском бассейне.",
+          "ttsText": "Семье здесь есть свой ритм: детям занятие, вам время на лечение и отдых.",
+          "showText": true
+        },
+        {
+          "id": "cue-objection_family_fit-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Кроватку, стульчик и коляску дадим по запросу, без доплаты.",
+          "ttsText": "Детские принадлежности не нужно везти с собой, их поставят на месте.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "objection_family_fit-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/14-plaza_room_luxe_002.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "objection_family_fit-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/rooms/15-plaza_room_luxe_004.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Удобно ли с семьёй",
+      "title": "Семья",
+      "endButtons": [
+        {
+          "id": "btn-objection_family_fit-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_day_rhythm": {
+      "id": "treatment_day_rhythm",
+      "cues": [
+        {
+          "id": "cue-treatment_day_rhythm-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Кабинеты ставят в первую половину дня, чтобы очередь не растянулась до вечера.",
+          "ttsText": "Лечебница не забирает весь день, если процедуры собраны до обеда.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_day_rhythm-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "После приёмов можно идти в парк или в бассейн, а не сидеть в коридоре.",
+          "ttsText": "Свободная часть суток остаётся вам: аллеи, вода или просто тишина.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "treatment_day_rhythm-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "treatment_day_rhythm-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Ритм лечебного дня",
+      "title": "День",
+      "endButtons": [
+        {
+          "id": "btn-treatment_day_rhythm-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "food_restaurant_space": {
+      "id": "food_restaurant_space",
+      "cues": [
+        {
+          "id": "cue-food_restaurant_space-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "«Панорама» — светлый просторный зал для основного стола.",
+          "ttsText": "В главном зале удобно семье и сразу после процедур: много света и места.",
+          "showText": true
+        },
+        {
+          "id": "cue-food_restaurant_space-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "«Роял» выбирают, когда хочется более тихой и неспешной посадки.",
+          "ttsText": "В «Роял» другой ритм ужина: тише, ближе к сервису и подаче шефа.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "food_restaurant_space-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/food/07.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "food_restaurant_space-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/food/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Ресторан и атмосфера",
+      "title": "Рестораны",
+      "endButtons": [
+        {
+          "id": "btn-food_restaurant_space-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_uncertainty": {
+      "id": "objection_uncertainty",
+      "cues": [
+        {
+          "id": "cue-objection_uncertainty-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Если нужен отдых, достаточно заезда от трёх ночей.",
+          "ttsText": "Короткий заезд закрывает воздух, стол и СПА, когда полный курс ещё не нужен.",
+          "showText": true
+        },
+        {
+          "id": "cue-objection_uncertainty-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Если едете лечиться, лучше закладывать семь ночей, иначе останется только осмотр.",
+          "ttsText": "Для лечения неделе есть смысл: врачу нужно время и на осмотр, и на сам курс.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "objection_uncertainty-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/06.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "objection_uncertainty-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Неопределённость",
+      "title": "Формат",
+      "endButtons": [
+        {
+          "id": "btn-objection_uncertainty-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "next_step_manager_chat": {
+      "id": "next_step_manager_chat",
+      "cues": [
+        {
+          "id": "cue-next_step_manager_chat-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Один специалист ответит по телефону или почте на все вопросы.",
+          "ttsText": "Вам не придётся писать в несколько служб: вопросы закроет один человек.",
+          "showText": true
+        },
+        {
+          "id": "cue-next_step_manager_chat-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Трансфер, номер и лечение соберём в одно бронирование.",
+          "ttsText": "Мы свяжем дорогу, проживание и назначения в одну бронь за вас.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "next_step_manager_chat-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/07-psk5.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "next_step_manager_chat-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/08-plaza_cameras.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Следующий шаг: менеджер",
+      "title": "Менеджер",
+      "endButtons": [
+        {
+          "id": "btn-next_step_manager_chat-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "next_step_confirm_dates": {
+      "id": "next_step_confirm_dates",
+      "cues": [
+        {
+          "id": "cue-next_step_confirm_dates-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Назовите месяц или точные дни, и мы проверим свободные номера.",
+          "ttsText": "Даже примерных дат достаточно, чтобы сверить наличие категорий.",
+          "showText": true
+        },
+        {
+          "id": "cue-next_step_confirm_dates-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Заезд возможен в любой день года, без общей даты «для всех».",
+          "ttsText": "Подберём день вам, а не под расписание общего заезда.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "next_step_confirm_dates-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/place/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "next_step_confirm_dates-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/place/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Следующий шаг: уточнить даты",
+      "title": "Уточнение",
+      "endButtons": [
+        {
+          "id": "btn-next_step_confirm_dates-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "objection_treatment_fit": {
+      "id": "objection_treatment_fit",
+      "cues": [
+        {
+          "id": "cue-objection_treatment_fit-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Лечебница ведёт профили сердца, спины, дыхания и желудочно-кишечного тракта.",
+          "ttsText": "Мы не обещаем вылечить всё сразу и говорим только о тех направлениях, которые здесь ведут.",
+          "showText": true
+        },
+        {
+          "id": "cue-objection_treatment_fit-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Процедуры ставят после осмотра терапевта, а не одним пакетом на всех.",
+          "ttsText": "Лишние назначения можно не брать: план появляется после осмотра.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "objection_treatment_fit-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/07.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "objection_treatment_fit-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Подойдёт ли лечение",
+      "title": "Лечение",
+      "endButtons": [
+        {
+          "id": "btn-objection_treatment_fit-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "purpose_health_recovery": {
+      "id": "purpose_health_recovery",
+      "cues": [
+        {
+          "id": "cue-purpose_health_recovery-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "На курс лучше закладывать семь ночей, чтобы хватило на осмотр и сами процедуры.",
+          "ttsText": "Неделя нужна не для галочки, а чтобы лечение успело сложиться.",
+          "showText": true
+        },
+        {
+          "id": "cue-purpose_health_recovery-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Диагностика и кабинеты идут одним планом, а не набором разрозненных услуг.",
+          "ttsText": "Обследования и назначения связывают в одну линию, и день становится понятным.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "purpose_health_recovery-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "purpose_health_recovery-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Цель: лечение и восстановление",
+      "title": "Лечение",
+      "endButtons": [
+        {
+          "id": "btn-purpose_health_recovery-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "territory_season_summer": {
+      "id": "territory_season_summer",
+      "cues": [
+        {
+          "id": "cue-territory_season_summer-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Лето в Кисловодске мягче равнины благодаря высоте и тени парка.",
+          "ttsText": "Здесь нет степного зноя: гулять днём можно за счёт горного воздуха и аллей.",
+          "showText": true
+        },
+        {
+          "id": "cue-territory_season_summer-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "К курсу можно добавить поездку к Эльбрусу или Джилы-Су, если будут силы.",
+          "ttsText": "Лечение и горы совмещают, когда самочувствие уже позволяет выехать.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "territory_season_summer-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/place/01.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "territory_season_summer-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/place/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Летний сезон",
+      "title": "Лето",
+      "endButtons": [
+        {
+          "id": "btn-territory_season_summer-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "territory_season_winter": {
+      "id": "territory_season_winter",
+      "cues": [
+        {
+          "id": "cue-territory_season_winter-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Зима в Кисловодске часто ясная, и в парк выходят гулять, а не пережидают в номере.",
+          "ttsText": "Зимний заезд не закрывает прогулки: солнца здесь обычно достаточно.",
+          "showText": true
+        },
+        {
+          "id": "cue-territory_season_winter-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Тёплый бассейн, врачи и рестораны работают так же, как в высокий сезон.",
+          "ttsText": "Дом не уходит на каникулы, поэтому курс и быт остаются на месте.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "territory_season_winter-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/about/07-psk5.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "territory_season_winter-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/about/08-plaza_cameras.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Зимний сезон",
+      "title": "Зима",
+      "endButtons": [
+        {
+          "id": "btn-territory_season_winter-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_profile_neuro": {
+      "id": "treatment_profile_neuro",
+      "cues": [
+        {
+          "id": "cue-treatment_profile_neuro-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Для снятия напряжения используют хвойные ванны, массаж и спелеокамеру.",
+          "ttsText": "Курс собирают так, чтобы нервной системе стало спокойнее, а не бодрее насильно.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_profile_neuro-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Сам санаторный день здесь тише городского, и это часто важнее одной процедуры.",
+          "ttsText": "Тихий ритм дома работает вместе с назначениями и помогает восстановить сон.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "treatment_profile_neuro-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "treatment_profile_neuro-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Профиль: нервная система",
+      "title": "Нервы",
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_neuro-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "wellness_sleep_recovery": {
+      "id": "wellness_sleep_recovery",
+      "cues": [
+        {
+          "id": "cue-wellness_sleep_recovery-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Вечером лучше остаться в тёплой воде и хаммаме, чем добавлять ещё один кабинет.",
+          "ttsText": "Сон начинается задолго до кровати: день нужно вовремя закончить.",
+          "showText": true
+        },
+        {
+          "id": "cue-wellness_sleep_recovery-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Ночью здесь тихо, потому что это курорт, а не городской фон за окном.",
+          "ttsText": "Тишина ночью здесь не обещание матраса, а устройство самого места.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "wellness_sleep_recovery-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/14-bassein_plz_001-1620x1080.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "wellness_sleep_recovery-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/leisure/04.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Сон и восстановление",
+      "title": "Сон",
+      "endButtons": [
+        {
+          "id": "btn-wellness_sleep_recovery-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "next_step_pick_treatment": {
+      "id": "next_step_pick_treatment",
+      "cues": [
+        {
+          "id": "cue-next_step_pick_treatment-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Напишите, что важно по самочувствию, и мы пришлём состав программы.",
+          "ttsText": "Расскажите о цели поездки, и мы подберём программу без лишних процедур.",
+          "showText": true
+        },
+        {
+          "id": "cue-next_step_pick_treatment-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Подскажем, какие документы взять, чтобы первый день не ушёл на справки.",
+          "ttsText": "К заезду вы будете знать, что взять с собой и с чего начнётся курс.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "next_step_pick_treatment-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "next_step_pick_treatment-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/07.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Следующий шаг: лечение",
+      "title": "Лечение",
+      "endButtons": [
+        {
+          "id": "btn-next_step_pick_treatment-contact",
+          "label": "Связаться",
+          "target": {
+            "kind": "contact"
+          }
+        }
+      ]
+    },
+    "treatment_profile_cardio": {
+      "id": "treatment_profile_cardio",
+      "cues": [
+        {
+          "id": "cue-treatment_profile_cardio-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Курс начинают с обследования и ЭКГ, без резкой нагрузки в первый день.",
+          "ttsText": "Сердцу сначала нужен контроль, и только потом процедуры.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_profile_cardio-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Дальше по разрешению врача идут нарзанные ванны и короткий терренкур.",
+          "ttsText": "Нарзан и спокойная ходьба добавляют, когда врач видит, что это безопасно.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "treatment_profile_cardio-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "treatment_profile_cardio-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/07.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Профиль: сердце и сосуды",
+      "title": "Сердце",
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_cardio-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "objection_dates_not_fixed": {
+      "id": "objection_dates_not_fixed",
+      "cues": [
+        {
+          "id": "cue-objection_dates_not_fixed-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Если точных дней ещё нет, стоимость можно сравнить по сезонам.",
+          "ttsText": "Покажем месяцы, которые спокойнее по цене и наличию, если дни ещё плавают.",
+          "showText": true
+        },
+        {
+          "id": "cue-objection_dates_not_fixed-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Выберите удобное окно, и даты зафиксируем предоплатой.",
+          "ttsText": "Когда определитесь, бронь можно закрепить, не держа решение «на потом» бесконечно.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "objection_dates_not_fixed-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/place/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "objection_dates_not_fixed-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/place/01.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Возражение: даты не определены",
+      "title": "Планирование",
+      "endButtons": [
+        {
+          "id": "btn-objection_dates_not_fixed-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "senior_medical_confidence": {
+      "id": "senior_medical_confidence",
+      "cues": [
+        {
+          "id": "cue-senior_medical_confidence-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Лечебницу ведут врачи с курортной практикой, которые работают здесь каждый сезон.",
+          "ttsText": "Вас не отпускают в коридор разбираться: маршрут лечения собирают за вас.",
+          "showText": true
+        },
+        {
+          "id": "cue-senior_medical_confidence-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Регистратура собирает расписание, чтобы вам не искать кабинеты самостоятельно.",
+          "ttsText": "Врачи знают санаторный ритм и ведут курс без лишней суеты.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "senior_medical_confidence-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "senior_medical_confidence-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Медицинская уверенность",
+      "title": "Врачи",
+      "endButtons": [
+        {
+          "id": "btn-senior_medical_confidence-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_individual_plan": {
+      "id": "treatment_individual_plan",
+      "cues": [
+        {
+          "id": "cue-treatment_individual_plan-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Терапевт собирает назначения после осмотра и диагностики, а не из готового буклета.",
+          "ttsText": "Ваш курс начинается с вашего случая, а не с общего списка на всех.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_individual_plan-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Если процедура даётся тяжело, план можно сдвинуть по ходу курса.",
+          "ttsText": "Достаточно сказать врачу, что переносится плохо, и нагрузку поправят.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "treatment_individual_plan-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/07.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "treatment_individual_plan-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Индивидуальный план",
+      "title": "План",
+      "endButtons": [
+        {
+          "id": "btn-treatment_individual_plan-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_detox_antistress": {
+      "id": "treatment_detox_antistress",
+      "cues": [
+        {
+          "id": "cue-treatment_detox_antistress-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "«Детокс» и «Антистресс» идут отдельным курсом от семи дней.",
+          "ttsText": "Это не общий пакет, а своя программа с осмотром, процедурами и рационом.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_detox_antistress-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Стол этих программ подают в «Роял», чтобы еда не спорила с назначениями.",
+          "ttsText": "Питание под курс выносят в отдельный зал, и стол работает на ту же задачу.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "treatment_detox_antistress-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/05.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "treatment_detox_antistress-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/07.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Детокс и антистресс",
+      "title": "Программы",
+      "endButtons": [
+        {
+          "id": "btn-treatment_detox_antistress-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_profile_breathing": {
+      "id": "treatment_profile_breathing",
+      "cues": [
+        {
+          "id": "cue-treatment_profile_breathing-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "Для дыхательных путей ставят спелеокамеру и ингаляции.",
+          "ttsText": "Соляная пещера и ингаляции используют, когда важно очистить дыхание.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_profile_breathing-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "После кабинетов прогулка в парке продолжает тот же день, а не выглядит экскурсией.",
+          "ttsText": "Воздух кисловодского парка здесь часть лечения, поэтому после процедур стоит выйти к аллеям.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "treatment_profile_breathing-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/07.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "treatment_profile_breathing-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Профиль: дыхание",
+      "title": "Дыхание",
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_breathing-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_profile_digestive": {
+      "id": "treatment_profile_digestive",
+      "cues": [
+        {
+          "id": "cue-treatment_profile_digestive-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "В бювете санатория пьют нарзан, Славяновскую и Ессентуки по схеме врача.",
+          "ttsText": "Минеральную воду назначают индивидуально, а не по совету соседа по столу.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_profile_digestive-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "Кухня может собрать щадящий стол, без жёсткой голодовки.",
+          "ttsText": "Рацион делают лёгким, когда желудку нужен покой, и не превращают еду в испытание.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "treatment_profile_digestive-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "treatment_profile_digestive-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/02.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Профиль: ЖКТ",
+      "title": "ЖКТ",
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_digestive-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    },
+    "treatment_profile_musculoskeletal": {
+      "id": "treatment_profile_musculoskeletal",
+      "cues": [
+        {
+          "id": "cue-treatment_profile_musculoskeletal-01",
+          "startSec": 0.0,
+          "durationSec": 4.6,
+          "text": "По осмотру ставят грязь Тамбукана и водные процедуры.",
+          "ttsText": "Для спины и суставов тепло и гидротерапия работают, если врачу это подходит.",
+          "showText": true
+        },
+        {
+          "id": "cue-treatment_profile_musculoskeletal-02",
+          "startSec": 4.6,
+          "durationSec": 4.2,
+          "text": "К этому добавляют лечебную гимнастику и массаж, чтобы тело не только лежало.",
+          "ttsText": "Движение включают в курс специально, чтобы эффект не ограничивался кабинетом.",
+          "showText": true
+        }
+      ],
+      "clips": [
+        {
+          "id": "treatment_profile_musculoskeletal-01",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/10-cosmetolog-1620x1080.webp",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-out",
+          "animSec": 4.6,
+          "showTitle": true,
+          "transition": "cut",
+          "durationSec": 4.6
+        },
+        {
+          "id": "treatment_profile_musculoskeletal-02",
+          "to": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.18
+          },
+          "src": "/media/projects/adm/library/gallery/treatment/01.jpg",
+          "from": {
+            "x": 0.5,
+            "y": 0.5,
+            "scale": 1.02
+          },
+          "media": "image",
+          "easing": "ease-in-out",
+          "motion": "zoom-in",
+          "animSec": 4.2,
+          "showTitle": false,
+          "transition": "dissolve",
+          "durationSec": 4.2
+        }
+      ],
+      "label": "Профиль: спина и суставы",
+      "title": "Суставы",
+      "endButtons": [
+        {
+          "id": "btn-treatment_profile_musculoskeletal-menu",
+          "label": "К разделам",
+          "target": {
+            "kind": "menu"
+          }
+        }
+      ]
+    }
+  },
+  "emailPreview": {
+    "enabled": true,
+    "src": "/media/projects/adm/library/gallery/about/07-psk5.jpg",
+    "showPlay": true,
+    "showTitle": false,
+    "title": "{name}, персональная презентация «Плаза СПА»"
+  },
+  "mediaLibrary": [
+    {
+      "count": 8,
+      "folder": "about"
+    },
+    {
+      "count": 8,
+      "folder": "food"
+    },
+    {
+      "count": 6,
+      "folder": "intro"
+    },
+    {
+      "count": 8,
+      "folder": "leisure"
+    },
+    {
+      "count": 5,
+      "folder": "place"
+    },
+    {
+      "count": 6,
+      "folder": "rooms"
+    },
+    {
+      "count": 5,
+      "folder": "treatment"
+    }
+  ],
+  "constructorV2": {
+    "mode": "adaptive",
+    "sequenceMetaById": {
+      "cta_call": {
+        "group": "cta",
+        "subgroup": "call",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "cta",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "food_diet": {
+        "group": "food",
+        "subgroup": "diet",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "food",
+          "treatment"
+        ],
+        "objectionTags": [
+          "food-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_view": {
+        "group": "rooms",
+        "subgroup": "view",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "room",
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "food_buffet": {
+        "group": "food",
+        "subgroup": "buffet",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "medium",
+        "audienceTags": [],
+        "topicTags": [
+          "food"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": []
+      },
+      "food_family": {
+        "group": "food",
+        "subgroup": "family",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "food",
+          "family"
+        ],
+        "objectionTags": [
+          "food-fit",
+          "family-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_mix": {
+        "group": "purpose",
+        "subgroup": "mix",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "treatment",
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_quiet": {
+        "group": "rooms",
+        "subgroup": "quiet",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "room",
+          "trust"
+        ],
+        "objectionTags": [
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "cta_whatsapp": {
+        "group": "cta",
+        "subgroup": "whatsapp",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 10,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "cta",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "name"
+        ],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_deluxe": {
+        "group": "rooms",
+        "subgroup": "deluxe",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_double": {
+        "group": "rooms",
+        "subgroup": "double",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_family": {
+        "group": "rooms",
+        "subgroup": "family",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "room",
+          "family"
+        ],
+        "objectionTags": [
+          "family-fit",
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_luxury": {
+        "group": "rooms",
+        "subgroup": "luxury",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_single": {
+        "group": "rooms",
+        "subgroup": "single",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "solo"
+        ],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "solo_support": {
+        "group": "senior",
+        "subgroup": "support",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "solo"
+        ],
+        "topicTags": [
+          "trust",
+          "room"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "wellness_spa": {
+        "group": "wellness",
+        "subgroup": "spa",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "greeting_warm": {
+        "group": "intro",
+        "subgroup": "generic",
+        "enabled": false,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "intro"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "name"
+        ],
+        "slotFields": [
+          "guestName"
+        ]
+      },
+      "intro_generic": {
+        "group": "intro",
+        "subgroup": "generic",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "intro"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "name"
+        ],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_comfort": {
+        "group": "rooms",
+        "subgroup": "comfort",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "medium",
+        "audienceTags": [],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": []
+      },
+      "wellness_pool": {
+        "group": "wellness",
+        "subgroup": "pool",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "topics"
+        ]
+      },
+      "intro_by_dates": {
+        "group": "intro",
+        "subgroup": "by-dates",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "intro",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "dates"
+        ],
+        "slotFields": [
+          "dates"
+        ]
+      },
+      "leisure_active": {
+        "group": "leisure",
+        "subgroup": "active",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "leisure"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "rooms_standard": {
+        "group": "rooms",
+        "subgroup": "standard",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [
+          "solo"
+        ],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [
+          "price"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "couple_wellness": {
+        "group": "couple",
+        "subgroup": "wellness",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "couple",
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "cta_get_options": {
+        "group": "cta",
+        "subgroup": "get-options",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "cta",
+          "price",
+          "room"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "leisure_evening": {
+        "group": "leisure",
+        "subgroup": "evening",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 4,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "leisure"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "topics"
+        ]
+      },
+      "objection_price": {
+        "group": "objection",
+        "subgroup": "price",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "price"
+        ],
+        "objectionTags": [
+          "price",
+          "expensive"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "territory_walks": {
+        "group": "territory",
+        "subgroup": "walks",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "territory",
+          "location"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_start": {
+        "group": "treatment",
+        "subgroup": "start",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "medium",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "trust"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "topics"
+        ]
+      },
+      "family_with_kids": {
+        "group": "family",
+        "subgroup": "with-kids",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "family",
+          "room",
+          "food"
+        ],
+        "objectionTags": [
+          "family-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "about_positioning": {
+        "group": "about",
+        "subgroup": "positioning",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "medium",
+        "audienceTags": [],
+        "topicTags": [
+          "about"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": []
+      },
+      "couple_quiet_rest": {
+        "group": "couple",
+        "subgroup": "quiet-rest",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "couple",
+          "wellness",
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "family_activities": {
+        "group": "family",
+        "subgroup": "activities",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "family",
+          "leisure"
+        ],
+        "objectionTags": [
+          "family-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_compare": {
+        "group": "objection",
+        "subgroup": "compare-competitor",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "price",
+          "trust"
+        ],
+        "objectionTags": [
+          "compare-competitor"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_long_stay": {
+        "group": "purpose",
+        "subgroup": "long-stay",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "room"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_distance": {
+        "group": "objection",
+        "subgroup": "distance",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "location"
+        ],
+        "objectionTags": [
+          "distance"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_food_fit": {
+        "group": "objection",
+        "subgroup": "food-fit",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "food"
+        ],
+        "objectionTags": [
+          "food-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_room_fit": {
+        "group": "objection",
+        "subgroup": "room-fit",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "room"
+        ],
+        "objectionTags": [
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_rest_reset": {
+        "group": "purpose",
+        "subgroup": "rest-reset",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "wellness"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_short_stay": {
+        "group": "purpose",
+        "subgroup": "short-stay",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "senior_calm_rhythm": {
+        "group": "senior",
+        "subgroup": "calm-rhythm",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "senior",
+          "treatment"
+        ],
+        "objectionTags": [
+          "distance",
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_ask_price": {
+        "group": "next-step",
+        "subgroup": "ask-price",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step",
+          "price"
+        ],
+        "objectionTags": [
+          "price"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_pick_room": {
+        "group": "next-step",
+        "subgroup": "pick-room",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step",
+          "room"
+        ],
+        "objectionTags": [
+          "room-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "price_what_included": {
+        "group": "price",
+        "subgroup": "what-included",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "price"
+        ],
+        "objectionTags": [
+          "price",
+          "expensive"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "objections"
+        ]
+      },
+      "cta_whatsapp_generic": {
+        "group": "cta",
+        "subgroup": "whatsapp-generic",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "cta",
+          "next-step"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "location_where_is_it": {
+        "group": "location",
+        "subgroup": "where-is-it",
+        "enabled": true,
+        "autoplayEligible": false,
+        "menuOnly": true,
+        "priority": 4,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "location"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": []
+      },
+      "objection_family_fit": {
+        "group": "objection",
+        "subgroup": "family-fit",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [
+          "family"
+        ],
+        "topicTags": [
+          "family",
+          "room",
+          "food"
+        ],
+        "objectionTags": [
+          "family-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_day_rhythm": {
+        "group": "treatment",
+        "subgroup": "day-rhythm",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "treatment",
+          "purpose"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "food_restaurant_space": {
+        "group": "food",
+        "subgroup": "restaurant-space",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [
+          "couple"
+        ],
+        "topicTags": [
+          "food",
+          "wellness"
+        ],
+        "objectionTags": [],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_uncertainty": {
+        "group": "objection",
+        "subgroup": "uncertainty",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "trust",
+          "next-step"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_manager_chat": {
+        "group": "next-step",
+        "subgroup": "manager-chat",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step",
+          "cta"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_confirm_dates": {
+        "group": "next-step",
+        "subgroup": "confirm-dates",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step"
+        ],
+        "objectionTags": [
+          "dates-not-fixed"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_treatment_fit": {
+        "group": "objection",
+        "subgroup": "treatment-fit",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "purpose_health_recovery": {
+        "group": "purpose",
+        "subgroup": "health-recovery",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "purpose",
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "territory_season_summer": {
+        "group": "territory",
+        "subgroup": "season-summer",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "territory"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "dates"
+        ],
+        "slotFields": [
+          "dates",
+          "topics"
+        ]
+      },
+      "territory_season_winter": {
+        "group": "territory",
+        "subgroup": "season-winter",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 5,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "territory",
+          "leisure"
+        ],
+        "objectionTags": [],
+        "requiresFields": [
+          "dates"
+        ],
+        "slotFields": [
+          "dates",
+          "topics"
+        ]
+      },
+      "treatment_profile_neuro": {
+        "group": "treatment",
+        "subgroup": "profile-neuro",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "wellness"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "wellness_sleep_recovery": {
+        "group": "wellness",
+        "subgroup": "sleep-recovery",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "wellness",
+          "purpose"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "next_step_pick_treatment": {
+        "group": "next-step",
+        "subgroup": "pick-treatment",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step",
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_profile_cardio": {
+        "group": "treatment",
+        "subgroup": "profile-cardio",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "treatment",
+          "senior"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "objection_dates_not_fixed": {
+        "group": "objection",
+        "subgroup": "dates-not-fixed",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 9,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "next-step"
+        ],
+        "objectionTags": [
+          "dates-not-fixed"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "senior_medical_confidence": {
+        "group": "senior",
+        "subgroup": "medical-confidence",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 8,
+        "durationClass": "short",
+        "audienceTags": [
+          "senior"
+        ],
+        "topicTags": [
+          "senior",
+          "trust",
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_individual_plan": {
+        "group": "treatment",
+        "subgroup": "individual-plan",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "trust"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_detox_antistress": {
+        "group": "treatment",
+        "subgroup": "individual-plan",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 7,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "wellness",
+          "purpose"
+        ],
+        "objectionTags": [
+          "uncertainty"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_profile_breathing": {
+        "group": "treatment",
+        "subgroup": "profile-breathing",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "territory"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_profile_digestive": {
+        "group": "treatment",
+        "subgroup": "profile-digestive",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment",
+          "food"
+        ],
+        "objectionTags": [
+          "food-fit",
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      },
+      "treatment_profile_musculoskeletal": {
+        "group": "treatment",
+        "subgroup": "profile-musculoskeletal",
+        "enabled": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
+        "priority": 6,
+        "durationClass": "short",
+        "audienceTags": [],
+        "topicTags": [
+          "treatment"
+        ],
+        "objectionTags": [
+          "treatment-fit"
+        ],
+        "requiresFields": [],
+        "slotFields": [
+          "partyType",
+          "topics",
+          "objections",
+          "dates"
+        ]
+      }
+    },
+    "assembly": {
+      "enabled": true,
+      "mode": "adaptive",
+      "maxAutoplaySec": 75,
+      "maxBlocks": 10,
+      "alwaysStartIds": [
+        "intro_generic",
+        "intro_by_dates"
+      ],
+      "alwaysEndIds": [
+        "cta_whatsapp",
+        "cta_whatsapp_generic"
+      ],
+      "lowConfidenceBehavior": "menu"
+    }
+  },
+  "defaultMenuId": "main",
+  "defaultGuestName": "Гость",
+  "greetingSubtitle": "Адаптивная презентация под цель поездки",
+  "menuTtsFirstOnly": true
+}

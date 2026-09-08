@@ -31,6 +31,8 @@ import { CueCopyGenerateDialog } from './CueCopyGenerateDialog'
 import {
   inspectorFieldsClass,
   inspectorGridClass,
+  inspectorLiveFieldsClass,
+  inspectorLiveShellClass,
   inspectorShellClass,
   inspectorStageClass,
 } from './editorTypes'
@@ -101,6 +103,41 @@ export function CueInspector({
   const [ttsUnlocked, setTtsUnlocked] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
   const ttsPreviewAudioRef = useRef<HTMLAudioElement | null>(null)
+  const fieldsRef = useRef<HTMLDivElement>(null)
+  const scrollerRef = useRef<HTMLElement | null>(null)
+  const pinnedRef = useRef(false)
+
+  useEffect(() => {
+    const node = inspectorRef.current
+    const fields = fieldsRef.current
+    if (!node || !fields) return
+    const scroller = node.parentElement
+    if (!scroller) return
+    scrollerRef.current = scroller
+
+    const updatePinned = () => {
+      const max = scroller.scrollHeight - scroller.clientHeight
+      pinnedRef.current = max <= 1 || scroller.scrollTop >= max - 2
+    }
+    updatePinned()
+    scroller.addEventListener('scroll', updatePinned, { passive: true })
+
+    const onWheel = (e: WheelEvent) => {
+      if (window.matchMedia('(max-width: 900px)').matches) return
+      const sc = scrollerRef.current
+      if (!sc) return
+      const sendToMain = !pinnedRef.current || (fields.scrollTop <= 0 && e.deltaY < 0)
+      if (!sendToMain) return
+      e.preventDefault()
+      sc.scrollTop += e.deltaY
+      updatePinned()
+    }
+    fields.addEventListener('wheel', onWheel, { passive: false })
+    return () => {
+      scroller.removeEventListener('scroll', updatePinned)
+      fields.removeEventListener('wheel', onWheel)
+    }
+  }, [inspectorRef, selectedCue.id])
 
   useEffect(() => {
     setTtsGenMessage(null)
@@ -240,29 +277,31 @@ export function CueInspector({
   return (
     <div
       ref={inspectorRef}
-      className={`${inspectorShellClass} ${inspectorGridClass}`}
+      className={`${inspectorShellClass} ${inspectorGridClass} ${inspectorLiveShellClass}`}
     >
-      <div className={inspectorStageClass}>
-        <div className={`editor-inspector-phone${isLandscape ? ' is-landscape' : ''}`}>
-          <StoryPlayer
-            key={`cue-live-${selectedCue.id}-${cuePreviewClip?.id ?? 'empty'}-${theme.orientation}`}
-            clips={sequence.clips}
-            cues={filledCues}
-            title={displayTitle}
-            captionBarStyle={captionBarStyle(theme)}
-            paused
-            editable
-            activeClipId={cuePreviewClip?.id ?? sequence.clips[0]?.id ?? null}
-            editTitle={sequenceTitle}
-            editLine={selectedCue.text ?? ''}
-            editShowLine={showText}
-            onTitleChange={onSequenceTitleChange}
-            onLineChange={(value) => updateCue(selectedCue.id, { text: value })}
-            onEnded={() => undefined}
-          />
+      <div className="editor-inspector-stage-wrap min-w-0 min-[901px]:h-full min-[901px]:min-h-0">
+        <div className={inspectorStageClass}>
+          <div className={`editor-inspector-phone${isLandscape ? ' is-landscape' : ''}`}>
+            <StoryPlayer
+              key={`cue-live-${selectedCue.id}-${cuePreviewClip?.id ?? 'empty'}-${theme.orientation}`}
+              clips={sequence.clips}
+              cues={filledCues}
+              title={displayTitle}
+              captionBarStyle={captionBarStyle(theme)}
+              paused
+              editable
+              activeClipId={cuePreviewClip?.id ?? sequence.clips[0]?.id ?? null}
+              editTitle={sequenceTitle}
+              editLine={selectedCue.text ?? ''}
+              editShowLine={showText}
+              onTitleChange={onSequenceTitleChange}
+              onLineChange={(value) => updateCue(selectedCue.id, { text: value })}
+              onEnded={() => undefined}
+            />
+          </div>
         </div>
       </div>
-      <div className={inspectorFieldsClass}>
+      <div ref={fieldsRef} className={`${inspectorFieldsClass} ${inspectorLiveFieldsClass}`}>
         <div className="flex min-w-0 flex-col gap-3">
           {canUseAi ? (
             <div className="flex justify-end">

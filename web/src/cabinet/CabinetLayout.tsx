@@ -17,6 +17,7 @@ const TITLES: Record<string, string> = {
   'edit-v2': 'Конструктор V2',
   voice: 'Голос',
   plan: 'Тариф',
+  team: 'Команда',
   account: 'Аккаунт',
   users: 'Пользователи',
   'tts-usage': 'Расход TTS',

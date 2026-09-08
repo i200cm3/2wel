@@ -14,7 +14,7 @@ function isPropertyConfig(value) {
   )
 }
 
-/** Пути SPA, которые нельзя выдавать как public_id (особенно при длине 3). */
+/** Пути SPA, которые нельзя выдавать как public_id (особенно при короткой длине). */
 const RESERVED_PUBLIC_IDS = new Set([
   'app',
   'api',
@@ -24,13 +24,15 @@ const RESERVED_PUBLIC_IDS = new Set([
   'assets',
   'editor',
   'register',
+  'join',
   'dashboard',
   'properties',
 ])
 
 export const PUBLIC_ID_RE = /^[a-z0-9]{3,16}$/
 
-export function generatePublicId(length = 3) {
+/** Новые гостевые ссылки — 4 символа; старые 3-символьные id остаются валидными. */
+export function generatePublicId(length = 4) {
   const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789'
   const bytes = crypto.randomBytes(length)
   let out = ''

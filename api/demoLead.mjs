@@ -3,6 +3,7 @@ import { query } from './db.js'
 import { sendDemoGuestMail } from './mail.mjs'
 import { guestLinkUrl } from './publicUrl.mjs'
 import { formatGuestName } from './guestLink.mjs'
+import { getLinkByExternalId } from './links.mjs'
 import { isEmail, normalizeEmail } from './users.mjs'
 
 function demoProjectCode() {
@@ -42,7 +43,7 @@ async function upsertMarketingLead({
      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
      ON CONFLICT (email_normalized) DO UPDATE SET
        email = EXCLUDED.email,
-       name = EXCLUDED.name,
+       name = marketing_leads.name,
        source = EXCLUDED.source,
        project_id = EXCLUDED.project_id,
        link_id = EXCLUDED.link_id,
@@ -55,15 +56,14 @@ async function upsertMarketingLead({
 }
 
 /**
- * Публичная выдача демо-ссылки с лендинга: имя + email → персональная ссылка,
- * письмо гостю, запись в marketing_leads.
+ * Демо с лендинга: имя + email → ссылка.
+ * Имя фиксируется при первой выдаче; повтор на тот же email шлёт ту же ссылку без смены имени.
  */
 export async function createDemoGuestLead({ name, email, source = 'offer_demo' }) {
-  const guestName = formatGuestName(name)
   const emailRaw = String(email ?? '').trim()
   const emailNormalized = normalizeEmail(emailRaw)
+  const requestedName = formatGuestName(name)
 
-  if (!guestName) return { status: 400, error: 'Укажите имя' }
   if (!isEmail(emailNormalized)) return { status: 400, error: 'Укажите корректный email' }
 
   const projectCode = demoProjectCode()
@@ -73,13 +73,18 @@ export async function createDemoGuestLead({ name, email, source = 'offer_demo' }
     return { status: 503, error: 'Демо временно недоступно' }
   }
 
+  const externalId = `demo:${emailNormalized}`
+  const existing = await getLinkByExternalId(project.id, externalId)
+  const guestName = formatGuestName(existing?.guestName) || requestedName
+  if (!guestName) return { status: 400, error: 'Укажите имя' }
+
   const templateCode = demoTemplateCode()
   const issued = await issueGuestLink(
     project,
     {
       name: guestName,
       category: templateCode || undefined,
-      externalId: `demo:${emailNormalized}`,
+      externalId,
       summaryMeta: { source, email: emailNormalized },
     },
     { skipTts: demoSkipTts() },
@@ -98,10 +103,12 @@ export async function createDemoGuestLead({ name, email, source = 'offer_demo' }
     (publicId ? guestLinkUrl(project.code, publicId) : '')
   if (!url) return { status: 500, error: 'Не удалось выдать демо-ссылку' }
 
+  const lockedName = formatGuestName(issued.link?.guestName) || guestName
+
   await upsertMarketingLead({
     email: emailRaw,
     emailNormalized,
-    name: guestName,
+    name: lockedName,
     source,
     projectId: project.id,
     linkId: issued.link?.id ?? null,
@@ -109,7 +116,7 @@ export async function createDemoGuestLead({ name, email, source = 'offer_demo' }
   })
 
   const mail = await sendDemoGuestMail(emailNormalized, {
-    name: guestName,
+    name: lockedName,
     link: url,
   })
   if (!mail.ok && !mail.skipped) {
@@ -119,7 +126,6 @@ export async function createDemoGuestLead({ name, email, source = 'offer_demo' }
   return {
     status: 200,
     ok: true,
-    url,
     mailed: Boolean(mail.ok),
     reused: Boolean(issued.reused),
   }

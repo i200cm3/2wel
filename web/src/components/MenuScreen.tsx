@@ -130,12 +130,13 @@ export function MenuScreen({
     setFontsReady(false)
     const family = titleFontCss.split(',')[0]?.trim() || "'Cormorant Garamond'"
     const weight = theme.titleBold ? '600' : '400'
-    void fonts.load(`${weight} ${theme.titleFontSize}px ${family}`).then(mark).catch(mark)
+    const style = theme.titleItalic ? 'italic' : 'normal'
+    void fonts.load(`${style} ${weight} ${theme.titleFontSize}px ${family}`).then(mark).catch(mark)
     void fonts.ready.then(mark).catch(mark)
     return () => {
       cancelled = true
     }
-  }, [theme.titleBold, theme.titleFontSize, titleFontCss])
+  }, [theme.titleBold, theme.titleItalic, theme.titleFontSize, titleFontCss])
 
   useEffect(() => {
     const audio = ttsRef.current

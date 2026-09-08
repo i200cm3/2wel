@@ -388,6 +388,7 @@ html.is-player-presentation #root {
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.35);
   overflow-wrap: anywhere;
   word-break: break-word;
+  font-synthesis: weight style;
 }
 
 .story-copy-captions {
@@ -414,6 +415,7 @@ html.is-player-presentation #root {
   paint-order: stroke fill;
   overflow-wrap: anywhere;
   word-break: break-word;
+  font-synthesis: weight style;
 }
 
 .story-copy.is-editable {
@@ -551,6 +553,7 @@ html.is-player-presentation #root {
   paint-order: stroke fill;
   line-height: 1.05;
   color: var(--menu-title-color, var(--sand));
+  font-synthesis: weight style;
   /* Пока грузится веб-шрифт — невидимый, без скачка с Manrope/Georgia */
   visibility: hidden;
 }
@@ -570,6 +573,7 @@ html.is-player-presentation #root {
   -webkit-text-stroke: var(--menu-text-stroke, 0 transparent);
   paint-order: stroke fill;
   color: color-mix(in srgb, var(--menu-text-color, var(--sand)) 72%, transparent);
+  font-synthesis: weight style;
 }
 
 .menu-kicker + .menu-grid,

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   cookieToken,
+  isPublicApi,
   isWeakAuthSecret,
   requestIsHttps,
   requestSessionToken,
@@ -76,5 +77,13 @@ describe('requestIsHttps', () => {
   it('смотрит X-Forwarded-Proto', () => {
     assert.equal(requestIsHttps({ headers: { 'x-forwarded-proto': 'https' } }), true)
     assert.equal(requestIsHttps({ headers: { 'x-forwarded-proto': 'http' } }), false)
+  })
+})
+
+describe('isPublicApi', () => {
+  it('открывает приглашение в объект без сессии', () => {
+    assert.equal(isPublicApi('/api/auth/join', 'GET'), true)
+    assert.equal(isPublicApi('/api/auth/join', 'POST'), true)
+    assert.equal(isPublicApi('/api/auth/join', 'DELETE'), false)
   })
 })

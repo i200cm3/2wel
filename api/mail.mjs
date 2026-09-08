@@ -117,7 +117,7 @@ export function demoGuestMail({ to, name, link, env = mailEnv() }) {
   const text = [
     `${guest}, здравствуйте!`,
     '',
-    'Ваша персональная демо-страница 2wel:',
+    'Ваша демо-презентация 2wel:',
     '',
     link,
     '',
@@ -128,14 +128,14 @@ export function demoGuestMail({ to, name, link, env = mailEnv() }) {
   const safeLink = String(link).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
   const safeName = String(guest).replace(/&/g, '&amp;').replace(/</g, '&lt;')
   const html = `<p>${safeName}, здравствуйте!</p>
-<p>Ваша персональная демо-страница 2wel:</p>
+<p>Ваша демо-презентация 2wel:</p>
 <p><a href="${safeLink}">${safeLink}</a></p>
 <p>Откройте ссылку с телефона — так её обычно видит гость.</p>
 <p>Если письмо пришло случайно, просто удалите его.</p>`
   return {
     from: formatFrom(env),
     to,
-    subject: 'Ваша демо-страница 2wel',
+    subject: 'Демо-презентация 2wel',
     text,
     html,
   }
@@ -146,6 +146,42 @@ export async function sendDemoGuestMail(to, { name, link }) {
   if (!address) return { ok: false, skipped: true, error: 'no recipient' }
   if (!link) return { ok: false, skipped: true, error: 'no link' }
   return sendMail(demoGuestMail({ to: address, name, link }))
+}
+
+export function teamInviteMail({ to, projectName, link, env = mailEnv() }) {
+  const objectName = String(projectName ?? '').trim() || 'объект'
+  const text = [
+    `Вас пригласили в кабинет 2wel — объект «${objectName}».`,
+    '',
+    'Это доступ сотрудника: шаблоны, ссылки и контент. Без прав администратора системы.',
+    '',
+    'Откройте ссылку и создайте аккаунт (или войдите, если он уже есть):',
+    '',
+    link,
+    '',
+    'Ссылка действует 14 дней. Если письмо пришло случайно, просто удалите его.',
+  ].join('\n')
+  const safeLink = String(link).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+  const safeName = objectName.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  const html = `<p>Вас пригласили в кабинет 2wel — объект «${safeName}».</p>
+<p>Это доступ сотрудника: шаблоны, ссылки и контент. Без прав администратора системы.</p>
+<p>Откройте ссылку и создайте аккаунт (или войдите, если он уже есть):</p>
+<p><a href="${safeLink}">${safeLink}</a></p>
+<p>Ссылка действует 14 дней. Если письмо пришло случайно, просто удалите его.</p>`
+  return {
+    from: formatFrom(env),
+    to,
+    subject: `Приглашение в «${objectName}» — 2wel`,
+    text,
+    html,
+  }
+}
+
+export async function sendTeamInviteMail(to, { projectName, link }) {
+  const address = String(to ?? '').trim()
+  if (!address) return { ok: false, skipped: true, error: 'no recipient' }
+  if (!link) return { ok: false, skipped: true, error: 'no link' }
+  return sendMail(teamInviteMail({ to: address, projectName, link }))
 }
 
 async function sendMail(message) {

@@ -215,6 +215,28 @@ function alwaysEndFamilyKey(entry: ScoredAssemblyEntry): string {
   return group || entry.id
 }
 
+function alwaysStartFamilyKey(entry: ScoredAssemblyEntry): string {
+  return entry.group.trim().toLowerCase() || entry.id
+}
+
+/** alwaysStart: score>0 и не больше одного блока на группу (intro с датами / без дат). */
+function pickAlwaysStartIds(
+  alwaysStartIds: string[],
+  findEntry: (id: string) => ScoredAssemblyEntry | undefined,
+): string[] {
+  const eligible = alwaysStartIds
+    .map((id) => findEntry(id))
+    .filter((entry): entry is ScoredAssemblyEntry => Boolean(entry && entry.score > 0))
+    .sort(compareAssemblyEntries)
+  const bestByFamily = new Map<string, string>()
+  for (const entry of eligible) {
+    const key = alwaysStartFamilyKey(entry)
+    if (!bestByFamily.has(key)) bestByFamily.set(key, entry.id)
+  }
+  const chosen = new Set(bestByFamily.values())
+  return alwaysStartIds.filter((id) => chosen.has(id))
+}
+
 /** alwaysEnd: score>0 и не больше одного блока на «семью» (cta с именем / без имени). */
 function pickAlwaysEndIds(
   alwaysEndIds: string[],
@@ -246,14 +268,15 @@ function deriveAdaptiveFlowIds(
 ): string[] {
   const maxSec = rules.maxAutoplaySec
   const maxBlocks = rules.maxBlocks
-  const alwaysStart = rules.alwaysStartIds.filter((id) => config.sequences[id] && isBlockEnabled(config, id))
+  const alwaysStartListed = rules.alwaysStartIds.filter((id) => config.sequences[id] && isBlockEnabled(config, id))
+  const findEntry = (id: string) => entries.find((item) => item.id === id)
+  const alwaysStart = pickAlwaysStartIds(alwaysStartListed, findEntry)
   const alwaysEnd = rules.alwaysEndIds.filter(
     (id) => config.sequences[id] && isBlockEnabled(config, id) && !alwaysStart.includes(id),
   )
   const ordered: string[] = []
   let usedSec = 0
 
-  const findEntry = (id: string) => entries.find((item) => item.id === id)
   const alwaysEndEligible = pickAlwaysEndIds(alwaysEnd, findEntry)
   const alwaysEndSec = alwaysEndEligible.reduce((sum, id) => sum + (findEntry(id)?.durationSec ?? 0), 0)
 
