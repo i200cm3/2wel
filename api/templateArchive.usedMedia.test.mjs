@@ -3,11 +3,10 @@ import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
 import test from 'node:test'
+import { resolveUsedMediaFiles } from './templateArchive.mjs'
 
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'export-used-'))
-process.env.PUBLIC_DIR = tmp
-
-const { resolveUsedMediaFiles } = await import('./templateArchive.mjs')
+const prevPublicDir = process.env.PUBLIC_DIR
 
 function writeMedia(code, rel, body = 'x') {
   const full = path.join(tmp, 'media', 'projects', code, rel)
@@ -16,41 +15,63 @@ function writeMedia(code, rel, body = 'x') {
   return `/media/projects/${code}/${rel.replace(/\\/g, '/')}`
 }
 
-test('resolveUsedMediaFiles packs only referenced files', () => {
-  const code = 'exp-used'
-  const keep = writeMedia(code, 'library/gallery/keep.jpg')
-  writeMedia(code, 'library/gallery/junk.jpg')
-  const tts = writeMedia(code, 'tts/voice.mp3')
-  writeMedia(code, 'tts/orphan.mp3')
-  const music = writeMedia(code, 'music/ambient.mp3')
+function withPublicDir(fn) {
+  return async () => {
+    process.env.PUBLIC_DIR = tmp
+    try {
+      await fn()
+    } finally {
+      if (prevPublicDir === undefined) delete process.env.PUBLIC_DIR
+      else process.env.PUBLIC_DIR = prevPublicDir
+    }
+  }
+}
 
-  const { files, counts } = resolveUsedMediaFiles(code, {
-    musicSrc: music,
-    sequences: {
-      intro: {
-        clips: [{ src: keep }],
-        cues: [{ ttsSrc: tts }],
+test.after(() => {
+  fs.rmSync(tmp, { recursive: true, force: true })
+})
+
+test(
+  'resolveUsedMediaFiles packs only referenced files',
+  withPublicDir(() => {
+    const code = 'exp-used'
+    const keep = writeMedia(code, 'library/gallery/keep.jpg')
+    writeMedia(code, 'library/gallery/junk.jpg')
+    const tts = writeMedia(code, 'tts/voice.mp3')
+    writeMedia(code, 'tts/orphan.mp3')
+    const music = writeMedia(code, 'music/ambient.mp3')
+
+    const { files, counts } = resolveUsedMediaFiles(code, {
+      musicSrc: music,
+      sequences: {
+        intro: {
+          clips: [{ src: keep }],
+          cues: [{ ttsSrc: tts }],
+        },
       },
-    },
-  })
+    })
 
-  assert.equal(counts.library, 1)
-  assert.equal(counts.music, 1)
-  assert.equal(counts.tts, 1)
-  assert.equal(counts.missing, 0)
-  assert.deepEqual(
-    files.map((f) => f.src).sort(),
-    [keep, music, tts].sort(),
-  )
-})
+    assert.equal(counts.library, 1)
+    assert.equal(counts.music, 1)
+    assert.equal(counts.tts, 1)
+    assert.equal(counts.missing, 0)
+    assert.deepEqual(
+      files.map((f) => f.src).sort(),
+      [keep, music, tts].sort(),
+    )
+  }),
+)
 
-test('resolveUsedMediaFiles counts missing refs', () => {
-  const code = 'exp-miss'
-  const { counts } = resolveUsedMediaFiles(code, {
-    sequences: {
-      intro: { clips: [{ src: `/media/projects/${code}/library/nope.jpg` }] },
-    },
-  })
-  assert.equal(counts.library, 0)
-  assert.equal(counts.missing, 1)
-})
+test(
+  'resolveUsedMediaFiles counts missing refs',
+  withPublicDir(() => {
+    const code = 'exp-miss'
+    const { counts } = resolveUsedMediaFiles(code, {
+      sequences: {
+        intro: { clips: [{ src: `/media/projects/${code}/library/nope.jpg` }] },
+      },
+    })
+    assert.equal(counts.library, 0)
+    assert.equal(counts.missing, 1)
+  }),
+)

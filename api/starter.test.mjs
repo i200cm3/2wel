@@ -6,8 +6,6 @@ import { publicDir } from './env.js'
 import { rewriteConfigMedia } from './projectMedia.mjs'
 import { trialPresentationConfig } from './starter.mjs'
 
-const STARTER_DIR = path.join(publicDir(), 'media/starter')
-
 describe('trialPresentationConfig', () => {
   const config = trialPresentationConfig({ id: 'demo1' })
 
@@ -33,11 +31,12 @@ describe('trialPresentationConfig', () => {
   })
 
   it('все кадры ссылаются на существующие вертикальные файлы', () => {
+    const starterDir = path.join(publicDir(), 'media/starter')
     const srcs = Object.values(config.sequences).flatMap((seq) => seq.clips.map((clip) => clip.src))
     assert.ok(srcs.length >= 16)
     for (const src of srcs) {
       assert.match(src, /^\/media\/starter\/[\w.-]+\.jpg$/)
-      const file = path.join(STARTER_DIR, path.basename(src))
+      const file = path.join(starterDir, path.basename(src))
       assert.ok(fs.existsSync(file), `нет файла ${file}`)
     }
   })
