@@ -1,6 +1,28 @@
+import crypto from 'node:crypto'
 import { query } from './db.js'
 import { generatePublicId } from './links.mjs'
-import { isEmail, normalizeEmail } from './users.mjs'
+import {
+  findUserById,
+  isEmail,
+  markEmailVerified,
+  normalizeEmail,
+  publicUser,
+  registerUser,
+  setUserPassword,
+} from './users.mjs'
+
+const INVITE_PASSWORD_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789'
+
+/** Читаемый пароль для письма сотруднику (без неоднозначных символов). */
+export function generateInvitePassword(length = 10) {
+  const size = Math.max(8, Math.min(32, Number(length) || 10))
+  const bytes = crypto.randomBytes(size)
+  let out = ''
+  for (let i = 0; i < size; i += 1) {
+    out += INVITE_PASSWORD_ALPHABET[bytes[i] % INVITE_PASSWORD_ALPHABET.length]
+  }
+  return out
+}
 
 export const PROJECT_INVITE_TTL_MS = 14 * 24 * 60 * 60 * 1000
 
@@ -181,14 +203,21 @@ export async function inviteOrAddMember({ project, actorId, email }) {
   }
   const existing = await findActiveUserByEmail(emailValue)
   if (existing) {
-    const added = await addProjectMember({
-      projectId: project.id,
-      ownerId: project.user_id,
-      userId: existing.id,
-      invitedBy: actorId,
-    })
-    if (!added.ok) return added
-    return { ok: true, added: true, member: added.member }
+    if (existing.is_blocked) {
+      return { ok: false, status: 400, error: 'Аккаунт заблокирован' }
+    }
+    if (existing.id === project.user_id) {
+      return { ok: false, status: 400, error: 'Этот человек уже владелец объекта' }
+    }
+    const { rows: memberRows } = await query(
+      `SELECT 1 FROM project_members WHERE project_id = $1 AND user_id = $2`,
+      [project.id, existing.id],
+    )
+    if (memberRows[0]) {
+      return { ok: false, status: 400, error: 'Уже в команде объекта' }
+    }
+    // Аккаунт уже есть (в т.ч. после удаления из команды) — всё равно шлём
+    // invite-письмо со ссылкой /join, а не молчае добавляем.
   }
   const created = await createProjectInvite({
     projectId: project.id,
@@ -255,5 +284,63 @@ export async function acceptProjectInvite({ token, userId, email }) {
     projectCode: peeked.projectCode,
     projectName: peeked.projectName,
     member: added.member ?? null,
+  }
+}
+
+/**
+ * One-click join: аккаунт на email из приглашения, новый пароль, вход в объект.
+ * Текущая сессия браузера не используется — всегда почта из invite.
+ */
+export async function claimProjectInvite({ token }) {
+  const peeked = await peekProjectInvite(token)
+  if (!peeked.ok) return { ok: false, status: 400, error: peeked.error }
+  const email = normalizeEmail(peeked.email)
+  if (!isEmail(email)) {
+    return { ok: false, status: 400, error: 'В приглашении нет почты' }
+  }
+
+  const password = generateInvitePassword()
+  let userId = null
+  let created = false
+  const existing = await findActiveUserByEmail(email)
+  if (existing) {
+    if (existing.is_blocked) {
+      return { ok: false, status: 403, error: 'Аккаунт заблокирован' }
+    }
+    if (existing.id === peeked.ownerId) {
+      return { ok: false, status: 400, error: 'Владелец объекта уже в команде' }
+    }
+    const updated = await setUserPassword(existing.id, password)
+    if (!updated.ok) return updated
+    await markEmailVerified(existing.id)
+    userId = existing.id
+  } else {
+    const registered = await registerUser({
+      email,
+      password,
+      name: peeked.projectName,
+    })
+    if (!registered.ok) return registered
+    await markEmailVerified(registered.user.id)
+    userId = registered.user.id
+    created = true
+  }
+
+  const accepted = await acceptProjectInvite({ token, userId, email })
+  if (!accepted.ok) return accepted
+
+  const user = await findUserById(userId)
+  if (!user || user.is_blocked) {
+    return { ok: false, status: 500, error: 'Не удалось открыть аккаунт' }
+  }
+
+  return {
+    ok: true,
+    created,
+    password,
+    email,
+    user: publicUser(user),
+    projectCode: accepted.projectCode,
+    projectName: accepted.projectName,
   }
 }

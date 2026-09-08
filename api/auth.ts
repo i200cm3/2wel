@@ -222,7 +222,12 @@ export function isPublicApi(url: string, method: string): boolean {
   if (url === '/api/auth/otp/verify' && method === 'POST') return true
   if (url === '/api/auth/otp/resend' && method === 'POST') return true
   if (url === '/api/auth/reset' && method === 'POST') return true
-  if (url === '/api/auth/join' && (method === 'GET' || method === 'HEAD' || method === 'POST')) return true
+  if (
+    (url === '/api/auth/join' || url === '/api/auth/join/') &&
+    (method === 'GET' || method === 'HEAD' || method === 'POST')
+  ) {
+    return true
+  }
   if (url === '/api/auth/me' && (method === 'GET' || method === 'HEAD')) return true
   if (url.startsWith('/api/public/') && (method === 'GET' || method === 'HEAD')) return true
   if (url.startsWith('/api/public/') && method === 'POST') return true

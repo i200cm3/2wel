@@ -155,7 +155,7 @@ export function teamInviteMail({ to, projectName, link, env = mailEnv() }) {
     '',
     'Это доступ сотрудника: шаблоны, ссылки и контент. Без прав администратора системы.',
     '',
-    'Откройте ссылку и создайте аккаунт (или войдите, если он уже есть):',
+    'Откройте ссылку и нажмите «Присоединиться» — пароль от аккаунта придёт на эту почту:',
     '',
     link,
     '',
@@ -165,7 +165,7 @@ export function teamInviteMail({ to, projectName, link, env = mailEnv() }) {
   const safeName = objectName.replace(/&/g, '&amp;').replace(/</g, '&lt;')
   const html = `<p>Вас пригласили в кабинет 2wel — объект «${safeName}».</p>
 <p>Это доступ сотрудника: шаблоны, ссылки и контент. Без прав администратора системы.</p>
-<p>Откройте ссылку и создайте аккаунт (или войдите, если он уже есть):</p>
+<p>Откройте ссылку и нажмите «Присоединиться» — пароль от аккаунта придёт на эту почту:</p>
 <p><a href="${safeLink}">${safeLink}</a></p>
 <p>Ссылка действует 14 дней. Если письмо пришло случайно, просто удалите его.</p>`
   return {
@@ -182,6 +182,48 @@ export async function sendTeamInviteMail(to, { projectName, link }) {
   if (!address) return { ok: false, skipped: true, error: 'no recipient' }
   if (!link) return { ok: false, skipped: true, error: 'no link' }
   return sendMail(teamInviteMail({ to: address, projectName, link }))
+}
+
+export function teamJoinCredentialsMail({ to, projectName, password, loginUrl, email, env = mailEnv() }) {
+  const objectName = String(projectName ?? '').trim() || 'объект'
+  const login = String(email ?? to ?? '').trim()
+  const pass = String(password ?? '')
+  const link = String(loginUrl ?? '').trim() || 'https://2wel.ru/login'
+  const text = [
+    `Вы в команде объекта «${objectName}» в кабинете 2wel.`,
+    '',
+    `Почта: ${login}`,
+    `Пароль: ${pass}`,
+    '',
+    'Вход:',
+    link,
+    '',
+    'Сохраните пароль или смените его в кабинете после входа.',
+  ].join('\n')
+  const safeLink = link.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;')
+  const safeName = objectName.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  const safeLogin = login.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  const safePass = pass.replace(/&/g, '&amp;').replace(/</g, '&lt;')
+  const html = `<p>Вы в команде объекта «${safeName}» в кабинете 2wel.</p>
+<p>Почта: <strong>${safeLogin}</strong><br/>Пароль: <strong>${safePass}</strong></p>
+<p>Вход: <a href="${safeLink}">${safeLink}</a></p>
+<p>Сохраните пароль или смените его в кабинете после входа.</p>`
+  return {
+    from: formatFrom(env),
+    to,
+    subject: `Пароль для «${objectName}» — 2wel`,
+    text,
+    html,
+  }
+}
+
+export async function sendTeamJoinCredentialsMail(to, { projectName, password, loginUrl, email }) {
+  const address = String(to ?? '').trim()
+  if (!address) return { ok: false, skipped: true, error: 'no recipient' }
+  if (!password) return { ok: false, skipped: true, error: 'no password' }
+  return sendMail(
+    teamJoinCredentialsMail({ to: address, projectName, password, loginUrl, email: email || address }),
+  )
 }
 
 async function sendMail(message) {

@@ -725,6 +725,25 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
           />
         )}
 
+        {phase === 'menu' && soundArmed ? (
+          <div className="player-corner-actions">
+            <button
+              type="button"
+              className="player-corner-btn"
+              onClick={toggleMute}
+              aria-label={userMuted ? 'Включить звук' : 'Выключить звук'}
+              title={userMuted ? 'Включить звук' : 'Выключить звук'}
+              aria-pressed={userMuted}
+            >
+              {userMuted ? (
+                <VolumeX size={22} strokeWidth={2} aria-hidden />
+              ) : (
+                <Volume2 size={22} strokeWidth={2} aria-hidden />
+              )}
+            </button>
+          </div>
+        ) : null}
+
         {phase !== 'menu' && !showEndButtons ? (
           !hasPlayableFlow && !embedded ? (
             <div className="start-gate" role="status">

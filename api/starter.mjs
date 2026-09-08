@@ -215,6 +215,7 @@ export function trialPresentationConfig({ id, musicSrc } = {}) {
           buttonFontSize: 12,
           kickerFontSize: 11,
         },
+        menuBgSrc: "/media/starter/menu-01.jpg",
         menuTtsFirstOnly: true,
       },
     },

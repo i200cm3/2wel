@@ -342,8 +342,8 @@ export function OfferPage() {
               Общение уже началось.
             </h1>
             <p className="landing-lead pt-6 max-w-xl">
-              2wel даёт каждому гостю свою страницу: с именем, фотографиями объекта и возможностью
-              ответить. А после звонка можно собрать презентацию под то, о чём говорили.
+              2wel собирает каждому гостю персональную презентацию объекта — под его предпочтения и
+              возражения. Не общий сайт «для всех», а то, что нужно именно ему, чтобы принять решение.
             </p>
             <div className="landing-cta-row mt-8 flex flex-wrap items-center gap-3">
               <a className="landing-btn landing-btn-primary" href={MAIL_HREF}>

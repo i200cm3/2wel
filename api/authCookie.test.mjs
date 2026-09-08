@@ -84,6 +84,8 @@ describe('isPublicApi', () => {
   it('открывает приглашение в объект без сессии', () => {
     assert.equal(isPublicApi('/api/auth/join', 'GET'), true)
     assert.equal(isPublicApi('/api/auth/join', 'POST'), true)
+    assert.equal(isPublicApi('/api/auth/join/', 'GET'), true)
+    assert.equal(isPublicApi('/api/auth/join/', 'POST'), true)
     assert.equal(isPublicApi('/api/auth/join', 'DELETE'), false)
   })
 })

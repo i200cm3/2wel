@@ -41,6 +41,12 @@ describe('trialPresentationConfig', () => {
     }
   })
 
+  it('фон меню ссылается на существующий starter-файл', () => {
+    const bg = config.menus.main.menuBgSrc
+    assert.equal(bg, '/media/starter/menu-01.jpg')
+    assert.ok(fs.existsSync(path.join(publicDir(), bg.replace(/^\//, ''))))
+  })
+
   it('титры с озвучкой ссылаются на файлы starter TTS', () => {
     const withTts = Object.values(config.sequences).flatMap((seq) =>
       (seq.cues ?? []).filter((cue) => cue.ttsSrc),
@@ -62,6 +68,7 @@ describe('trialPresentationConfig', () => {
     assert.equal(next.musicSrc, '/media/projects/abc12xyz/music/ambient.mp3')
     const tts = next.sequences.greeting.cues[0].ttsSrc
     assert.equal(tts, '/media/projects/abc12xyz/tts/el_790e15111f82.mp3')
+    assert.equal(next.menus.main.menuBgSrc, '/media/projects/abc12xyz/library/gallery/menu-01.jpg')
   })
 
   it('rewrite переносит legacy-медиа Джинала в папку проекта', () => {

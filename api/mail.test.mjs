@@ -92,8 +92,26 @@ describe('teamInviteMail', () => {
       env: { from: 'support@2wel.ru', fromName: '2wel' },
     })
     assert.match(mail.subject, /Plaza/)
-    assert.match(mail.text, /сотрудника/)
+    assert.match(mail.text, /Присоединиться/)
     assert.match(mail.text, /https:\/\/2wel.ru\/join\?invite=abc/)
     assert.equal(mail.to, 'content@plaza.spa')
+  })
+})
+
+describe('teamJoinCredentialsMail', () => {
+  it('кладёт пароль и почту', async () => {
+    const { teamJoinCredentialsMail } = await import('./mail.mjs')
+    const mail = teamJoinCredentialsMail({
+      to: 'content@plaza.spa',
+      projectName: 'Plaza',
+      password: 'Ab3xY7kQ2m',
+      loginUrl: 'https://2wel.ru/login',
+      email: 'content@plaza.spa',
+      env: { from: 'support@2wel.ru', fromName: '2wel' },
+    })
+    assert.match(mail.subject, /Пароль/)
+    assert.match(mail.text, /Ab3xY7kQ2m/)
+    assert.match(mail.text, /content@plaza.spa/)
+    assert.match(mail.html, /Ab3xY7kQ2m/)
   })
 })

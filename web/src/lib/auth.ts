@@ -260,8 +260,7 @@ export type JoinInviteInfo = {
 }
 
 export async function fetchJoinInvite(token: string): Promise<JoinInviteInfo> {
-  const res = await fetch(`/api/auth/join?invite=${encodeURIComponent(token)}`, {
-    credentials: 'include',
+  const res = await authFetch(`/api/auth/join?invite=${encodeURIComponent(token)}`, {
     cache: 'no-store',
   })
   const data = (await res.json().catch(() => ({}))) as JoinInviteInfo & { ok?: boolean; error?: string }
@@ -271,26 +270,26 @@ export async function fetchJoinInvite(token: string): Promise<JoinInviteInfo> {
 
 export async function acceptJoinInvite(
   token: string,
-  extras?: { email?: string; password?: string; remember?: boolean },
-): Promise<{ projectCode: string | null; needsOtp?: boolean; email?: string }> {
-  const res = await fetch('/api/auth/join', {
+  extras?: { remember?: boolean },
+): Promise<{ projectCode: string | null; email?: string; emailed?: boolean }> {
+  const res = await authFetch('/api/auth/join', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify({ invite: token, ...extras }),
+    body: JSON.stringify({ invite: token, remember: extras?.remember !== false }),
   })
   const data = (await res.json().catch(() => ({}))) as {
     ok?: boolean
     error?: string
-    needsOtp?: boolean
+    emailed?: boolean
     email?: string
     projectCode?: string
   }
   if (!res.ok || !data.ok) throw new Error(data.error || 'Не удалось принять приглашение')
-  if (data.needsOtp && data.email) {
-    return { projectCode: data.projectCode ?? null, needsOtp: true, email: data.email }
+  return {
+    projectCode: data.projectCode ?? null,
+    email: data.email,
+    emailed: Boolean(data.emailed),
   }
-  return { projectCode: data.projectCode ?? null }
 }
 
 export async function fetchSessionUser(): Promise<SessionUser | null> {

@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { addMemberError, canManageProject, inviteEmailMismatch, revokeProjectInvite } from './members.mjs'
+import {
+  addMemberError,
+  canManageProject,
+  generateInvitePassword,
+  inviteEmailMismatch,
+  revokeProjectInvite,
+} from './members.mjs'
 import { projectJoinUrl } from './access.mjs'
 
 describe('canManageProject', () => {
@@ -29,6 +35,17 @@ describe('inviteEmailMismatch', () => {
     assert.equal(inviteEmailMismatch('A@B.c', 'a@b.c'), false)
     assert.equal(inviteEmailMismatch('a@b.c', 'other@b.c'), true)
     assert.equal(inviteEmailMismatch('', 'anyone@b.c'), false)
+  })
+})
+
+describe('generateInvitePassword', () => {
+  it('даёт читаемый пароль нужной длины', () => {
+    const a = generateInvitePassword(10)
+    const b = generateInvitePassword(10)
+    assert.equal(a.length, 10)
+    assert.equal(b.length, 10)
+    assert.match(a, /^[A-Za-z0-9]+$/)
+    assert.notEqual(a, b)
   })
 })
 

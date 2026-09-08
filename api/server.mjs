@@ -50,14 +50,16 @@ import {
   createPasswordReset,
   listInvites,
   markInviteUsed,
+  publicOrigin,
   publicRegistration,
   registrationMode,
 } from './access.mjs'
 import {
-  acceptProjectInvite,
-  inviteEmailMismatch,
+  claimProjectInvite,
   peekProjectInvite,
 } from './members.mjs'
+import { isOtpPurpose, issueEmailOtp, verifyEmailOtp } from './otp.mjs'
+import { sendTeamJoinCredentialsMail } from './mail.mjs'
 import { getAdminTtsUsageOverview } from './ttsUsage.mjs'
 import { createDemoGuestLead } from './demoLead.mjs'
 
@@ -339,7 +341,10 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    if (url === '/api/auth/join' && (req.method === 'GET' || req.method === 'HEAD')) {
+    if (
+      (url === '/api/auth/join' || url === '/api/auth/join/') &&
+      (req.method === 'GET' || req.method === 'HEAD')
+    ) {
       const peeked = await peekProjectInvite(queryOf(req).get('invite') || queryOf(req).get('token'))
       if (!peeked.ok) {
         json(res, 400, { error: peeked.error })
@@ -356,8 +361,13 @@ const server = http.createServer(async (req, res) => {
       return
     }
 
-    if (url === '/api/auth/join' && req.method === 'POST') {
+    if ((url === '/api/auth/join' || url === '/api/auth/join/') && req.method === 'POST') {
       const ip = clientIp(req)
+      const limited = consumeRateLimit(`join:${ip}`, { windowMs: 60 * 60 * 1000, max: 20 })
+      if (!limited.ok) {
+        rateLimited(res, json, limited.retryAfterSec, 'Слишком много попыток. Подождите.')
+        return
+      }
       const raw = await readBuffer(req, MAX_JSON_BYTES)
       let payload = {}
       try {
@@ -367,74 +377,31 @@ const server = http.createServer(async (req, res) => {
         return
       }
       const inviteToken = String(payload.invite ?? payload.inviteToken ?? '').trim()
-      const session = readSession(requestSessionToken(req))
-      if (session) {
-        const actor = await findUserById(session.userId)
-        if (!actor || isBlockedUser(actor)) {
-          json(res, 401, { error: 'unauthorized' })
-          return
-        }
-        const accepted = await acceptProjectInvite({
-          token: inviteToken,
-          userId: actor.id,
-          email: actor.email || actor.login,
-        })
-        if (!accepted.ok) {
-          json(res, accepted.status, { error: accepted.error })
-          return
-        }
-        json(res, 200, {
-          ok: true,
-          projectCode: accepted.projectCode,
-          projectName: accepted.projectName,
-        })
+      const claimed = await claimProjectInvite({ token: inviteToken })
+      if (!claimed.ok) {
+        json(res, claimed.status, { error: claimed.error })
         return
       }
-      const limited = consumeRateLimit(`register:${ip}`, { windowMs: 60 * 60 * 1000, max: 5 })
-      if (!limited.ok) {
-        rateLimited(res, json, limited.retryAfterSec, 'Слишком много регистраций с этого адреса. Подождите.')
-        return
-      }
-      const peeked = await peekProjectInvite(inviteToken)
-      if (!peeked.ok) {
-        json(res, 400, { error: peeked.error })
-        return
-      }
-      const email = payload?.email ?? payload?.login
-      if (inviteEmailMismatch(peeked.email, email)) {
-        json(res, 403, { error: 'Приглашение выдано на другой email' })
-        return
-      }
-      if (peeked.existingUser) {
-        json(res, 409, { error: 'Аккаунт с этой почтой уже есть. Войдите, чтобы присоединиться.' })
-        return
-      }
-      const result = await registerUser({
-        email,
-        password: payload?.password,
-        name: peeked.projectName,
+      const origin = publicOrigin(req)
+      const loginUrl = origin ? `${origin}/login` : '/login'
+      const mailed = await sendTeamJoinCredentialsMail(claimed.email, {
+        projectName: claimed.projectName,
+        password: claimed.password,
+        loginUrl,
+        email: claimed.email,
       })
-      if (!result.ok) {
-        json(res, result.status, { error: result.error })
-        return
+      if (!mailed.ok && !mailed.skipped) {
+        console.error('team join credentials mail', claimed.email, mailed.error)
       }
-      const accepted = await acceptProjectInvite({
-        token: inviteToken,
-        userId: result.user.id,
-        email: result.user.email,
-      })
-      if (!accepted.ok) {
-        json(res, accepted.status, { error: accepted.error })
-        return
-      }
-      await issueEmailOtp(result.user.email, 'register')
+      const remember = payload?.remember !== false
+      issueSession(req, res, claimed.user.id, { remember })
       json(res, 200, {
         ok: true,
-        needsOtp: true,
-        purpose: 'register',
-        email: result.user.email,
-        projectCode: accepted.projectCode,
-        projectName: accepted.projectName,
+        emailed: Boolean(mailed?.ok),
+        email: claimed.email,
+        projectCode: claimed.projectCode,
+        projectName: claimed.projectName,
+        user: claimed.user,
       })
       return
     }
