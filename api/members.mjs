@@ -129,6 +129,18 @@ export async function leaveProject({ projectId, ownerId, userId }) {
   return removeProjectMember({ projectId, ownerId, userId })
 }
 
+export async function revokeProjectInvite({ projectId, inviteId }) {
+  const id = String(inviteId ?? '').trim()
+  if (!id) return { ok: false, status: 400, error: 'Не указано приглашение' }
+  const { rowCount } = await query(
+    `DELETE FROM project_invites
+     WHERE id = $1 AND project_id = $2 AND used_at IS NULL`,
+    [id, projectId],
+  )
+  if (!Number(rowCount)) return { ok: false, status: 404, error: 'Приглашение не найдено' }
+  return { ok: true }
+}
+
 export async function createProjectInvite({ projectId, createdBy, email }) {
   const emailValue = normalizeEmail(email)
   if (!isEmail(emailValue)) {

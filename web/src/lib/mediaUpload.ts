@@ -1,9 +1,17 @@
 import type { LibraryManifest } from '../hooks/useMediaLibrary'
-import { authFetch } from './auth'
+import { authFetch, authHeaders, clearEditorToken } from './auth'
 
 export const MEDIA_IMAGE_EXTS = new Set(['jpg', 'jpeg', 'png', 'webp'])
 export const MEDIA_VIDEO_EXTS = new Set(['mp4', 'webm', 'mov', 'm4v'])
 export const DEFAULT_UPLOAD_FOLDER = 'gallery/uploads'
+
+export type LibraryImportProgress = {
+  phase: 'scan' | 'upload' | 'resize'
+  current: number
+  total: number
+  fileName?: string
+  percent: number
+}
 
 type UploadOk = {
   ok: true
@@ -89,7 +97,7 @@ function entryToFile(entry: FileSystemEntryLike): Promise<File | null> {
       resolve(null)
       return
     }
-    const timer = window.setTimeout(() => resolve(null), 1500)
+    const timer = window.setTimeout(() => resolve(null), 8000)
     entry.file(
       (file) => {
         window.clearTimeout(timer)
@@ -103,26 +111,41 @@ function entryToFile(entry: FileSystemEntryLike): Promise<File | null> {
   })
 }
 
-async function walkEntry(entry: FileSystemEntryLike, out: File[]): Promise<void> {
+function attachRelativePath(file: File, rel: string): File {
+  if (!rel || file.webkitRelativePath) return file
+  try {
+    Object.defineProperty(file, 'webkitRelativePath', { value: rel, configurable: true })
+  } catch {
+    /* ignore */
+  }
+  return file
+}
+
+async function walkEntry(
+  entry: FileSystemEntryLike,
+  out: File[],
+  parentPath: string,
+  onFound?: (found: number) => void,
+): Promise<void> {
+  const rel = parentPath ? `${parentPath}/${entry.name}` : entry.name
   if (entry.isFile) {
     const file = await entryToFile(entry)
-    if (file) out.push(file)
+    if (file) {
+      out.push(attachRelativePath(file, rel))
+      onFound?.(out.length)
+    }
     return
   }
   if (entry.isDirectory && entry.createReader) {
-    const children = await Promise.race([
-      readAllEntries(entry.createReader()),
-      new Promise<FileSystemEntryLike[]>((resolve) => {
-        window.setTimeout(() => resolve([]), 1500)
-      }),
-    ])
-    for (const child of children) await walkEntry(child, out)
+    const children = await readAllEntries(entry.createReader())
+    for (const child of children) await walkEntry(child, out, rel, onFound)
   }
 }
 
 async function mediaFilesFromDataTransfer(
   dt: DataTransfer,
   accept: (file: File) => boolean,
+  onScan?: (found: number) => void,
 ): Promise<File[]> {
   const fromList = [...dt.files].filter(accept)
   const items = [...dt.items]
@@ -133,22 +156,18 @@ async function mediaFilesFromDataTransfer(
     ).webkitGetAsEntry?.()
     if (entry?.isDirectory) directories.push(entry)
   }
-  if (fromList.length && !directories.length) return fromList
+  if (!directories.length) {
+    onScan?.(fromList.length)
+    return fromList
+  }
 
   const extra: File[] = []
-  await Promise.race([
-    Promise.all(directories.map((entry) => walkEntry(entry, extra))),
-    new Promise<void>((resolve) => {
-      window.setTimeout(resolve, 2000)
-    }),
-  ])
-  const seen = new Set(fromList.map((file) => `${file.name}:${file.size}`))
-  for (const file of extra.filter(accept)) {
-    const key = `${file.name}:${file.size}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    fromList.push(file)
+  for (const entry of directories) {
+    await walkEntry(entry, extra, '', (found) => onScan?.(found))
   }
+  const walked = extra.filter(accept)
+  if (walked.length) return walked
+  onScan?.(fromList.length)
   return fromList
 }
 
@@ -156,40 +175,102 @@ export async function imageFilesFromDataTransfer(dt: DataTransfer): Promise<File
   return mediaFilesFromDataTransfer(dt, isImageFile)
 }
 
-export async function libraryFilesFromDataTransfer(dt: DataTransfer): Promise<File[]> {
-  return mediaFilesFromDataTransfer(dt, isMediaFile)
+export async function libraryFilesFromDataTransfer(
+  dt: DataTransfer,
+  onScan?: (found: number) => void,
+): Promise<File[]> {
+  return mediaFilesFromDataTransfer(dt, isMediaFile, onScan)
+}
+
+export function libraryImportPercent(fileIndex: number, fileCount: number, fileShare: number): number {
+  if (fileCount <= 0) return 0
+  const share = Math.min(1, Math.max(0, fileShare))
+  const raw = ((fileIndex + share) / fileCount) * 100
+  if (fileIndex + share >= fileCount) return 100
+  return Math.min(99, Math.round(raw))
 }
 
 export async function uploadMediaFile(
   projectCode: string,
   file: File,
   folder: string,
+  onProgress?: (info: { phase: 'upload' | 'resize'; loaded: number; total: number }) => void,
 ): Promise<UploadOk> {
-  const res = await authFetch(`/api/projects/${encodeURIComponent(projectCode)}/media/upload`, {
-    method: 'POST',
-    headers: {
+  const resizing = isImageFile(file)
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `/api/projects/${encodeURIComponent(projectCode)}/media/upload`)
+    xhr.withCredentials = true
+    const headers = authHeaders({
       'Content-Type': file.type || 'application/octet-stream',
       'x-file-name': encodeURIComponent(file.name),
       'x-folder': encodeURIComponent(folder),
-    },
-    body: file,
+    })
+    for (const [key, value] of headers) xhr.setRequestHeader(key, value)
+    xhr.upload.onprogress = (event) => {
+      const total = event.lengthComputable ? event.total : file.size
+      onProgress?.({ phase: 'upload', loaded: event.loaded, total })
+    }
+    xhr.upload.onload = () => {
+      onProgress?.({
+        phase: resizing ? 'resize' : 'upload',
+        loaded: file.size,
+        total: file.size,
+      })
+    }
+    xhr.onerror = () => reject(new Error('Сеть недоступна'))
+    xhr.onload = () => {
+      if (xhr.status === 401) clearEditorToken()
+      let data: UploadOk | { error?: string } | null = null
+      try {
+        data = JSON.parse(xhr.responseText || 'null') as UploadOk | { error?: string } | null
+      } catch {
+        data = null
+      }
+      if (xhr.status < 200 || xhr.status >= 300 || !data || !('ok' in data) || !data.ok) {
+        reject(
+          new Error(
+            (data && 'error' in data && data.error) || `Не удалось загрузить ${file.name}`,
+          ),
+        )
+        return
+      }
+      resolve(data)
+    }
+    xhr.send(file)
   })
-  const data = (await res.json().catch(() => null)) as UploadOk | { error?: string } | null
-  if (!res.ok || !data || !('ok' in data) || !data.ok) {
-    throw new Error(
-      (data && 'error' in data && data.error) || `Не удалось загрузить ${file.name}`,
-    )
-  }
-  return data
 }
 
-export async function uploadMediaFiles(projectCode: string, files: File[], folder: string) {
+export async function uploadMediaFiles(
+  projectCode: string,
+  files: File[],
+  folder: string,
+  onProgress?: (progress: LibraryImportProgress) => void,
+) {
   const srcs: string[] = []
   let manifest: LibraryManifest | null = null
-  for (const file of files) {
-    const result = await uploadMediaFile(projectCode, file, folder)
+  for (let i = 0; i < files.length; i += 1) {
+    const file = files[i]
+    const result = await uploadMediaFile(projectCode, file, folder, (part) => {
+      const uploaded = part.total > 0 ? part.loaded / part.total : 0
+      const share = part.phase === 'resize' ? 0.92 : uploaded * 0.7
+      onProgress?.({
+        phase: part.phase,
+        current: i + 1,
+        total: files.length,
+        fileName: file.name,
+        percent: libraryImportPercent(i, files.length, share),
+      })
+    })
     srcs.push(result.src)
     manifest = result.manifest
+    onProgress?.({
+      phase: isImageFile(file) ? 'resize' : 'upload',
+      current: i + 1,
+      total: files.length,
+      fileName: file.name,
+      percent: libraryImportPercent(i, files.length, 1),
+    })
   }
   return { srcs, manifest }
 }

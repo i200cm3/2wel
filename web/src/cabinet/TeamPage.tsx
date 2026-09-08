@@ -19,6 +19,7 @@ import {
   inviteProjectMember,
   leaveProject,
   removeProjectMember,
+  revokeProjectInvite,
   type ProjectTeamInvite,
   type ProjectTeamMember,
 } from '@/lib/api'
@@ -182,23 +183,25 @@ export function TeamPage() {
                           <Button
                             type="button"
                             size="sm"
-                            variant="ghost"
+                            variant="destructive"
                             disabled={busyId === item.id}
                             onClick={() => {
-                              if (!confirm(`Убрать «${item.name || item.email}» из объекта?`)) return
+                              if (!confirm(`Удалить «${item.name || item.email}» из команды объекта?`)) {
+                                return
+                              }
                               setBusyId(item.id)
                               void removeProjectMember(projectCode, item.id)
                                 .then(() => {
-                                  toast.success('Сотрудник убран')
+                                  toast.success('Сотрудник удалён из команды')
                                   return reload()
                                 })
                                 .catch((err) =>
-                                  toast.error(err instanceof Error ? err.message : 'Не удалось убрать'),
+                                  toast.error(err instanceof Error ? err.message : 'Не удалось удалить'),
                                 )
                                 .finally(() => setBusyId(null))
                             }}
                           >
-                            Убрать
+                            Удалить
                           </Button>
                         ) : null}
                       </TableCell>
@@ -216,6 +219,7 @@ export function TeamPage() {
                     <TableHead>Ожидают вход</TableHead>
                     <TableHead>Создано</TableHead>
                     <TableHead>Истекает</TableHead>
+                    <TableHead />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -224,6 +228,31 @@ export function TeamPage() {
                       <TableCell>{item.email || '—'}</TableCell>
                       <TableCell>{formatDt(item.createdAt)}</TableCell>
                       <TableCell>{formatDt(item.expiresAt)}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="destructive"
+                          disabled={busyId === `invite:${item.id}`}
+                          onClick={() => {
+                            if (!confirm(`Удалить приглашение для ${item.email || 'сотрудника'}?`)) {
+                              return
+                            }
+                            setBusyId(`invite:${item.id}`)
+                            void revokeProjectInvite(projectCode, item.id)
+                              .then(() => {
+                                toast.success('Приглашение удалено')
+                                return reload()
+                              })
+                              .catch((err) =>
+                                toast.error(err instanceof Error ? err.message : 'Не удалось удалить'),
+                              )
+                              .finally(() => setBusyId(null))
+                          }}
+                        >
+                          Удалить
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

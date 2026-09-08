@@ -8,7 +8,7 @@
     "migrate": "tsx migrate.mjs",
     "seed": "tsx seed.mjs",
     "user": "tsx create-user.mjs",
-    "test": "tsx --test",
+    "test": "tsx --test --test-isolation=process",
     "typecheck": "tsc --noEmit",
     "generate-elevenlabs-demos": "tsx ../scripts/generate-elevenlabs-demos.mjs",
     "optimize-library": "tsx optimize-library.mjs"

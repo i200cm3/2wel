@@ -20,6 +20,7 @@ export function EditorPageV2() {
     ready,
     loadError,
     hasDraft,
+    published,
     saveState,
     publishState,
     saveError,
@@ -84,6 +85,7 @@ export function EditorPageV2() {
       onChange={updateConfig}
       onReset={resetConfig}
       hasDraft={hasDraft}
+      published={published}
       saveState={saveState}
       publishState={publishState}
       saveError={saveError}

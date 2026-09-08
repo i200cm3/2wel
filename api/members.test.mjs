@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { addMemberError, canManageProject, inviteEmailMismatch } from './members.mjs'
+import { addMemberError, canManageProject, inviteEmailMismatch, revokeProjectInvite } from './members.mjs'
 import { projectJoinUrl } from './access.mjs'
 
 describe('canManageProject', () => {
@@ -39,5 +39,13 @@ describe('projectJoinUrl', () => {
     assert.equal(projectJoinUrl({}, 'abc+token'), 'https://2wel.ru/join?invite=abc%2Btoken')
     if (prev === undefined) delete process.env.PUBLIC_ORIGIN
     else process.env.PUBLIC_ORIGIN = prev
+  })
+})
+
+describe('revokeProjectInvite', () => {
+  it('требует id приглашения', async () => {
+    const result = await revokeProjectInvite({ projectId: 'p', inviteId: '  ' })
+    assert.equal(result.ok, false)
+    assert.equal(result.status, 400)
   })
 })

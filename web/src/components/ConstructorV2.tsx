@@ -100,6 +100,8 @@ type Props = {
   onChange: (next: PropertyConfig | ((prev: PropertyConfig) => PropertyConfig)) => void
   onReset: () => void
   hasDraft?: boolean
+  /** false, если шаблон ещё ни разу не публиковали */
+  published?: boolean
   saveState?: SaveState
   publishState?: SaveState
   saveError?: string | null
@@ -421,6 +423,7 @@ export function ConstructorV2({
   onChange: emitChange,
   onReset,
   hasDraft = false,
+  published = true,
   saveState = 'idle',
   publishState = 'idle',
   saveError = null,
@@ -434,6 +437,7 @@ export function ConstructorV2({
   onPublish,
   onRetryDraft,
 }: Props) {
+  const needsPublish = hasDraft || !published
   const setConfig = useCallback(
     (next: PropertyConfig | ((prev: PropertyConfig) => PropertyConfig)) => {
       emitChange((prev) => {
@@ -857,7 +861,7 @@ export function ConstructorV2({
           </h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {hasDraft ? <Badge variant="outline">Черновик</Badge> : <Badge variant="secondary">В эфире</Badge>}
+          {needsPublish ? <Badge variant="outline">Черновик</Badge> : <Badge variant="secondary">В эфире</Badge>}
           <Button variant="outline" size="sm" onClick={onReset}>
             Сбросить черновик
           </Button>
@@ -879,10 +883,20 @@ export function ConstructorV2({
           {onSave ? (
             <Button
               size="sm"
+              variant={needsPublish ? 'default' : 'outline'}
+              disabled={saveState === 'saving' || publishState === 'saving'}
               onClick={() => onSave()}
-              title="Опубликовать шаблон — после этого можно выдавать ссылки гостям"
+              title={
+                needsPublish
+                  ? 'Опубликовать шаблон — после этого можно выдавать ссылки гостям'
+                  : 'Шаблон уже в эфире. Нажмите, чтобы опубликовать текущую версию ещё раз'
+              }
             >
-              {saveState === 'saving' ? 'Публикация…' : 'Опубликовать шаблон'}
+              {saveState === 'saving'
+                ? 'Публикация…'
+                : saveState === 'saved' && !needsPublish
+                  ? 'Опубликовано'
+                  : 'Опубликовать шаблон'}
             </Button>
           ) : null}
           <Button

@@ -76,6 +76,7 @@ export function EmailPreviewInspector({
             className={`relative mx-auto w-full max-w-[220px] overflow-hidden rounded-xl bg-black ${
               picking || libDragSrc ? 'ring-2 ring-primary' : ''
             }`}
+            data-lib-drop="email-preview"
             style={{ aspectRatio: '9 / 16' }}
             onDragOver={(e) => {
               if (!isLibraryDrag(e.dataTransfer) && !libDragSrc) return

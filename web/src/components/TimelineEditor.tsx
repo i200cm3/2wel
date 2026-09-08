@@ -1,4 +1,13 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from 'react'
+import { createPortal } from 'react-dom'
 import {
   EllipsisVertical,
   GripVertical,
@@ -27,6 +36,7 @@ import {
   deleteMediaFile,
   probeVideoDuration,
   uploadMediaFiles,
+  type LibraryImportProgress,
 } from '../lib/mediaUpload'
 import {
   buildTtsTextFromCaption,
@@ -48,12 +58,14 @@ import {
   newMenuId,
   newSequenceId,
   normalizeCue,
+  normalizeEmailPreview,
   normalizeProperty,
   migrateSequenceCues,
   pathFromPreset,
   resolveMenu,
   resolveReturnMenuId,
   sequenceDuration,
+  clipHoldSec,
   withReturnMenu,
   type MenuScreenConfig,
   type MotionPath,
@@ -149,11 +161,16 @@ import {
   clipAtTime,
   copyText,
   cueEndSec,
+  defaultLibraryClipDuration,
   fitTimelinePxPerSec,
   isModCode,
   isTypingTarget,
+  libraryDropAtX,
   packCuesLeftToRight,
   resolveCueOverlaps,
+  shiftCuesForClipInsert,
+  shiftCuesFromTime,
+  cueVisualStartSec,
   sliderNumber,
   syncClipsToCues,
   timelineAddTailPx,
@@ -285,11 +302,29 @@ export function TimelineEditor({
   const [mediaUrlError, setMediaUrlError] = useState<string | null>(null)
   const [libPreviewSrc, setLibPreviewSrc] = useState<string | null>(null)
   const [libDragSrc, setLibDragSrc] = useState<string | null>(null)
+  const [libGhost, setLibGhost] = useState<{ x: number; y: number; thumb: string } | null>(null)
+  const libPointerDragRef = useRef<{
+    src: string
+    thumb: string
+    pointerId: number
+    startX: number
+    startY: number
+    started: boolean
+    leftSheet: boolean
+    insertIndex: number | null
+    replaceClipId: string | null
+    cancelled: boolean
+  } | null>(null)
+  const selectedIdRef = useRef<string | null>(null)
+  selectedIdRef.current = selectedId
+  const clipsRef = useRef<StoryClip[]>([])
   const [libDropClipId, setLibDropClipId] = useState<string | null>(null)
+  const [libInsertIndex, setLibInsertIndex] = useState<number | null>(null)
   const [libDropOnPreview, setLibDropOnPreview] = useState(false)
   const [awaitingClipAdd, setAwaitingClipAdd] = useState(false)
   const [libFileHover, setLibFileHover] = useState(false)
   const [libUploading, setLibUploading] = useState(false)
+  const [libUploadProgress, setLibUploadProgress] = useState<LibraryImportProgress | null>(null)
   const [libUploadError, setLibUploadError] = useState<string | null>(null)
   const [libFocusSrcs, setLibFocusSrcs] = useState<string[]>([])
   const [trackCtx, setTrackCtx] = useState<TrackContextMenuState | null>(null)
@@ -814,16 +849,24 @@ export function TimelineEditor({
       const media = files.filter(isMediaFile)
       if (!media.length) {
         setLibUploading(false)
+        setLibUploadProgress(null)
         setLibUploadError('Нужны файлы JPG, PNG, WebP, MP4 или WebM')
         return
       }
       setLibUploadError(null)
       setLibUploading(true)
+      setLibUploadProgress({
+        phase: 'upload',
+        current: 0,
+        total: media.length,
+        percent: 0,
+      })
       try {
         const { srcs, manifest: next } = await uploadMediaFiles(
           projectCode,
           media,
           libraryUploadFolder,
+          setLibUploadProgress,
         )
         if (next) setManifest(next)
         else await reloadLibrary()
@@ -841,6 +884,7 @@ export function TimelineEditor({
         setLibUploadError(err instanceof Error ? err.message : 'Не удалось загрузить файлы')
       } finally {
         setLibUploading(false)
+        setLibUploadProgress(null)
         if (libFileInputRef.current) libFileInputRef.current.value = ''
       }
     },
@@ -970,10 +1014,14 @@ export function TimelineEditor({
       setLibFileHover(false)
       const dt = e.dataTransfer
       setLibUploading(true)
-      void libraryFilesFromDataTransfer(dt)
+      setLibUploadProgress({ phase: 'scan', current: 0, total: 0, percent: 0 })
+      void libraryFilesFromDataTransfer(dt, (found) => {
+        setLibUploadProgress({ phase: 'scan', current: found, total: 0, percent: 0 })
+      })
         .then((files) => importLibraryFiles(files))
         .catch((err) => {
           setLibUploading(false)
+          setLibUploadProgress(null)
           setLibUploadError(err instanceof Error ? err.message : 'Не удалось загрузить фото')
         })
     }
@@ -988,6 +1036,7 @@ export function TimelineEditor({
   }, [importLibraryFiles, libDragSrc, libraryOpen, libraryTab])
 
   const sequence = config.sequences[seqId]
+  clipsRef.current = sequence?.clips ?? []
 
   const sequenceReturnMenuId = useMemo(() => {
     if (!sequence) return getDefaultMenuId(config)
@@ -1483,6 +1532,62 @@ export function TimelineEditor({
     }
   }
 
+  const insertClipAt = (src: string, index: number) => {
+    const media = clipMediaKind({ src })
+    const path = pathFromPreset('none')
+    const placeholderDur = defaultLibraryClipDuration(src)
+    const clip: StoryClip = {
+      id: newClipId(seqId),
+      src,
+      media,
+      motion: media === 'video' ? 'none' : DEFAULT_MOTION,
+      durationSec: placeholderDur,
+      animSec: placeholderDur,
+      from: path.from,
+      to: path.to,
+      easing: DEFAULT_EASING,
+      transition: DEFAULT_TRANSITION,
+    }
+    patchSequence((seq) => {
+      const clips = [...seq.clips]
+      const at = Math.max(0, Math.min(index, clips.length))
+      const prevCues = seq.cues?.length
+        ? seq.cues.map((item) => normalizeCue(item))
+        : migrateSequenceCues(seq)
+      const cues = shiftCuesForClipInsert(clips, prevCues, at, placeholderDur)
+      clips.splice(at, 0, clip)
+      return { ...seq, clips, cues }
+    })
+    setSelectedId(clip.id)
+    setSelectedCueId(null)
+    setSlidePreview(false)
+    setAwaitingClipAdd(false)
+    if (media === 'video') {
+      void probeVideoDuration(src).then((d) => {
+        if (!d) return
+        const durationSec = Math.max(0.8, d)
+        const delta = durationSec - placeholderDur
+        updateClip(clip.id, {
+          sourceDurationSec: d,
+          trimStartSec: 0,
+          durationSec,
+          animSec: durationSec,
+        })
+        if (Math.abs(delta) < 0.02) return
+        patchSequence((seq) => {
+          const idx = seq.clips.findIndex((item) => item.id === clip.id)
+          if (idx < 0) return seq
+          let insertTime = 0
+          for (let i = 0; i < idx; i++) insertTime += clipHoldSec(seq.clips[i]!)
+          return {
+            ...seq,
+            cues: shiftCuesFromTime(seq.cues ?? [], insertTime + placeholderDur, delta),
+          }
+        })
+      })
+    }
+  }
+
   const applyMediaSrc = (clipId: string, src: string) => {
     const media = clipMediaKind({ src })
     const patch: Partial<StoryClip> = { src, media }
@@ -1644,6 +1749,7 @@ export function TimelineEditor({
   const startCuePointerDrag = useCueDrag({
     patchCues,
     cuesRef,
+    clipsRef,
     ttsDurationsRef,
     pxPerSecRef,
     cueDragMovedRef,
@@ -1651,6 +1757,7 @@ export function TimelineEditor({
     setSelectedId,
     setSlidePreview,
     setDragCueId,
+    setSnapGuideSec,
     timelineGestureRef,
   })
 
@@ -1786,6 +1893,215 @@ export function TimelineEditor({
     setLibDragSrc(null)
   }
 
+  const libGhostElRef = useRef<HTMLDivElement | null>(null)
+
+  const beginLibPointerDrag = (src: string, thumb: string, event: ReactPointerEvent) => {
+    if (event.button !== 0) return
+    const drag = {
+      src,
+      thumb,
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      started: false,
+      leftSheet: false,
+      insertIndex: null as number | null,
+      replaceClipId: null as string | null,
+      cancelled: false,
+    }
+    libPointerDragRef.current = drag
+    let lastReplaceId: string | null = null
+    let lastInsertIndex: number | null = null
+    let lastDropPreview = false
+    const insertDurSec = defaultLibraryClipDuration(src)
+
+    const moveGhost = (x: number, y: number) => {
+      const el = libGhostElRef.current
+      if (el) {
+        el.style.left = `${x}px`
+        el.style.top = `${y}px`
+        return
+      }
+      setLibGhost({ x, y, thumb: drag.thumb })
+    }
+
+    const clearTimelineHover = () => {
+      drag.insertIndex = null
+      drag.replaceClipId = null
+      if (lastInsertIndex != null) {
+        lastInsertIndex = null
+        setLibInsertIndex(null)
+      }
+      if (lastReplaceId != null) {
+        lastReplaceId = null
+        setLibDropClipId(null)
+      }
+    }
+
+    const syncTimelineHover = (ev: PointerEvent) => {
+      const node = document.elementFromPoint(ev.clientX, ev.clientY)
+      const onPreview = Boolean(node?.closest('[data-lib-drop="preview"]'))
+      if (onPreview !== lastDropPreview) {
+        lastDropPreview = onPreview
+        setLibDropOnPreview(onPreview)
+      }
+      if (onPreview || node?.closest('[data-lib-drop="email-preview"]')) {
+        clearTimelineHover()
+        return
+      }
+      if (!node?.closest('.editor-reel')) {
+        clearTimelineHover()
+        return
+      }
+      const lane = document.querySelector('[data-lib-drop="lane"]')
+      if (!(lane instanceof HTMLElement)) {
+        clearTimelineHover()
+        return
+      }
+      const drop = libraryDropAtX({
+        x: ev.clientX - lane.getBoundingClientRect().left,
+        clips: clipsRef.current,
+        pxPerSec: pxPerSecRef.current,
+        insertIndex: drag.insertIndex,
+        insertDurSec,
+      })
+      if (drop.kind === 'insert') {
+        drag.insertIndex = drop.index
+        drag.replaceClipId = null
+        if (lastInsertIndex !== drop.index) {
+          lastInsertIndex = drop.index
+          setLibInsertIndex(drop.index)
+        }
+        if (lastReplaceId != null) {
+          lastReplaceId = null
+          setLibDropClipId(null)
+        }
+        return
+      }
+      drag.insertIndex = null
+      drag.replaceClipId = drop.clipId
+      if (lastInsertIndex != null) {
+        lastInsertIndex = null
+        setLibInsertIndex(null)
+      }
+      if (lastReplaceId !== drop.clipId) {
+        lastReplaceId = drop.clipId
+        setLibDropClipId(drop.clipId)
+      }
+    }
+
+    const onMove = (ev: PointerEvent) => {
+      if (ev.pointerId !== drag.pointerId || drag.cancelled) return
+      const dist = Math.hypot(ev.clientX - drag.startX, ev.clientY - drag.startY)
+      if (!drag.started) {
+        if (dist < 8) return
+        drag.started = true
+        skipNextLibPickRef.current = true
+        if (libClickTimer.current) {
+          window.clearTimeout(libClickTimer.current)
+          libClickTimer.current = null
+        }
+        setLibPreviewSrc(null)
+        setLibDragSrc(drag.src)
+        document.documentElement.classList.add('editor-lib-dragging')
+        setLibGhost({ x: ev.clientX, y: ev.clientY, thumb: drag.thumb })
+      }
+      ev.preventDefault()
+      moveGhost(ev.clientX, ev.clientY)
+      const sheet = document.querySelector('[data-slot="sheet-content"]')
+      let overSheet = false
+      if (sheet instanceof HTMLElement) {
+        const rect = sheet.getBoundingClientRect()
+        overSheet =
+          ev.clientX >= rect.left &&
+          ev.clientX <= rect.right &&
+          ev.clientY >= rect.top &&
+          ev.clientY <= rect.bottom
+      }
+      if (!overSheet && !drag.leftSheet) {
+        drag.leftSheet = true
+        document.documentElement.classList.add('editor-lib-sheet-away')
+        setLibraryOpen(false)
+        setAwaitingClipAdd(false)
+      }
+      syncTimelineHover(ev)
+    }
+
+    const cleanupListeners = () => {
+      window.removeEventListener('pointermove', onMove, true)
+      window.removeEventListener('pointerup', onUp, true)
+      window.removeEventListener('pointercancel', onUp, true)
+      window.removeEventListener('keydown', onKey, true)
+    }
+
+    const finishDrag = (dropped: boolean, ev?: PointerEvent) => {
+      cleanupListeners()
+      document.documentElement.classList.remove('editor-lib-dragging')
+      window.setTimeout(() => {
+        document.documentElement.classList.remove('editor-lib-sheet-away')
+      }, 250)
+      libPointerDragRef.current = null
+      setLibGhost(null)
+      setLibDragSrc(null)
+      setLibDropClipId(null)
+      setLibInsertIndex(null)
+      setLibDropOnPreview(false)
+      if (!drag.started) return
+      const suppressClick = (ce: MouseEvent) => {
+        ce.preventDefault()
+        ce.stopPropagation()
+        window.removeEventListener('click', suppressClick, true)
+      }
+      window.addEventListener('click', suppressClick, true)
+      window.setTimeout(() => window.removeEventListener('click', suppressClick, true), 400)
+      window.setTimeout(() => {
+        skipNextLibPickRef.current = false
+      }, 400)
+      if (!dropped || drag.cancelled || !ev) return
+      const node = document.elementFromPoint(ev.clientX, ev.clientY)
+      if (node?.closest('[data-lib-drop="preview"]') && selectedIdRef.current) {
+        replaceClipSrc(selectedIdRef.current, drag.src)
+        return
+      }
+      if (node?.closest('[data-lib-drop="email-preview"]')) {
+        onChange((current) => ({
+          ...current,
+          emailPreview: { ...normalizeEmailPreview(current.emailPreview), src: drag.src },
+        }))
+        return
+      }
+      if (!node?.closest('.editor-reel')) return
+      const lane = document.querySelector('[data-lib-drop="lane"]')
+      if (!(lane instanceof HTMLElement)) return
+      const drop = libraryDropAtX({
+        x: ev.clientX - lane.getBoundingClientRect().left,
+        clips: clipsRef.current,
+        pxPerSec: pxPerSecRef.current,
+        insertIndex: drag.insertIndex,
+        insertDurSec,
+      })
+      if (drop.kind === 'replace') replaceClipSrc(drop.clipId, drag.src)
+      else insertClipAt(drag.src, drop.index)
+    }
+
+    const onUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== drag.pointerId) return
+      finishDrag(true, ev)
+    }
+
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key !== 'Escape') return
+      ev.preventDefault()
+      drag.cancelled = true
+      finishDrag(false)
+    }
+
+    window.addEventListener('pointermove', onMove, { capture: true, passive: false })
+    window.addEventListener('pointerup', onUp, true)
+    window.addEventListener('pointercancel', onUp, true)
+    window.addEventListener('keydown', onKey, true)
+  }
+
   const submitMediaUrl = () => {
     const raw = mediaUrlDraft.trim()
     if (!raw) {
@@ -1818,7 +2134,7 @@ export function TimelineEditor({
   }
 
   const onLibraryClick = (src: string) => {
-    if (libDragSrc) return
+    if (skipNextLibPickRef.current || libDragSrc) return
     if (libClickTimer.current) window.clearTimeout(libClickTimer.current)
     if (awaitingPreviewPick) {
       skipNextLibPickRef.current = true
@@ -1860,6 +2176,7 @@ export function TimelineEditor({
   useEffect(() => {
     return () => {
       if (libClickTimer.current) window.clearTimeout(libClickTimer.current)
+      document.documentElement.classList.remove('editor-lib-dragging', 'editor-lib-sheet-away')
     }
   }, [])
 
@@ -1918,12 +2235,22 @@ export function TimelineEditor({
     () => cues.reduce((max, cue) => Math.max(max, cueEndSec(cue)), 0),
     [cues],
   )
+  const libInsertDurSec =
+    libInsertIndex != null && libDragSrc ? defaultLibraryClipDuration(libDragSrc) : 0
+  const visualLastCueEndSec = useMemo(() => {
+    if (libInsertIndex == null || libInsertDurSec <= 0) return lastCueEndSec
+    const clips = sequence?.clips ?? []
+    return cues.reduce((max, cue, i) => {
+      const start = cueVisualStartSec(clips, cues, cue, i, libInsertIndex, libInsertDurSec)
+      return Math.max(max, start + cue.durationSec)
+    }, 0)
+  }, [cues, lastCueEndSec, libInsertIndex, libInsertDurSec, sequence?.clips])
   const timelineWidth = useMemo(() => {
     const addTail = timelineAddTailPx()
-    const clipsPx = total * pxPerSec
-    const cuesPx = lastCueEndSec * pxPerSec
+    const clipsPx = (total + libInsertDurSec) * pxPerSec
+    const cuesPx = visualLastCueEndSec * pxPerSec
     return Math.max(240, Math.max(clipsPx, cuesPx) + addTail)
-  }, [total, lastCueEndSec, pxPerSec])
+  }, [total, visualLastCueEndSec, pxPerSec, libInsertDurSec])
 
   /** При открытии блока подогнать масштаб под длину контента (в пределах min/max). */
   useLayoutEffect(() => {
@@ -2047,6 +2374,11 @@ export function TimelineEditor({
         timelineGestureRef={timelineGestureRef}
         libDragSrc={libDragSrc}
         libDropClipId={libDropClipId}
+        libInsertIndex={libInsertIndex}
+        libInsertDurSec={libInsertDurSec}
+        libInsertThumb={
+          libInsertIndex != null && libDragSrc ? libraryThumbUrl(libDragSrc) : null
+        }
         awaitingClipAdd={awaitingClipAdd}
         ttsDurations={ttsDurations}
         reelScrollRef={reelScrollRef}
@@ -3082,7 +3414,7 @@ export function TimelineEditor({
       <LibrarySheet
         open={libraryOpen}
         onOpenChange={(open, details) => {
-          if (!open && (libPreviewSrc || libDragSrc || libUploading)) {
+          if (!open && (libPreviewSrc || libUploading) && !libDragSrc) {
             details?.cancel()
             return
           }
@@ -3102,6 +3434,7 @@ export function TimelineEditor({
         libError={libError}
         libUploadError={libUploadError}
         libUploading={libUploading}
+        libUploadProgress={libUploadProgress}
         libFileHover={libFileHover}
         setLibFileHover={setLibFileHover}
         libraryUploadFolderLabel={
@@ -3110,21 +3443,13 @@ export function TimelineEditor({
         libFileInputRef={libFileInputRef}
         importLibraryFiles={importLibraryFiles}
         libDragSrc={libDragSrc}
-        setLibDragSrc={setLibDragSrc}
-        setLibDropClipId={setLibDropClipId}
-        setLibDropOnPreview={setLibDropOnPreview}
         usedInProject={usedInProject}
         libFocusSrcs={libFocusSrcs}
         libraryThumbUrl={libraryThumbUrl}
         libraryFileName={libraryFileName}
         onLibraryClick={onLibraryClick}
         onLibraryPick={onLibraryPick}
-        onLibItemDragStart={() => {
-          if (libClickTimer.current) {
-            window.clearTimeout(libClickTimer.current)
-            libClickTimer.current = null
-          }
-        }}
+        beginLibPointerDrag={beginLibPointerDrag}
         deleteLibrarySrc={deleteLibrarySrc}
         deleteLibrarySrcs={deleteLibrarySrcs}
         setMediaUrlOpen={setMediaUrlOpen}
@@ -3143,6 +3468,24 @@ export function TimelineEditor({
         ttsDurations={ttsDurations}
         toggleLibAudio={toggleLibAudio}
       />
+
+      {libGhost
+        ? createPortal(
+            <div
+              ref={libGhostElRef}
+              className="editor-lib-ghost"
+              style={{ left: libGhost.x, top: libGhost.y }}
+              aria-hidden
+            >
+              {isVideoSrc(libGhost.thumb) ? (
+                <video src={libGhost.thumb} muted playsInline preload="metadata" />
+              ) : (
+                <img src={libGhost.thumb} alt="" />
+              )}
+            </div>,
+            document.body,
+          )
+        : null}
 
       <TrackContextMenu
         state={trackCtx}

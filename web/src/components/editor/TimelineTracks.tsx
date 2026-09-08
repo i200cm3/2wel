@@ -1,4 +1,5 @@
 import {
+  Fragment,
   useEffect,
   useRef,
   useState,
@@ -21,6 +22,7 @@ import {
   TRACK_ADD_GAP,
   clipLaneWidth,
   cueSnippet,
+  cueVisualStartSec,
   isLibraryDrag,
   readLibrarySrc,
   sliderNumber,
@@ -56,6 +58,9 @@ type Props = {
   timelineGestureRef: RefObject<boolean>
   libDragSrc: string | null
   libDropClipId: string | null
+  libInsertIndex: number | null
+  libInsertDurSec: number
+  libInsertThumb: string | null
   awaitingClipAdd: boolean
   ttsDurations: Record<string, number>
   reelScrollRef: RefObject<HTMLDivElement | null>
@@ -90,7 +95,7 @@ type Props = {
   startCuePointerDrag: (
     e: ReactPointerEvent<HTMLElement>,
     cue: StoryCue,
-    mode: 'move' | 'resize',
+    mode: 'move' | 'resize-start' | 'resize-end',
   ) => void
 }
 
@@ -149,6 +154,9 @@ export function TimelineTracks(props: Props) {
     timelineGestureRef,
     libDragSrc,
     libDropClipId,
+    libInsertIndex,
+    libInsertDurSec,
+    libInsertThumb,
     awaitingClipAdd,
     ttsDurations,
     reelScrollRef,
@@ -196,6 +204,32 @@ export function TimelineTracks(props: Props) {
     }
     renameBlock(seqId, next)
   }
+
+  const cueStartPx = (cue: (typeof cues)[number], cueIndex: number) =>
+    cueVisualStartSec(sequence.clips, cues, cue, cueIndex, libInsertIndex, libInsertDurSec) *
+    pxPerSec
+  const visualCueEndSec =
+    cues.reduce(
+      (max, cue, i) =>
+        Math.max(max, cueVisualStartSec(sequence.clips, cues, cue, i, libInsertIndex, libInsertDurSec) + cue.durationSec),
+      0,
+    ) || lastCueEndSec
+  const insertSlot = (index: number) =>
+    libInsertIndex === index ? (
+      <div
+        className="editor-lib-insert-slot"
+        style={{ width: Math.max(1, libInsertDurSec * pxPerSec) }}
+        aria-hidden
+      >
+        {libInsertThumb ? (
+          isVideoSrc(libInsertThumb) ? (
+            <video src={libInsertThumb} muted playsInline preload="metadata" />
+          ) : (
+            <img src={libInsertThumb} alt="" />
+          )
+        ) : null}
+      </div>
+    ) : null
 
   return (
     <>
@@ -398,6 +432,7 @@ export function TimelineTracks(props: Props) {
               </div>
               <div
                 className={`editor-track-lane${libDragSrc ? ' is-lib-drag' : ''}`}
+                data-lib-drop="lane"
                 role="list"
                 onDragOver={(e) => {
                   if (!(isLibraryDrag(e.dataTransfer) || libDragSrc)) return
@@ -417,8 +452,9 @@ export function TimelineTracks(props: Props) {
                 }}
               >
                 {sequence.clips.map((clip, i) => (
+                  <Fragment key={clip.id}>
+                    {insertSlot(i)}
                   <div
-                    key={clip.id}
                     data-clip-id={clip.id}
                     role="listitem"
                     tabIndex={-1}
@@ -554,7 +590,9 @@ export function TimelineTracks(props: Props) {
                       onClick={(e) => e.stopPropagation()}
                     />
                   </div>
+                  </Fragment>
                 ))}
+                {insertSlot(sequence.clips.length)}
                 {dropIndex === sequence.clips.length && <div className="editor-drop-end" aria-hidden />}
                 <Button
                   type="button"
@@ -564,6 +602,7 @@ export function TimelineTracks(props: Props) {
                     'editor-track-add size-auto h-[72px] w-12 shrink-0 border-dashed',
                     (libDragSrc || awaitingClipAdd) && 'border-primary bg-primary/10 text-primary',
                   )}
+                  data-lib-drop="add"
                   title="Добавить слайд из библиотеки"
                   aria-label="Добавить слайд"
                   onClick={(e) => {
@@ -607,7 +646,7 @@ export function TimelineTracks(props: Props) {
                   setSlidePreview(false)
                 }}
               >
-                {cues.map((cue) => {
+                {cues.map((cue, cueIndex) => {
                   const ttsSec = cue.ttsSrc ? ttsDurations[cue.ttsSrc] : undefined
                   const barSec =
                     ttsSec != null && ttsSec > 0 ? Math.min(ttsSec, cue.durationSec) : null
@@ -625,7 +664,7 @@ export function TimelineTracks(props: Props) {
                         .filter(Boolean)
                         .join(' ')}
                       style={{
-                        left: cue.startSec * pxPerSec,
+                        left: cueStartPx(cue, cueIndex),
                         width: Math.max(16, cue.durationSec * pxPerSec),
                       }}
                       title={
@@ -658,9 +697,16 @@ export function TimelineTracks(props: Props) {
                         />
                       ) : null}
                       <span
-                        className="editor-cue-resize"
-                        aria-hidden
-                        onPointerDown={(e) => startCuePointerDrag(e, cue, 'resize')}
+                        className="editor-cue-resize editor-cue-resize-start"
+                        title="Начало титра — прилипает к кадрам"
+                        aria-label="Изменить начало титра"
+                        onPointerDown={(e) => startCuePointerDrag(e, cue, 'resize-start')}
+                      />
+                      <span
+                        className="editor-cue-resize editor-cue-resize-end"
+                        title="Конец титра — прилипает к кадрам"
+                        aria-label="Изменить конец титра"
+                        onPointerDown={(e) => startCuePointerDrag(e, cue, 'resize-end')}
                       />
                     </button>
                   )
@@ -669,10 +715,10 @@ export function TimelineTracks(props: Props) {
                   type="button"
                   variant="outline"
                   size="icon"
-                  className="editor-track-add editor-track-add-cue size-auto h-14 w-12 shrink-0 border-dashed"
+                  className="editor-track-add editor-track-add-cue size-auto h-14 w-12 shrink-0 border-dashed transition-none"
                   style={{
                     left:
-                      (cues.length ? lastCueEndSec * pxPerSec : 0) +
+                      (cues.length ? visualCueEndSec * pxPerSec : 0) +
                       (cues.length ? TRACK_ADD_GAP : 4),
                   }}
                   title="Добавить титр"

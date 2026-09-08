@@ -42,3 +42,6 @@ __pycache__
 
 video-project.zip
 *.zip
+
+# Local photo dumps for project upload — never deploy
+imports/

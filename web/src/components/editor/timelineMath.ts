@@ -1,6 +1,7 @@
 import {
   clipHoldSec,
   clipMediaKind,
+  clipStartTimes,
   isVideoSrc,
   normalizeCue,
   type StoryClip,
@@ -69,6 +70,16 @@ export function uniqueTimes(times: number[]): number[] {
     if (out.every((x) => Math.abs(x - rounded) > 0.0005)) out.push(rounded)
   }
   return out
+}
+
+export function clipBoundaryTimes(clips: StoryClip[]): number[] {
+  const times: number[] = [0]
+  let t = 0
+  for (const clip of clips) {
+    t += clipHoldSec(clip)
+    times.push(Number(t.toFixed(3)))
+  }
+  return uniqueTimes(times)
 }
 
 export function cueSnapTimes(cues: StoryCue[], ttsDurations: Record<string, number>): number[] {
@@ -228,6 +239,109 @@ export function clipAtTime(clips: StoryClip[], timeSec: number): StoryClip | nul
   return clips[clips.length - 1] ?? null
 }
 
+export const DEFAULT_LIBRARY_IMAGE_SEC = 2.5
+export const DEFAULT_LIBRARY_VIDEO_SEC = 5
+
+export function defaultLibraryClipDuration(src: string) {
+  return isVideoSrc(src) ? DEFAULT_LIBRARY_VIDEO_SEC : DEFAULT_LIBRARY_IMAGE_SEC
+}
+
+export function clipIndexAtTime(clips: StoryClip[], timeSec: number): number {
+  let cursor = 0
+  for (let i = 0; i < clips.length; i++) {
+    const end = cursor + clipHoldSec(clips[i]!)
+    if (timeSec + 1e-9 < end) return i
+    cursor = end
+  }
+  return clips.length
+}
+
+/**
+ * Куда поставить титр при вставке клипа в зазор: остаётся на своём хозяине
+ * и уезжает вместе с ним. Если startSec уже не на хозяине — возвращаем к началу клипа.
+ */
+export function cueVisualStartSec(
+  clips: StoryClip[],
+  cues: StoryCue[],
+  cue: StoryCue,
+  cueIndex: number,
+  insertIndex: number | null,
+  insertDurSec: number,
+): number {
+  const shift = insertIndex != null && insertDurSec > 0 ? insertDurSec : 0
+  if (insertIndex == null || !shift) return cue.startSec
+
+  const starts = clipStartTimes(clips)
+  if (cues.length === clips.length && clips[cueIndex]) {
+    const start = starts[cueIndex] ?? 0
+    const hold = clipHoldSec(clips[cueIndex]!)
+    const within = cue.startSec + 1e-9 >= start && cue.startSec < start + hold + 1e-9
+    const base = within ? cue.startSec : start
+    return cueIndex >= insertIndex ? base + shift : cue.startSec
+  }
+
+  const owner = clipIndexAtTime(clips, cue.startSec)
+  return owner >= insertIndex ? cue.startSec + shift : cue.startSec
+}
+
+export function shiftCuesForClipInsert(
+  clips: StoryClip[],
+  cues: StoryCue[],
+  insertIndex: number,
+  deltaSec: number,
+): StoryCue[] {
+  if (!cues.length || !deltaSec) return cues
+  return cues.map((cue, i) => {
+    const next = cueVisualStartSec(clips, cues, cue, i, insertIndex, deltaSec)
+    if (Math.abs(next - cue.startSec) < 1e-9) return cue
+    return { ...cue, startSec: Number(next.toFixed(3)) }
+  })
+}
+
+export function shiftCuesFromTime(cues: StoryCue[], fromSec: number, deltaSec: number): StoryCue[] {
+  if (!cues.length || !deltaSec) return cues
+  const from = fromSec - 1e-9
+  return cues.map((cue) =>
+    cue.startSec >= from
+      ? { ...cue, startSec: Number(Math.max(0, cue.startSec + deltaSec).toFixed(3)) }
+      : cue,
+  )
+}
+
+export type LibraryTimelineDrop =
+  | { kind: 'insert'; index: number }
+  | { kind: 'replace'; clipId: string }
+
+/** Куда вставить кадр из медиатеки: края клипа — щель, середина — замена. */
+export function libraryDropAtX(input: {
+  x: number
+  clips: StoryClip[]
+  pxPerSec: number
+  insertIndex: number | null
+  insertDurSec: number
+}): LibraryTimelineDrop {
+  const { clips, pxPerSec, insertIndex } = input
+  const gapPx =
+    insertIndex != null && input.insertDurSec > 0
+      ? Math.max(1, input.insertDurSec * pxPerSec)
+      : 0
+  let t = 0
+  for (let i = 0; i < clips.length; i++) {
+    if (insertIndex === i && gapPx) {
+      if (input.x < t + gapPx) return { kind: 'insert', index: i }
+      t += gapPx
+    }
+    const clip = clips[i]!
+    const w = Math.max(1, clipHoldSec(clip) * pxPerSec)
+    const edge = Math.min(Math.max(16, w * 0.22), w * 0.42)
+    if (input.x < t + edge) return { kind: 'insert', index: i }
+    if (input.x < t + w - edge) return { kind: 'replace', clipId: clip.id }
+    if (input.x < t + w) return { kind: 'insert', index: i + 1 }
+    t += w
+  }
+  return { kind: 'insert', index: clips.length }
+}
+
 export function sliderNumber(value: number | readonly number[]) {
   return Array.isArray(value) ? (value[0] ?? 0) : value
 }
@@ -364,33 +478,107 @@ export function clipResizeFromDelta(input: {
   }
 }
 
+export type CueDragMode = 'move' | 'resize-start' | 'resize-end'
+
+export type CueDragHoldSnap = { time: number; edge: 'start' | 'end' } | null
+
+const SNAP_HOLD = 1.65
+
+function stickySnap(
+  raw: number,
+  targets: number[],
+  threshold: number,
+  hold: CueDragHoldSnap,
+  edge: 'start' | 'end',
+): { time: number | null; hold: CueDragHoldSnap } {
+  const stay =
+    hold != null &&
+    hold.edge === edge &&
+    Math.abs(raw - hold.time) <= threshold * SNAP_HOLD
+  const snapped = stay ? hold.time : snapTime(raw, targets, threshold)
+  return { time: snapped, hold: snapped != null ? { time: snapped, edge } : null }
+}
+
 export function cueDragFromDelta(input: {
   originCues: StoryCue[]
   cueId: string
-  mode: 'move' | 'resize'
+  mode: CueDragMode
   deltaSec: number
   originStart: number
   originDuration: number
   minDur: number
-}): StoryCue[] {
+  snapTargets?: number[]
+  threshold?: number
+  holdSnap?: CueDragHoldSnap
+}): {
+  cues: StoryCue[]
+  snapGuideSec: number | null
+  holdSnap: CueDragHoldSnap
+} {
+  const targets = input.snapTargets ?? []
+  const threshold = input.threshold ?? 0
+  const originEnd = input.originStart + input.originDuration
+  let startSec = input.originStart
+  let durationSec = input.originDuration
+  let snapGuideSec: number | null = null
+  let holdSnap: CueDragHoldSnap = null
+
   if (input.mode === 'move') {
-    const startSec = Math.max(0, Number((input.originStart + input.deltaSec).toFixed(3)))
-    return resolveCueOverlaps(
-      input.originCues.map((c) =>
-        c.id === input.cueId
-          ? normalizeCue({ ...c, startSec, durationSec: input.originDuration })
-          : c,
-      ),
-      input.cueId,
-    )
+    const rawStart = Math.max(0, input.originStart + input.deltaSec)
+    const rawEnd = rawStart + input.originDuration
+    const startHit = stickySnap(rawStart, targets, threshold, input.holdSnap ?? null, 'start')
+    const endHit = stickySnap(rawEnd, targets, threshold, input.holdSnap ?? null, 'end')
+    const startDist =
+      startHit.time != null ? Math.abs(rawStart - startHit.time) : Number.POSITIVE_INFINITY
+    const endDist = endHit.time != null ? Math.abs(rawEnd - endHit.time) : Number.POSITIVE_INFINITY
+    if (startHit.time != null && startDist <= endDist) {
+      startSec = Math.max(0, startHit.time)
+      snapGuideSec = startHit.time
+      holdSnap = startHit.hold
+    } else if (endHit.time != null) {
+      startSec = Math.max(0, endHit.time - input.originDuration)
+      snapGuideSec = endHit.time
+      holdSnap = endHit.hold
+    } else {
+      startSec = rawStart
+    }
+    durationSec = input.originDuration
+  } else if (input.mode === 'resize-start') {
+    const rawStart = Math.max(0, input.originStart + input.deltaSec)
+    const hit = stickySnap(rawStart, targets, threshold, input.holdSnap ?? null, 'start')
+    const nextStart = hit.time ?? rawStart
+    const maxStart = originEnd - input.minDur
+    if (nextStart <= maxStart + 1e-9) {
+      startSec = Math.max(0, Number(nextStart.toFixed(3)))
+      durationSec = Number((originEnd - startSec).toFixed(3))
+      snapGuideSec = hit.time != null && nextStart <= maxStart + 1e-9 ? hit.time : null
+      holdSnap = snapGuideSec != null ? hit.hold : null
+    } else {
+      startSec = Math.max(0, maxStart)
+      durationSec = input.minDur
+    }
+  } else {
+    const rawEnd = originEnd + input.deltaSec
+    const hit = stickySnap(rawEnd, targets, threshold, input.holdSnap ?? null, 'end')
+    const nextEnd = hit.time ?? rawEnd
+    const minEnd = input.originStart + input.minDur
+    if (nextEnd >= minEnd - 1e-9) {
+      durationSec = Math.max(input.minDur, Number((nextEnd - input.originStart).toFixed(3)))
+      snapGuideSec = hit.time != null && nextEnd >= minEnd - 1e-9 ? hit.time : null
+      holdSnap = snapGuideSec != null ? hit.hold : null
+    } else {
+      durationSec = input.minDur
+    }
+    startSec = input.originStart
   }
-  const durationSec = Math.max(input.minDur, Number((input.originDuration + input.deltaSec).toFixed(3)))
-  return resolveCueOverlaps(
+
+  startSec = Math.max(0, Number(startSec.toFixed(3)))
+  durationSec = Math.max(input.minDur, Number(durationSec.toFixed(3)))
+  const cues = resolveCueOverlaps(
     input.originCues.map((c) =>
-      c.id === input.cueId
-        ? normalizeCue({ ...c, startSec: input.originStart, durationSec })
-        : c,
+      c.id === input.cueId ? normalizeCue({ ...c, startSec, durationSec }) : c,
     ),
     input.cueId,
   )
+  return { cues, snapGuideSec, holdSnap }
 }

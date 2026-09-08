@@ -103,6 +103,7 @@ export function ClipInspector({
       <div className={`${inspectorStageClass}${slidePreview ? ' is-preview' : ''}`}>
         <div
           className={`editor-crop-drop${libDropOnPreview ? ' is-lib-drop' : ''}`}
+          data-lib-drop="preview"
           onDragOver={(e) => {
             if (!(isLibraryDrag(e.dataTransfer) || libDragSrc)) return
             e.preventDefault()

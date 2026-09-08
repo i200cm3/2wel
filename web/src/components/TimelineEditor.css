@@ -611,6 +611,27 @@
   background: var(--foreground);
 }
 
+.editor-lib-insert-slot {
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  height: 72px;
+  overflow: hidden;
+  border: 1px dashed color-mix(in oklch, var(--primary) 75%, transparent);
+  border-radius: 8px;
+  background: color-mix(in oklch, var(--primary) 12%, transparent);
+  pointer-events: none;
+}
+
+.editor-lib-insert-slot img,
+.editor-lib-insert-slot video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.8;
+  pointer-events: none;
+}
+
 /* Элемент управления, не клип и не титр */
 .editor-track-add {
   flex: 0 0 48px;
@@ -625,6 +646,8 @@
   height: 56px;
   margin: 0;
   z-index: 2;
+  /* Button uses transition-all; don't ease `left` on zoom or it lags behind cues. */
+  transition-property: color, background-color, border-color, box-shadow, opacity;
 }
 
 .editor-clip-handle {
@@ -757,12 +780,19 @@
 .editor-cue-resize {
   position: absolute;
   top: 0;
-  right: 0;
   z-index: 3;
   width: 14px;
   height: 100%;
   cursor: ew-resize;
   touch-action: none;
+}
+
+.editor-cue-resize-end {
+  right: 0;
+}
+
+.editor-cue-resize-start {
+  left: 0;
 }
 
 .editor-cue-resize::before,
@@ -777,12 +807,20 @@
   transform: translateY(-50%);
 }
 
-.editor-cue-resize::before {
+.editor-cue-resize-end::before {
   right: 7px;
 }
 
-.editor-cue-resize::after {
+.editor-cue-resize-end::after {
   right: 4px;
+}
+
+.editor-cue-resize-start::before {
+  left: 4px;
+}
+
+.editor-cue-resize-start::after {
+  left: 7px;
 }
 
 .editor-cue:hover .editor-cue-resize::before,
@@ -1249,6 +1287,9 @@
   border-radius: 8px;
   background-color: var(--muted);
   cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .editor-lib-item-img {
@@ -1258,6 +1299,7 @@
   height: 100%;
   object-fit: cover;
   pointer-events: none;
+  -webkit-user-drag: none;
 }
 
 .editor-lib-item:hover,
@@ -1277,11 +1319,51 @@
 
 .editor-lib-item.is-select-mode {
   cursor: pointer;
+  touch-action: auto;
 }
 
 .editor-lib-item.is-dragging {
   opacity: 0.45;
   cursor: grabbing;
+}
+
+html.editor-lib-dragging {
+  cursor: grabbing !important;
+  user-select: none;
+}
+
+html.editor-lib-dragging [data-slot='sheet-overlay'] {
+  pointer-events: none !important;
+  opacity: 0 !important;
+}
+
+html.editor-lib-sheet-away [data-slot='sheet-content'],
+html.editor-lib-sheet-away [data-slot='sheet-overlay'] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transition: none !important;
+}
+
+.editor-lib-ghost {
+  position: fixed;
+  z-index: 400;
+  width: 88px;
+  height: 88px;
+  margin: -44px 0 0 -44px;
+  overflow: hidden;
+  border-radius: 8px;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  border: 2px solid #fff;
+}
+
+.editor-lib-ghost img,
+.editor-lib-ghost video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
 }
 
 .editor-track-lane.is-lib-drag {

@@ -355,6 +355,13 @@ export function removeProjectMember(projectCode: string, userId: string) {
   )
 }
 
+export function revokeProjectInvite(projectCode: string, inviteId: string) {
+  return apiSend<{ ok: true }>(
+    `/api/projects/${encodeURIComponent(projectCode)}/team/invites/${encodeURIComponent(inviteId)}`,
+    'DELETE',
+  )
+}
+
 export function leaveProject(projectCode: string) {
   return apiSend<{ ok: true }>(`/api/projects/${encodeURIComponent(projectCode)}/team/leave`, 'POST')
 }

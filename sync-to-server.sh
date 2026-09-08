@@ -116,6 +116,7 @@ rsync -avz \
   --exclude '.pytest_cache' \
   --exclude 'video-project.zip' \
   --exclude '*.zip' \
+  --exclude 'imports/' \
   --exclude 'web/public/s/' \
   --exclude 'web/public/media/projects/' \
   --include 'web/public/media/tts/demos/***' \
@@ -156,7 +157,7 @@ echo "Выставляю права на статичные медиа (nginx ч
 ssh_cmd "find '$REMOTE_DIR/web/public/media' -mindepth 1 -maxdepth 1 ! -name projects ! -name tts -exec chmod -R a+rX {} +" || true
 ssh_cmd "chmod -R a+rX '$REMOTE_DIR/web/public/media/tts/demos' '$REMOTE_DIR/web/public/media/tts/starter' 2>/dev/null" || true
 
-SYNC_SKIP_NOTE="Не копировались (живут только на проде): web/public/media/projects/, web/public/media/tts/* кроме demos/starter, web/public/s/"
+SYNC_SKIP_NOTE="Не копировались (живут только на проде): web/public/media/projects/, web/public/media/tts/* кроме demos/starter, web/public/s/. Локальные дампы: imports/"
 
 if [ "$DEPLOY" = 1 ]; then
   echo ""

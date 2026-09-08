@@ -1,11 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { createPortal } from 'react-dom'
 import type { ChangeEvent, DragEvent, RefObject } from 'react'
 import { Check, Images, Link2, Music, Plus, Search, Trash2, Upload, X } from 'lucide-react'
 import { FolderCombobox, type FolderOption } from '@/components/FolderCombobox'
 import { LibraryAudioRow } from '@/components/editor/LibraryAudioRow'
 import type { LibraryTab, ProjectAudioItem } from '@/components/editor/editorTypes'
-import { LIB_SRC_MIME } from '@/components/editor/timelineMath'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -29,6 +28,7 @@ import { cn } from '@/lib/utils'
 import {
   dataTransferHasFiles,
   libraryFilesFromDataTransfer,
+  type LibraryImportProgress,
 } from '@/lib/mediaUpload'
 import { isVideoSrc } from '@/types/story'
 
@@ -48,22 +48,20 @@ type Props = {
   libError: string | null
   libUploadError: string | null
   libUploading: boolean
+  libUploadProgress: LibraryImportProgress | null
   libFileHover: boolean
   setLibFileHover: (v: boolean) => void
   libraryUploadFolderLabel: string
   libFileInputRef: RefObject<HTMLInputElement | null>
   importLibraryFiles: (files: File[]) => void
   libDragSrc: string | null
-  setLibDragSrc: (src: string | null) => void
-  setLibDropClipId: (id: string | null) => void
-  setLibDropOnPreview: (v: boolean) => void
   usedInProject: Set<string>
   libFocusSrcs: string[]
   libraryThumbUrl: (src: string) => string
   libraryFileName: (src: string) => string
   onLibraryClick: (src: string) => void
   onLibraryPick: (src: string) => void
-  onLibItemDragStart?: () => void
+  beginLibPointerDrag: (src: string, thumb: string, event: ReactPointerEvent) => void
   deleteLibrarySrc: (src: string) => void
   deleteLibrarySrcs: (srcs: string[]) => void | Promise<void>
   setMediaUrlOpen: (open: boolean) => void
@@ -101,22 +99,20 @@ export function LibrarySheet({
   libError,
   libUploadError,
   libUploading,
+  libUploadProgress,
   libFileHover,
   setLibFileHover,
   libraryUploadFolderLabel,
   libFileInputRef,
   importLibraryFiles,
   libDragSrc,
-  setLibDragSrc,
-  setLibDropClipId,
-  setLibDropOnPreview,
   usedInProject,
   libFocusSrcs,
   libraryThumbUrl,
   libraryFileName,
   onLibraryClick,
   onLibraryPick,
-  onLibItemDragStart,
+  beginLibPointerDrag,
   deleteLibrarySrc,
   deleteLibrarySrcs,
   setMediaUrlOpen,
@@ -203,15 +199,11 @@ export function LibrarySheet({
     <>
       <Sheet
         open={open}
-        modal={!libDragSrc}
-        disablePointerDismissal={Boolean(libDragSrc || libFileHover || libUploading)}
-        onOpenChange={(next, details) => onOpenChange(next, details)}
+        modal={false}
+        disablePointerDismissal={Boolean(libFileHover || libUploading)}
+        onOpenChange={onOpenChange}
       >
-        <SheetContent
-          side="right"
-          showOverlay={!libDragSrc}
-          className="w-full gap-0 overflow-hidden p-0 sm:max-w-xl"
-        >
+        <SheetContent side="right" className="w-full gap-0 overflow-hidden p-0 sm:max-w-xl">
           <SheetHeader className="border-b pr-12">
             <SheetTitle>Медиатека</SheetTitle>
             <SheetDescription>
@@ -300,12 +292,52 @@ export function LibrarySheet({
                 <Upload data-icon="inline-start" aria-hidden />
                 <span>
                   {libUploading
-                    ? 'Загрузка…'
+                    ? libUploadProgress?.phase === 'scan'
+                      ? 'Читаю папку…'
+                      : libUploadProgress?.phase === 'resize'
+                        ? 'Ресайз…'
+                        : 'Импорт…'
                     : libFileHover
                       ? 'Отпустите, чтобы добавить в медиатеку'
-                      : `Перетащите фото или видео сюда или нажмите · папка: ${libraryUploadFolderLabel}`}
+                      : `Перетащите фото, видео или папку сюда или нажмите · папка: ${libraryUploadFolderLabel}`}
                 </span>
               </Button>
+              {libUploadProgress ? (
+                <div className="rounded-lg border bg-muted/40 p-2">
+                  <div className="mb-1 flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                    <span className="min-w-0 truncate">
+                      {libUploadProgress.phase === 'scan'
+                        ? `Читаю папку… найдено ${libUploadProgress.current}`
+                        : libUploadProgress.phase === 'resize'
+                          ? `Ресайз ${libUploadProgress.current} из ${libUploadProgress.total}${
+                              libUploadProgress.fileName ? ` · ${libUploadProgress.fileName}` : ''
+                            }`
+                          : `Импорт ${libUploadProgress.current} из ${libUploadProgress.total}${
+                              libUploadProgress.fileName ? ` · ${libUploadProgress.fileName}` : ''
+                            }`}
+                    </span>
+                    <span className="shrink-0 tabular-nums">
+                      {libUploadProgress.phase === 'scan'
+                        ? `${libUploadProgress.current}`
+                        : `${libUploadProgress.percent}%`}
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-background">
+                    <div
+                      className={
+                        libUploadProgress.phase === 'scan'
+                          ? 'h-full w-1/3 animate-pulse rounded-full bg-primary'
+                          : 'h-full rounded-full bg-primary transition-[width]'
+                      }
+                      style={
+                        libUploadProgress.phase === 'scan'
+                          ? undefined
+                          : { width: `${libUploadProgress.percent}%` }
+                      }
+                    />
+                  </div>
+                </div>
+              ) : null}
               {libUploadError ? <p className="text-destructive text-xs">{libUploadError}</p> : null}
               <div className="flex flex-wrap gap-2">
                 <Button
@@ -430,7 +462,7 @@ export function LibrarySheet({
                             render={
                               <button
                                 type="button"
-                                draggable={!selectMode}
+                                draggable={false}
                                 aria-pressed={selectMode ? selected : undefined}
                                 className={`editor-lib-item${libDragSrc === src ? ' is-dragging' : ''}${
                                   libFocusSrcs.includes(src) ? ' is-new' : ''
@@ -443,6 +475,11 @@ export function LibrarySheet({
                                     ? `${libraryFileName(src)} · в проекте`
                                     : libraryFileName(src)
                                 }
+                                onPointerDown={(e) => {
+                                  if (selectMode || e.button !== 0) return
+                                  beginLibPointerDrag(src, libraryThumbUrl(src), e)
+                                }}
+                                onDragStart={(e) => e.preventDefault()}
                                 onClick={() => {
                                   if (selectMode) {
                                     toggleSelected(src)
@@ -457,22 +494,6 @@ export function LibrarySheet({
                                   }
                                   e.preventDefault()
                                   onLibraryPick(src)
-                                }}
-                                onDragStart={(e) => {
-                                  if (selectMode) {
-                                    e.preventDefault()
-                                    return
-                                  }
-                                  onLibItemDragStart?.()
-                                  setLibDragSrc(src)
-                                  e.dataTransfer.effectAllowed = 'copy'
-                                  e.dataTransfer.setData(LIB_SRC_MIME, src)
-                                  e.dataTransfer.setData('text/plain', `lib:${src}`)
-                                }}
-                                onDragEnd={() => {
-                                  setLibDragSrc(null)
-                                  setLibDropClipId(null)
-                                  setLibDropOnPreview(false)
                                 }}
                               >
                                 {isVideoSrc(src) ? (

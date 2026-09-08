@@ -62,6 +62,7 @@ import {
   leaveProject,
   listProjectTeam,
   removeProjectMember,
+  revokeProjectInvite,
 } from './members.mjs'
 
 const CODE_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
@@ -1304,6 +1305,33 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
     })
     if (!left.ok) {
       json(res, left.status, { error: left.error })
+      return true
+    }
+    json(res, 200, { ok: true })
+    return true
+  }
+
+  const teamInviteMatch = url.match(/^\/api\/projects\/([^/]+)\/team\/invites\/([^/]+)\/?$/)
+  if (teamInviteMatch) {
+    const project = await projectForUser(userId, decodeURIComponent(teamInviteMatch[1]))
+    if (!project) {
+      json(res, 404, { error: 'project not found' })
+      return true
+    }
+    if (!canManageProject(project)) {
+      json(res, 403, { error: 'Командой управляет владелец объекта' })
+      return true
+    }
+    if (method !== 'DELETE') {
+      json(res, 405, { error: 'method not allowed' })
+      return true
+    }
+    const revoked = await revokeProjectInvite({
+      projectId: project.id,
+      inviteId: decodeURIComponent(teamInviteMatch[2]),
+    })
+    if (!revoked.ok) {
+      json(res, revoked.status, { error: revoked.error })
       return true
     }
     json(res, 200, { ok: true })
