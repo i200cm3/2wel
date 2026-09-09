@@ -204,6 +204,42 @@ function alwaysEndFamilyKey(entry) {
   return group || entry.id
 }
 
+/**
+ * Взаимоисключающие opening-intro: intro_* / intro ↔ by-dates.
+ * greeting_* и прочие alwaysStart не схлопываем, даже если group=intro.
+ */
+function alwaysStartFamilyKey(entry) {
+  const id = String(entry.id ?? '')
+  const subgroup = String(entry.subgroup ?? '')
+    .trim()
+    .toLowerCase()
+  if (
+    subgroup === 'by-dates' ||
+    id === 'intro' ||
+    id.startsWith('intro_') ||
+    id.includes('by_dates') ||
+    id.includes('by-dates')
+  ) {
+    return 'intro-opening'
+  }
+  return id
+}
+
+/** alwaysStart: score>0; для intro — не больше одного opening (с датами / без). */
+function pickAlwaysStartIds(alwaysStartIds, findEntry) {
+  const eligible = alwaysStartIds
+    .map((id) => findEntry(id))
+    .filter((entry) => entry && entry.score > 0)
+    .sort(compareAssemblyEntries)
+  const bestByFamily = new Map()
+  for (const entry of eligible) {
+    const key = alwaysStartFamilyKey(entry)
+    if (!bestByFamily.has(key)) bestByFamily.set(key, entry.id)
+  }
+  const chosen = new Set(bestByFamily.values())
+  return alwaysStartIds.filter((id) => chosen.has(id))
+}
+
 function pickAlwaysEndIds(alwaysEndIds, findEntry) {
   const eligible = alwaysEndIds
     .map((id) => findEntry(id))
@@ -231,10 +267,82 @@ const FILL_GROUP_ORDER = [
   'price_value',
 ]
 const FILL_GROUP_RANK = new Map(FILL_GROUP_ORDER.map((group, index) => [group, index]))
+
+/** Обзорная витрина, когда о госте почти ничего не известно (только имя / пустые сигналы). */
+const COLD_START_GROUP_ORDER = [
+  'about',
+  'territory',
+  'treatment',
+  'food',
+  'rooms',
+  'wellness',
+  'leisure',
+  'location',
+  'trust',
+  'price',
+  'price_value',
+]
+const COLD_START_GROUP_RANK = new Map(COLD_START_GROUP_ORDER.map((group, index) => [group, index]))
+const COLD_START_EXCLUDED_GROUPS = new Set([
+  'intro',
+  'purpose',
+  'objection',
+  'objections',
+  'next-step',
+  'cta',
+  'family',
+  'couple',
+  'senior',
+])
 const SOFT_FILL_MAX_EXTRA = 3
 
 function isFillEligibleGroup(group) {
   return FILL_GROUP_RANK.has(group)
+}
+
+function isNicheColdStartSubgroup(subgroup) {
+  const value = String(subgroup ?? '')
+    .trim()
+    .toLowerCase()
+  if (!value) return false
+  return value.startsWith('profile-') || value.startsWith('season-') || value === 'family'
+}
+
+function isColdStartEligibleBlock(entry) {
+  if (entry.score <= 0) return false
+  if (entry.hasAudienceTags) return false
+  if (COLD_START_EXCLUDED_GROUPS.has(entry.group)) return false
+  if (!COLD_START_GROUP_RANK.has(entry.group)) return false
+  if (isNicheColdStartSubgroup(entry.subgroup)) return false
+  return true
+}
+
+function selectColdStartOverview({
+  candidates,
+  ordered,
+  selectedGroups,
+  selectedSubgroups,
+  pushCandidate,
+  maxBlocks,
+  alwaysEndPending,
+}) {
+  for (const group of COLD_START_GROUP_ORDER) {
+    if (ordered.length + alwaysEndPending() >= maxBlocks) return
+    if (selectedGroups.has(group)) continue
+    const entry = candidates
+      .filter(
+        (item) =>
+          item.group === group &&
+          isColdStartEligibleBlock(item) &&
+          !ordered.includes(item.id) &&
+          !selectedSubgroups.has(`${item.group}.${item.subgroup}`),
+      )
+      .sort(compareAssemblyEntries)[0]
+    if (!entry) continue
+    if (pushCandidate(entry)) {
+      entry.reason = entry.reason ? `${entry.reason} · обзор` : 'обзор при пустых параметрах'
+    }
+  }
 }
 
 function fillUncoveredGroups({
@@ -283,16 +391,17 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
   const sequences = config?.sequences ?? {}
   const maxSec = Math.max(15, Number(rules?.maxAutoplaySec) || 90)
   const maxBlocks = Math.max(1, Number(rules?.maxBlocks) || 5)
-  const alwaysStart = (Array.isArray(rules?.alwaysStartIds) ? rules.alwaysStartIds : []).filter(
+  const alwaysStartListed = (Array.isArray(rules?.alwaysStartIds) ? rules.alwaysStartIds : []).filter(
     (id) => sequences[id] && isBlockEnabled(config, id),
   )
+  const findEntry = (id) => entries.find((item) => item.id === id)
+  const alwaysStart = pickAlwaysStartIds(alwaysStartListed, findEntry)
   const alwaysEnd = (Array.isArray(rules?.alwaysEndIds) ? rules.alwaysEndIds : []).filter(
     (id) => sequences[id] && isBlockEnabled(config, id) && !alwaysStart.includes(id),
   )
   const ordered = []
   let usedSec = 0
 
-  const findEntry = (id) => entries.find((item) => item.id === id)
   const alwaysEndEligible = pickAlwaysEndIds(alwaysEnd, findEntry)
   const alwaysEndSec = alwaysEndEligible.reduce((sum, id) => sum + (findEntry(id)?.durationSec ?? 0), 0)
 
@@ -381,6 +490,7 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
   const isPrimaryTopicBlock = (entry) =>
     entry.topicHits.some((tag) => !['intro', 'cta', 'next-step'].includes(tag)) &&
     !['intro', 'objection', 'objections', 'purpose', 'next-step', 'cta'].includes(entry.group)
+  const isColdStart = !hasTopicInput && !hasAudienceInput && !hasObjectionInput
 
   const selectPrimaryTopics = () => {
     let used = 0
@@ -406,58 +516,65 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
     }
   }
 
-  const openingSlots = [
-    {
-      limit: hasAudienceInput ? 1 : 0,
-      predicate: (entry) =>
-        entry.audienceHit && !['next-step', 'cta', 'objection', 'objections'].includes(entry.group),
-    },
-    {
-      limit: hasTopicInput ? 1 : 0,
-      predicate: (entry) => entry.group === 'purpose' && entry.topicHits.includes('purpose'),
-    },
-  ]
+  if (isColdStart) {
+    selectColdStartOverview({
+      candidates,
+      ordered,
+      selectedGroups,
+      selectedSubgroups,
+      pushCandidate,
+      maxBlocks,
+      alwaysEndPending: () => tailPendingCount(),
+    })
+  } else {
+    const openingSlots = [
+      {
+        limit: hasAudienceInput ? 1 : 0,
+        predicate: (entry) =>
+          entry.audienceHit && !['next-step', 'cta', 'objection', 'objections'].includes(entry.group),
+      },
+      {
+        limit: hasTopicInput ? 1 : 0,
+        predicate: (entry) => entry.group === 'purpose' && entry.topicHits.includes('purpose'),
+      },
+    ]
 
-  /** Body closing only — next-step is selected after fill so CTA stays adjacent. */
-  const bodyClosingSlots = [
-    {
-      limit: objectionLimit,
-      predicate: (entry) =>
-        entry.objectionHits.length > 0 && ['objection', 'objections'].includes(entry.group),
-    },
-    {
-      limit: hasTopicInput || hasAudienceInput || hasObjectionInput ? 1 : 2,
-      predicate: (entry) =>
-        (entry.topicHits.length > 0 || entry.audienceHit || entry.objectionHits.length > 0) &&
-        !selectedGroups.has(entry.group) &&
-        !['intro', 'purpose', 'next-step', 'cta'].includes(entry.group),
-    },
-  ]
+    /** Body closing only — next-step is selected after fill so CTA stays adjacent. */
+    const bodyClosingSlots = [
+      {
+        limit: objectionLimit,
+        predicate: (entry) =>
+          entry.objectionHits.length > 0 && ['objection', 'objections'].includes(entry.group),
+      },
+      {
+        limit: 1,
+        predicate: (entry) =>
+          (entry.topicHits.length > 0 || entry.audienceHit || entry.objectionHits.length > 0) &&
+          !selectedGroups.has(entry.group) &&
+          !['intro', 'purpose', 'next-step', 'cta'].includes(entry.group),
+      },
+    ]
 
-  openingSlots.forEach(selectSlot)
-  selectPrimaryTopics()
-  bodyClosingSlots.forEach(selectSlot)
+    openingSlots.forEach(selectSlot)
+    selectPrimaryTopics()
+    bodyClosingSlots.forEach(selectSlot)
 
-  for (const entry of candidates) {
-    if (ordered.length + tailPendingCount(entry) >= maxBlocks) break
-    if (ordered.includes(entry.id)) continue
-    if (['intro', 'purpose', 'next-step', 'cta'].includes(entry.group)) continue
-    if (
-      (hasTopicInput || hasAudienceInput || hasObjectionInput) &&
-      !entry.topicHits.length &&
-      !entry.objectionHits.length &&
-      !entry.audienceHit
-    ) {
-      continue
+    for (const entry of candidates) {
+      if (ordered.length + tailPendingCount(entry) >= maxBlocks) break
+      if (ordered.includes(entry.id)) continue
+      if (['intro', 'purpose', 'next-step', 'cta'].includes(entry.group)) continue
+      if (!entry.topicHits.length && !entry.objectionHits.length && !entry.audienceHit) {
+        continue
+      }
+      if (selectedGroups.has(entry.group)) continue
+      if (selectedSubgroups.has(`${entry.group}.${entry.subgroup}`)) continue
+      pushCandidate(entry)
     }
-    if (selectedGroups.has(entry.group)) continue
-    if (selectedSubgroups.has(`${entry.group}.${entry.subgroup}`)) continue
-    pushCandidate(entry)
   }
 
   fillUncoveredGroups({
     mode: summary.fillRemaining ?? 'off',
-    candidates,
+    candidates: isColdStart ? candidates.filter(isColdStartEligibleBlock) : candidates,
     ordered,
     selectedGroups,
     selectedSubgroups,
@@ -541,6 +658,7 @@ function scoreSequenceEntries(config, summary) {
       topicHits,
       objectionHits,
       audienceHit: Boolean(audienceHit),
+      hasAudienceTags: meta.audienceTags.length > 0,
       priority: meta.priority,
       reason: reasons.join(' · '),
       placement: placementForId(config, sequence.id),
@@ -638,6 +756,51 @@ export function applyDerivedFlowToConfig(config, derivedFlow) {
     if (flow.length) next = { ...config, flow }
   }
   return hideDisabledBlocks(next)
+}
+
+/** Сводка как в Constructor V2 при «только имя» (cold start). */
+export function nameOnlyGuestSummary(guestName = 'Гость') {
+  const name = String(guestName ?? '').trim() || 'Гость'
+  return normalizeGuestSummary({
+    guestName: name,
+    dates: '',
+    partyType: '',
+    room: '',
+    topics: '',
+    objections: '',
+    confidence: '0.8',
+    fillRemaining: 'off',
+  })
+}
+
+/**
+ * Про → Старт: зафиксировать autoplay как name-only adaptive-сборку и выключить adaptive.
+ * Меню/блоки не удаляем — меняется только flow и флаги assembly.
+ */
+export function freezeAdaptiveConfigForStart(config, guestName) {
+  if (!config || typeof config !== 'object') return config
+  if (!isAdaptiveAssemblyEnabled(config)) return config
+
+  const name =
+    String(guestName ?? '').trim() ||
+    String(config.defaultGuestName ?? '').trim() ||
+    'Гость'
+  const flow = deriveFlowIds(config, nameOnlyGuestSummary(name))
+  const withFlow = applyDerivedFlowToConfig(config, flow)
+  const prev = withFlow.constructorV2 && typeof withFlow.constructorV2 === 'object' ? withFlow.constructorV2 : {}
+  const prevAssembly = prev.assembly && typeof prev.assembly === 'object' ? prev.assembly : {}
+  return {
+    ...withFlow,
+    constructorV2: {
+      ...prev,
+      mode: 'fixed',
+      assembly: {
+        ...prevAssembly,
+        enabled: false,
+        mode: 'fixed',
+      },
+    },
+  }
 }
 
 export function computeLinkAssembly(config, guestName, summaryInput = {}) {

@@ -18,6 +18,8 @@ const LANDSCAPE_ASPECT = 16 / 9
 const IMAGE_RE = /\.(jpe?g|png|webp)$/i
 const VIDEO_RE = /\.(mp4|webm|mov|m4v)$/i
 const PREVIEW_PATH_RE = /^\/(?:api\/public\/links\/)?([a-z0-9]{3,16})\/preview\.jpe?g$/i
+const TITLE_COLOR = '#e8dfd0'
+const BAR_COLOR = '#0a100e'
 const RESERVED_PREVIEW_IDS = new Set([
   'app',
   'api',

@@ -43,6 +43,8 @@ type ScoredAssemblyEntry = AssemblyEntry & {
   topicHits: string[]
   objectionHits: string[]
   audienceHit: boolean
+  /** Блок размечен под конкретную аудиторию (family/couple/…) — не для cold-start. */
+  hasAudienceTags: boolean
   priority: number
 }
 
@@ -165,6 +167,7 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
       topicHits,
       objectionHits,
       audienceHit: Boolean(audienceHit),
+      hasAudienceTags: meta.audienceTags.length > 0,
       priority: meta.priority,
     }
   })
@@ -215,11 +218,26 @@ function alwaysEndFamilyKey(entry: ScoredAssemblyEntry): string {
   return group || entry.id
 }
 
+/**
+ * Взаимоисключающие opening-intro: intro_* / intro ↔ by-dates.
+ * greeting_* и прочие alwaysStart не схлопываем, даже если group=intro.
+ */
 function alwaysStartFamilyKey(entry: ScoredAssemblyEntry): string {
-  return entry.group.trim().toLowerCase() || entry.id
+  const id = entry.id
+  const subgroup = entry.subgroup.trim().toLowerCase()
+  if (
+    subgroup === 'by-dates' ||
+    id === 'intro' ||
+    id.startsWith('intro_') ||
+    id.includes('by_dates') ||
+    id.includes('by-dates')
+  ) {
+    return 'intro-opening'
+  }
+  return id
 }
 
-/** alwaysStart: score>0 и не больше одного блока на группу (intro с датами / без дат). */
+/** alwaysStart: score>0; для intro — не больше одного opening (с датами / без). */
 function pickAlwaysStartIds(
   alwaysStartIds: string[],
   findEntry: (id: string) => ScoredAssemblyEntry | undefined,
@@ -359,6 +377,13 @@ function deriveAdaptiveFlowIds(
     }
   }
 
+  const isColdStart = !hasTopicInput && !hasAudienceInput && !hasObjectionInput
+  const primaryTopicLimit = hasTopicInput ? (hasAudienceInput && hasObjectionInput ? 1 : 2) : 1
+  const objectionLimit = hasObjectionInput ? (maxBlocks <= 7 ? 1 : 2) : 0
+  const isPrimaryTopicBlock = (entry: ScoredAssemblyEntry) =>
+    entry.topicHits.some((tag) => !['intro', 'cta', 'next-step'].includes(tag)) &&
+    !['intro', 'objection', 'objections', 'purpose', 'next-step', 'cta'].includes(entry.group)
+
   const selectPrimaryTopics = () => {
     let used = 0
     const orderedTopics = summary.topics.filter((tag) => !['intro', 'cta', 'next-step'].includes(tag))
@@ -383,62 +408,65 @@ function deriveAdaptiveFlowIds(
     }
   }
 
-  const primaryTopicLimit = hasTopicInput ? (hasAudienceInput && hasObjectionInput ? 1 : 2) : 1
-  const objectionLimit = hasObjectionInput ? (maxBlocks <= 7 ? 1 : 2) : 0
-  const isPrimaryTopicBlock = (entry: ScoredAssemblyEntry) =>
-    entry.topicHits.some((tag) => !['intro', 'cta', 'next-step'].includes(tag)) &&
-    !['intro', 'objection', 'objections', 'purpose', 'next-step', 'cta'].includes(entry.group)
+  if (isColdStart) {
+    selectColdStartOverview({
+      candidates,
+      ordered,
+      selectedGroups,
+      selectedSubgroups,
+      pushCandidate,
+      maxBlocks,
+      alwaysEndPending: () => tailPendingCount(),
+    })
+  } else {
+    const openingSlots: AssemblySlot[] = [
+      {
+        limit: hasAudienceInput ? 1 : 0,
+        predicate: (entry) =>
+          entry.audienceHit && !['next-step', 'cta', 'objection', 'objections'].includes(entry.group),
+      },
+      {
+        limit: hasTopicInput ? 1 : 0,
+        predicate: (entry) => entry.group === 'purpose' && entry.topicHits.includes('purpose'),
+      },
+    ]
 
-  const openingSlots: AssemblySlot[] = [
-    {
-      limit: hasAudienceInput ? 1 : 0,
-      predicate: (entry) => entry.audienceHit && !['next-step', 'cta', 'objection', 'objections'].includes(entry.group),
-    },
-    {
-      limit: hasTopicInput ? 1 : 0,
-      predicate: (entry) => entry.group === 'purpose' && entry.topicHits.includes('purpose'),
-    },
-  ]
+    /** Body closing only — next-step is selected after fill so CTA stays adjacent. */
+    const bodyClosingSlots: AssemblySlot[] = [
+      {
+        limit: objectionLimit,
+        predicate: (entry) =>
+          entry.objectionHits.length > 0 && ['objection', 'objections'].includes(entry.group),
+      },
+      {
+        limit: 1,
+        predicate: (entry) =>
+          (entry.topicHits.length > 0 || entry.audienceHit || entry.objectionHits.length > 0) &&
+          !selectedGroups.has(entry.group) &&
+          !['intro', 'purpose', 'next-step', 'cta'].includes(entry.group),
+      },
+    ]
 
-  /** Body closing only — next-step is selected after fill so CTA stays adjacent. */
-  const bodyClosingSlots: AssemblySlot[] = [
-    {
-      limit: objectionLimit,
-      predicate: (entry) => entry.objectionHits.length > 0 && ['objection', 'objections'].includes(entry.group),
-    },
-    {
-      limit: hasTopicInput || hasAudienceInput || hasObjectionInput ? 1 : 2,
-      predicate: (entry) =>
-        (entry.topicHits.length > 0 || entry.audienceHit || entry.objectionHits.length > 0) &&
-        !selectedGroups.has(entry.group) &&
-        !['intro', 'purpose', 'next-step', 'cta'].includes(entry.group),
-    },
-  ]
+    openingSlots.forEach(selectSlot)
+    selectPrimaryTopics()
+    bodyClosingSlots.forEach(selectSlot)
 
-  openingSlots.forEach(selectSlot)
-  selectPrimaryTopics()
-  bodyClosingSlots.forEach(selectSlot)
-
-  for (const entry of candidates) {
-    if (ordered.length + tailPendingCount(entry) >= maxBlocks) break
-    if (ordered.includes(entry.id)) continue
-    if (['intro', 'purpose', 'next-step', 'cta'].includes(entry.group)) continue
-    if (
-      (hasTopicInput || hasAudienceInput || hasObjectionInput) &&
-      !entry.topicHits.length &&
-      !entry.objectionHits.length &&
-      !entry.audienceHit
-    ) {
-      continue
+    for (const entry of candidates) {
+      if (ordered.length + tailPendingCount(entry) >= maxBlocks) break
+      if (ordered.includes(entry.id)) continue
+      if (['intro', 'purpose', 'next-step', 'cta'].includes(entry.group)) continue
+      if (!entry.topicHits.length && !entry.objectionHits.length && !entry.audienceHit) {
+        continue
+      }
+      if (selectedGroups.has(entry.group)) continue
+      if (selectedSubgroups.has(`${entry.group}.${entry.subgroup}`)) continue
+      pushCandidate(entry)
     }
-    if (selectedGroups.has(entry.group)) continue
-    if (selectedSubgroups.has(`${entry.group}.${entry.subgroup}`)) continue
-    pushCandidate(entry)
   }
 
   fillUncoveredGroups({
     mode: summary.fillRemaining ?? 'off',
-    candidates,
+    candidates: isColdStart ? candidates.filter(isColdStartEligibleBlock) : candidates,
     ordered,
     selectedGroups,
     selectedSubgroups,
@@ -477,10 +505,88 @@ const FILL_GROUP_RANK: Map<string, number> = new Map(
   FILL_GROUP_ORDER.map((group, index) => [group, index]),
 )
 
+/** Обзорная витрина, когда о госте почти ничего не известно (только имя / пустые сигналы). */
+const COLD_START_GROUP_ORDER = [
+  'about',
+  'territory',
+  'treatment',
+  'food',
+  'rooms',
+  'wellness',
+  'leisure',
+  'location',
+  'trust',
+  'price',
+  'price_value',
+] as const
+
+const COLD_START_GROUP_RANK: Map<string, number> = new Map(
+  COLD_START_GROUP_ORDER.map((group, index) => [group, index]),
+)
+
+const COLD_START_EXCLUDED_GROUPS = new Set([
+  'intro',
+  'purpose',
+  'objection',
+  'objections',
+  'next-step',
+  'cta',
+  'family',
+  'couple',
+  'senior',
+])
+
 const SOFT_FILL_MAX_EXTRA = 3
 
 function isFillEligibleGroup(group: string): boolean {
   return FILL_GROUP_RANK.has(group)
+}
+
+function isNicheColdStartSubgroup(subgroup: string): boolean {
+  const value = subgroup.trim().toLowerCase()
+  if (!value) return false
+  return value.startsWith('profile-') || value.startsWith('season-') || value === 'family'
+}
+
+function isColdStartEligibleBlock(entry: ScoredAssemblyEntry): boolean {
+  if (entry.score <= 0) return false
+  if (entry.hasAudienceTags) return false
+  if (COLD_START_EXCLUDED_GROUPS.has(entry.group)) return false
+  if (!COLD_START_GROUP_RANK.has(entry.group)) return false
+  if (isNicheColdStartSubgroup(entry.subgroup)) return false
+  return true
+}
+
+/** Тело autoplay при пустых partyType/topics/objections — нейтральный обзор места. */
+function selectColdStartOverview(args: {
+  candidates: ScoredAssemblyEntry[]
+  ordered: string[]
+  selectedGroups: Set<string>
+  selectedSubgroups: Set<string>
+  pushCandidate: (entry: ScoredAssemblyEntry) => boolean
+  maxBlocks: number
+  alwaysEndPending: () => number
+}): void {
+  const { candidates, ordered, selectedGroups, selectedSubgroups, pushCandidate, maxBlocks, alwaysEndPending } =
+    args
+
+  for (const group of COLD_START_GROUP_ORDER) {
+    if (ordered.length + alwaysEndPending() >= maxBlocks) return
+    if (selectedGroups.has(group)) continue
+    const entry = candidates
+      .filter(
+        (item) =>
+          item.group === group &&
+          isColdStartEligibleBlock(item) &&
+          !ordered.includes(item.id) &&
+          !selectedSubgroups.has(`${item.group}.${item.subgroup}`),
+      )
+      .sort(compareAssemblyEntries)[0]
+    if (!entry) continue
+    if (pushCandidate(entry)) {
+      entry.reason = entry.reason ? `${entry.reason} · обзор` : 'обзор при пустых параметрах'
+    }
+  }
 }
 
 function fillUncoveredGroups(args: {

@@ -143,14 +143,14 @@ describe('deriveFlowIds · adaptive slots', () => {
 
     assert.deepEqual(flow, [
       'intro',
+      'greeting',
       'family_with_kids',
       'rooms_family',
       'objection_price',
-      'food_family',
       'next_step_ask_price',
       'cta_whatsapp',
     ])
-    assert.equal(flow.includes('greeting'), false)
+    assert.equal(flow.includes('greeting'), true)
   })
 
   it('starts with dated intro when dates exist and generic intro when they do not', () => {
@@ -162,7 +162,7 @@ describe('deriveFlowIds · adaptive slots', () => {
       priority: 8,
       requiresFields: ['dates'],
     })
-    config.constructorV2!.assembly.alwaysStartIds = ['intro', 'intro_by_dates', 'greeting']
+    config.constructorV2!.assembly.alwaysStartIds = ['intro', 'intro_by_dates']
 
     const withDates = deriveFlowIds(config, {
       guestName: 'Анна',
@@ -175,7 +175,6 @@ describe('deriveFlowIds · adaptive slots', () => {
     })
     assert.equal(withDates[0], 'intro_by_dates')
     assert.equal(withDates.includes('intro'), false)
-    assert.equal(withDates.includes('greeting'), false)
 
     const withoutDates = deriveFlowIds(config, {
       guestName: 'Анна',
@@ -188,7 +187,6 @@ describe('deriveFlowIds · adaptive slots', () => {
     })
     assert.equal(withoutDates[0], 'intro')
     assert.equal(withoutDates.includes('intro_by_dates'), false)
-    assert.equal(withoutDates.includes('greeting'), false)
   })
 
   it('soft-fills uncovered groups when budget remains', () => {
@@ -293,6 +291,90 @@ describe('deriveFlowIds · adaptive slots', () => {
     const ctaAt = flow.indexOf('cta_whatsapp')
     assert.ok(detoxAt < nextAt, 'fill must come before next-step')
     assert.equal(nextAt + 1, ctaAt, 'next-step must sit directly before CTA')
+  })
+
+  it('cold-starts with a neutral overview when only the guest name is known', () => {
+    const config = adaptiveConfig()
+    config.constructorV2!.assembly.maxAutoplaySec = 120
+    config.constructorV2!.assembly.maxBlocks = 10
+    for (const [id, patch] of [
+      ['territory_walks', { group: 'territory', priority: 6, topicTags: ['territory'] }],
+      ['treatment_individual_plan', { group: 'treatment', subgroup: 'individual-plan', priority: 7, topicTags: ['treatment'] }],
+      ['treatment_profile_cardio', {
+        group: 'treatment',
+        subgroup: 'profile-cardio',
+        priority: 9,
+        audienceTags: ['senior'],
+        topicTags: ['treatment'],
+      }],
+      ['food_diet', { group: 'food', subgroup: 'diet', priority: 7, topicTags: ['food'] }],
+      ['leisure_active', { group: 'leisure', subgroup: 'active', priority: 5, topicTags: ['leisure'] }],
+      ['couple_quiet_rest', {
+        group: 'couple',
+        subgroup: 'quiet-rest',
+        priority: 9,
+        audienceTags: ['couple'],
+        topicTags: ['couple'],
+      }],
+      ['objection_dates_not_fixed', {
+        group: 'objection',
+        subgroup: 'dates-not-fixed',
+        priority: 9,
+        objectionTags: ['dates-not-fixed'],
+      }],
+    ] as const) {
+      config.sequences[id] = sequence(id)
+      config.constructorV2!.sequenceMetaById[id] = meta(patch)
+    }
+
+    const flow = deriveFlowIds(config, {
+      guestName: 'Иван',
+      dates: '',
+      partyType: '',
+      topics: '',
+      objections: '',
+      confidence: '0.8',
+      room: '',
+      fillRemaining: 'off',
+    })
+
+    assert.equal(flow[0], 'intro')
+    assert.equal(flow[flow.length - 1], 'cta_whatsapp')
+    assert.ok(flow.includes('territory_walks'))
+    assert.ok(flow.includes('treatment_individual_plan'))
+    assert.ok(flow.includes('food_diet'))
+    assert.ok(flow.includes('leisure_active'))
+    assert.equal(flow.includes('family_with_kids'), false)
+    assert.equal(flow.includes('couple_quiet_rest'), false)
+    assert.equal(flow.includes('food_family'), false)
+    assert.equal(flow.includes('treatment_profile_cardio'), false)
+    assert.equal(flow.includes('objection_dates_not_fixed'), false)
+  })
+
+  it('keeps directed personalization when partyType is known', () => {
+    const config = adaptiveConfig()
+    config.constructorV2!.assembly.maxAutoplaySec = 120
+    config.constructorV2!.assembly.maxBlocks = 8
+    config.sequences.territory_walks = sequence('territory_walks')
+    config.constructorV2!.sequenceMetaById.territory_walks = meta({
+      group: 'territory',
+      priority: 9,
+      topicTags: ['territory'],
+    })
+
+    const flow = deriveFlowIds(config, {
+      guestName: 'Анна',
+      dates: '',
+      partyType: 'family',
+      topics: '',
+      objections: '',
+      confidence: '0.8',
+      room: '',
+      fillRemaining: 'off',
+    })
+
+    assert.ok(flow.includes('family_with_kids'))
+    assert.equal(flow.includes('territory_walks'), false)
   })
 })
 

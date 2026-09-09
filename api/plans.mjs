@@ -1,3 +1,4 @@
+import { freezeAdaptiveConfigForStart } from './assembly.mjs'
 import { query } from './db.js'
 
 /**
@@ -262,6 +263,37 @@ export async function changeProjectPlan(project, userId, requestedId) {
   }
 }
 
+/** При Про → Старт: зафиксировать в шаблонах name-only autoplay из adaptive V2. */
+export async function freezeProjectTemplatesForStart(projectId) {
+  const { rows } = await query(
+    `SELECT id, config, draft_config FROM templates WHERE project_id = $1`,
+    [projectId],
+  )
+  let updated = 0
+  for (const row of rows) {
+    const nextConfig = freezeAdaptiveConfigForStart(row.config)
+    const nextDraft =
+      row.draft_config != null ? freezeAdaptiveConfigForStart(row.draft_config) : row.draft_config
+    const configChanged = JSON.stringify(nextConfig) !== JSON.stringify(row.config)
+    const draftChanged = JSON.stringify(nextDraft) !== JSON.stringify(row.draft_config)
+    if (!configChanged && !draftChanged) continue
+    await query(
+      `UPDATE templates
+       SET config = $2::jsonb,
+           draft_config = $3::jsonb,
+           updated_at = now()
+       WHERE id = $1`,
+      [
+        row.id,
+        JSON.stringify(nextConfig ?? null),
+        nextDraft == null ? null : JSON.stringify(nextDraft),
+      ],
+    )
+    updated += 1
+  }
+  return { updated, total: rows.length }
+}
+
 /**
  * Админ включает Старт / Про сразу (пилот без оплаты).
  * В истории kind = upgrade|downgrade (constraint миграции 011).
@@ -284,6 +316,7 @@ export async function adminSetProjectPlan(project, adminUserId, requestedId) {
   }
 
   const kind = next.id === current.id ? 'cancelled' : isPlanUpgrade(current.id, next.id) ? 'upgrade' : 'downgrade'
+  const freezeForStart = current.id === 'pro' && next.id === 'start'
 
   await query(
     `UPDATE projects
@@ -299,7 +332,22 @@ export async function adminSetProjectPlan(project, adminUserId, requestedId) {
      VALUES ($1, $2, $3, $4, $5, now())`,
     [project.id, adminUserId ?? null, current.id, next.id, kind],
   )
-  return { ok: true, plan: await loadProjectPlan(project.id) }
+
+  let templatesFrozen = null
+  if (freezeForStart) {
+    try {
+      templatesFrozen = await freezeProjectTemplatesForStart(project.id)
+    } catch (err) {
+      console.error('freeze templates for start', project.id, err)
+      templatesFrozen = { error: err?.message || 'freeze_failed' }
+    }
+  }
+
+  return {
+    ok: true,
+    plan: await loadProjectPlan(project.id),
+    ...(templatesFrozen ? { templatesFrozen } : {}),
+  }
 }
 
 export function constructorForPlan(planId) {

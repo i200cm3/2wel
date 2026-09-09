@@ -133,13 +133,14 @@ describe('wrapTitleLines', () => {
 
 describe('renderLinkPreview', () => {
   it('собирает jpeg с титром, даже если фото нет', async () => {
+    const publicId = `testprev-${Date.now().toString(36)}`
     const { jpeg } = await renderLinkPreview({
       config: {
         flow: ['greeting'],
         sequences: { greeting: { id: 'greeting', title: 'Здравствуйте, {name}!' } },
       },
       guestName: 'иван',
-      publicId: 'testprev1',
+      publicId,
     })
     assert.ok(jpeg.length > 800)
     assert.equal(jpeg[0], 0xff)
