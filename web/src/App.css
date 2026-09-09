@@ -756,7 +756,7 @@ html.is-player-presentation #root {
   position: absolute;
   top: max(12px, env(safe-area-inset-top, 0px));
   right: max(12px, env(safe-area-inset-right, 0px));
-  z-index: 9;
+  z-index: 12;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -781,6 +781,8 @@ html.is-player-presentation #root {
   place-items: center;
   filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.55));
   pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .player-corner-btn:active {

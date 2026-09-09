@@ -267,80 +267,37 @@ const FILL_GROUP_ORDER = [
   'price_value',
 ]
 const FILL_GROUP_RANK = new Map(FILL_GROUP_ORDER.map((group, index) => [group, index]))
-
-/** Обзорная витрина, когда о госте почти ничего не известно (только имя / пустые сигналы). */
-const COLD_START_GROUP_ORDER = [
-  'about',
-  'territory',
-  'treatment',
-  'food',
-  'rooms',
-  'wellness',
-  'leisure',
-  'location',
-  'trust',
-  'price',
-  'price_value',
-]
-const COLD_START_GROUP_RANK = new Map(COLD_START_GROUP_ORDER.map((group, index) => [group, index]))
-const COLD_START_EXCLUDED_GROUPS = new Set([
-  'intro',
-  'purpose',
-  'objection',
-  'objections',
-  'next-step',
-  'cta',
-  'family',
-  'couple',
-  'senior',
-])
 const SOFT_FILL_MAX_EXTRA = 3
 
 function isFillEligibleGroup(group) {
   return FILL_GROUP_RANK.has(group)
 }
 
-function isNicheColdStartSubgroup(subgroup) {
-  const value = String(subgroup ?? '')
-    .trim()
-    .toLowerCase()
-  if (!value) return false
-  return value.startsWith('profile-') || value.startsWith('season-') || value === 'family'
-}
-
-function isColdStartEligibleBlock(entry) {
-  if (entry.score <= 0) return false
-  if (entry.hasAudienceTags) return false
-  if (COLD_START_EXCLUDED_GROUPS.has(entry.group)) return false
-  if (!COLD_START_GROUP_RANK.has(entry.group)) return false
-  if (isNicheColdStartSubgroup(entry.subgroup)) return false
-  return true
-}
-
-function selectColdStartOverview({
-  candidates,
-  ordered,
-  selectedGroups,
-  selectedSubgroups,
+/**
+ * Тело autoplay при пустых partyType/topics/objections — только блоки из assembly.coldStartIds,
+ * строго в порядке списка. Явный cold-start важнее menu-only / autoplay / score.
+ */
+function selectColdStartIds({
+  coldStartIds,
+  findEntry,
   pushCandidate,
+  ordered,
   maxBlocks,
   alwaysEndPending,
+  isEnabled,
 }) {
-  for (const group of COLD_START_GROUP_ORDER) {
+  for (const id of coldStartIds) {
     if (ordered.length + alwaysEndPending() >= maxBlocks) return
-    if (selectedGroups.has(group)) continue
-    const entry = candidates
-      .filter(
-        (item) =>
-          item.group === group &&
-          isColdStartEligibleBlock(item) &&
-          !ordered.includes(item.id) &&
-          !selectedSubgroups.has(`${item.group}.${item.subgroup}`),
-      )
-      .sort(compareAssemblyEntries)[0]
+    if (ordered.includes(id)) continue
+    if (!isEnabled(id)) continue
+    const entry = findEntry(id)
     if (!entry) continue
     if (pushCandidate(entry)) {
-      entry.reason = entry.reason ? `${entry.reason} · обзор` : 'обзор при пустых параметрах'
+      entry.reason = entry.reason ? `${entry.reason} · cold-start` : 'cold-start'
+    } else {
+      entry.reason = entry.reason
+        ? `${entry.reason} · cold-start: не влез в лимит`
+        : 'cold-start: не влез в лимит'
     }
   }
 }
@@ -460,6 +417,7 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
     if (entry && entry.score > 0) pushIfFits(id)
   })
 
+  const isColdStart = !hasTopicInput && !hasAudienceInput && !hasObjectionInput
   const candidates = entries
     .filter((entry) => !alwaysStart.includes(entry.id) && !alwaysEnd.includes(entry.id))
     .filter((entry) => entry.score > 0)
@@ -490,8 +448,6 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
   const isPrimaryTopicBlock = (entry) =>
     entry.topicHits.some((tag) => !['intro', 'cta', 'next-step'].includes(tag)) &&
     !['intro', 'objection', 'objections', 'purpose', 'next-step', 'cta'].includes(entry.group)
-  const isColdStart = !hasTopicInput && !hasAudienceInput && !hasObjectionInput
-
   const selectPrimaryTopics = () => {
     let used = 0
     const orderedTopics = summary.topics.filter((tag) => !['intro', 'cta', 'next-step'].includes(tag))
@@ -517,14 +473,17 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
   }
 
   if (isColdStart) {
-    selectColdStartOverview({
-      candidates,
-      ordered,
-      selectedGroups,
-      selectedSubgroups,
+    const coldStartIds = (Array.isArray(rules?.coldStartIds) ? rules.coldStartIds : []).filter(
+      (id) => sequences[id] && isBlockEnabled(config, id) && !alwaysStart.includes(id) && !alwaysEnd.includes(id),
+    )
+    selectColdStartIds({
+      coldStartIds,
+      findEntry,
       pushCandidate,
+      ordered,
       maxBlocks,
       alwaysEndPending: () => tailPendingCount(),
+      isEnabled: (id) => isBlockEnabled(config, id),
     })
   } else {
     const openingSlots = [
@@ -572,16 +531,19 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
     }
   }
 
-  fillUncoveredGroups({
-    mode: summary.fillRemaining ?? 'off',
-    candidates: isColdStart ? candidates.filter(isColdStartEligibleBlock) : candidates,
-    ordered,
-    selectedGroups,
-    selectedSubgroups,
-    pushCandidate,
-    maxBlocks,
-    alwaysEndPending: () => tailPendingCount(),
-  })
+  // Cold-start — только явный список; дожим чужих групп не делаем.
+  if (!isColdStart) {
+    fillUncoveredGroups({
+      mode: summary.fillRemaining ?? 'off',
+      candidates,
+      ordered,
+      selectedGroups,
+      selectedSubgroups,
+      pushCandidate,
+      maxBlocks,
+      alwaysEndPending: () => tailPendingCount(),
+    })
+  }
 
   if (wantNextStep) {
     selectSlot({

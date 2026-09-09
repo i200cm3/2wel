@@ -5224,8 +5224,8 @@
         "group": "about",
         "subgroup": "positioning",
         "enabled": true,
-        "autoplayEligible": false,
-        "menuOnly": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
         "priority": 4,
         "durationClass": "medium",
         "audienceTags": [],
@@ -6717,7 +6717,14 @@
         "cta_whatsapp",
         "cta_whatsapp_generic"
       ],
-      "lowConfidenceBehavior": "menu"
+      "lowConfidenceBehavior": "menu",
+      "coldStartIds": [
+        "treatment_individual_plan",
+        "food_diet",
+        "wellness_sleep_recovery",
+        "leisure_active",
+        "price_what_included"
+      ]
     }
   }
 }

@@ -267,6 +267,7 @@ function updateBlockMeta(
           maxBlocks: 5,
           alwaysStartIds: [],
           alwaysEndIds: [],
+          coldStartIds: [],
           lowConfidenceBehavior: 'menu' as const,
         },
       }),
@@ -459,7 +460,7 @@ export function ConstructorV2({
   const [summary, setSummary] = useState<GuestSummary>({
     guestName: config.defaultGuestName || 'Гость',
     dates: '',
-    partyType: 'couple',
+    partyType: '',
     topics: '',
     objections: '',
     confidence: '0.8',
@@ -472,6 +473,9 @@ export function ConstructorV2({
   const [dragFlowId, setDragFlowId] = useState<string | null>(null)
   const [dropFlowIndex, setDropFlowIndex] = useState<number | null>(null)
   const flowDragFromGrip = useRef(false)
+  const [dragColdId, setDragColdId] = useState<string | null>(null)
+  const [dropColdIndex, setDropColdIndex] = useState<number | null>(null)
+  const coldDragFromGrip = useRef(false)
   const [dragMenuBranch, setDragMenuBranch] = useState<{ menuId: string; sequenceId: string } | null>(
     null,
   )
@@ -535,6 +539,12 @@ export function ConstructorV2({
     }
     return max
   }, [config.sequences, config.constructorV2?.sequenceMetaById])
+  const anchorSequences = useMemo(() => {
+    const sequences = config.sequences
+    return Object.values(sequences).sort((a, b) =>
+      (a.label?.trim() || a.id).localeCompare(b.label?.trim() || b.id, 'ru', { sensitivity: 'base' }),
+    )
+  }, [config.sequences])
   const filteredLibraryBlockIds = useMemo(() => {
     const q = blockLibraryQuery.trim().toLowerCase()
     if (!q) return libraryBlockIds
@@ -547,6 +557,12 @@ export function ConstructorV2({
   const simulation = useMemo(() => simulateAssembly(config, summary), [config, summary])
   const derivedFlowIds = useMemo(() => deriveFlowIds(config, summary), [config, summary])
   const adaptiveEnabled = isAdaptiveAssemblyEnabled(config)
+  const coldStartIds = config.constructorV2?.assembly.coldStartIds ?? []
+  const isColdStartPreview =
+    adaptiveEnabled &&
+    !summary.partyType.trim() &&
+    !summary.topics.trim() &&
+    !summary.objections.trim()
   const includedSimulation = useMemo(() => simulation.filter((entry) => entry.included), [simulation])
   const excludedSimulation = useMemo(() => simulation.filter((entry) => !entry.included), [simulation])
   const assemblyPreviewConfig = useMemo(() => {
@@ -663,17 +679,52 @@ export function ConstructorV2({
     patchConstructorV2((prev) => updateBlockMeta(prev, selectedSequence.id, { [field]: tags }))
   }
 
-  const toggleAssemblyAnchor = (field: 'alwaysStartIds' | 'alwaysEndIds', id: string, checked: boolean) => {
+  const toggleAssemblyAnchor = (
+    field: 'alwaysStartIds' | 'alwaysEndIds' | 'coldStartIds',
+    id: string,
+    checked: boolean,
+  ) => {
     patchConstructorV2((prev) => {
       const current = prev.constructorV2
       if (!current) return prev
+      let next: PropertyConfig = {
+        ...prev,
+        constructorV2: {
+          ...current,
+          assembly: {
+            ...current.assembly,
+            coldStartIds: current.assembly.coldStartIds ?? [],
+            [field]: toggleId(current.assembly[field] ?? [], id, checked),
+          },
+        },
+      }
+      // Cold = явно в autoplay при «только имя»: снять menu-only, иначе превью/выдача его отсекают.
+      if (field === 'coldStartIds' && checked) {
+        next = updateBlockMeta(next, id, menuOnlyBlockPatch(false))
+      }
+      return next
+    })
+  }
+
+  const reorderColdStart = (fromId: string, toIndex: number) => {
+    patchConstructorV2((prev) => {
+      const current = prev.constructorV2
+      if (!current) return prev
+      const list = (current.assembly.coldStartIds ?? []).filter((id) => prev.sequences[id])
+      const from = list.indexOf(fromId)
+      if (from < 0) return prev
+      let insertAt = Math.max(0, Math.min(toIndex, list.length))
+      const next = [...list]
+      const [item] = next.splice(from, 1)
+      if (from < insertAt) insertAt -= 1
+      next.splice(insertAt, 0, item)
       return {
         ...prev,
         constructorV2: {
           ...current,
           assembly: {
             ...current.assembly,
-            [field]: toggleId(current.assembly[field], id, checked),
+            coldStartIds: next,
           },
         },
       }
@@ -789,6 +840,7 @@ export function ConstructorV2({
               ...next.constructorV2.assembly,
               alwaysStartIds: next.constructorV2.assembly.alwaysStartIds.filter((item) => item !== id),
               alwaysEndIds: next.constructorV2.assembly.alwaysEndIds.filter((item) => item !== id),
+              coldStartIds: (next.constructorV2.assembly.coldStartIds ?? []).filter((item) => item !== id),
             },
           },
         }
@@ -920,6 +972,26 @@ export function ConstructorV2({
               JSON — только конфиг шаблона. Проект (ZIP) — конфиг вместе с медиа и TTS.
             </DialogDescription>
           </DialogHeader>
+          <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
+            <div className="min-w-0">
+              <p className="font-medium text-sm">Кнопка «Далее»</p>
+              <p className="text-muted-foreground text-xs">
+                Пропуск текущего блока в плеере. Выключите, если гостю лучше досмотреть до конца.
+              </p>
+            </div>
+            <Switch
+              checked={theme.showNextButton}
+              onCheckedChange={(checked) =>
+                setConfig((prev) => ({
+                  ...prev,
+                  theme: {
+                    ...normalizeTheme(prev.theme),
+                    showNextButton: checked === true,
+                  },
+                }))
+              }
+            />
+          </div>
           <div className="grid grid-cols-2 gap-2">
             <Button
               type="button"
@@ -1249,9 +1321,29 @@ export function ConstructorV2({
                   <Switch
                     checked={isMenuOnlyBlock(selectedMeta)}
                     onCheckedChange={(checked) =>
-                      patchConstructorV2((prev) =>
-                        updateBlockMeta(prev, selectedSequence.id, menuOnlyBlockPatch(checked === true)),
-                      )
+                      patchConstructorV2((prev) => {
+                        let next = updateBlockMeta(
+                          prev,
+                          selectedSequence.id,
+                          menuOnlyBlockPatch(checked === true),
+                        )
+                        // Menu-only и cold противоречат: убрать из cold-start списка.
+                        if (checked === true && next.constructorV2) {
+                          next = {
+                            ...next,
+                            constructorV2: {
+                              ...next.constructorV2,
+                              assembly: {
+                                ...next.constructorV2.assembly,
+                                coldStartIds: (next.constructorV2.assembly.coldStartIds ?? []).filter(
+                                  (item) => item !== selectedSequence.id,
+                                ),
+                              },
+                            },
+                          }
+                        }
+                        return next
+                      })
                     }
                   />
                 </div>
@@ -1481,31 +1573,155 @@ export function ConstructorV2({
                       </label>
                       <div className="rounded-lg border p-3">
                         <p className="font-medium">Anchors</p>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          Список блоков — по алфавиту. Порядок Cold — перетаскиванием за grip в списке
+                          ниже (не приоритетом). Новый чек Cold добавляется в конец.
+                        </p>
                         <div className="mt-3 grid gap-2">
-                          {Object.values(config.sequences).map((sequence) => (
-                            <div key={sequence.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-3">
-                              <span className="truncate text-sm">{sequence.label}</span>
-                              <label className="flex items-center gap-2 text-xs">
-                                <Checkbox
-                                  checked={config.constructorV2?.assembly.alwaysStartIds.includes(sequence.id)}
-                                  onCheckedChange={(checked) =>
-                                    toggleAssemblyAnchor('alwaysStartIds', sequence.id, checked === true)
-                                  }
-                                />
-                                <span>start</span>
-                              </label>
-                              <label className="flex items-center gap-2 text-xs">
-                                <Checkbox
-                                  checked={config.constructorV2?.assembly.alwaysEndIds.includes(sequence.id)}
-                                  onCheckedChange={(checked) =>
-                                    toggleAssemblyAnchor('alwaysEndIds', sequence.id, checked === true)
-                                  }
-                                />
-                                <span>end</span>
-                              </label>
-                            </div>
-                          ))}
+                          {anchorSequences.map((sequence) => {
+                            const fullName = sequence.label?.trim() || sequence.id
+                            const title = fullName === sequence.id ? sequence.id : `${fullName} · ${sequence.id}`
+                            return (
+                              <div
+                                key={sequence.id}
+                                className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3"
+                              >
+                                <span className="truncate text-sm" title={title}>
+                                  {fullName}
+                                </span>
+                                <label className="flex items-center gap-2 text-xs">
+                                  <Checkbox
+                                    checked={config.constructorV2?.assembly.alwaysStartIds.includes(sequence.id)}
+                                    onCheckedChange={(checked) =>
+                                      toggleAssemblyAnchor('alwaysStartIds', sequence.id, checked === true)
+                                    }
+                                  />
+                                  <span>start</span>
+                                </label>
+                                <label className="flex items-center gap-2 text-xs">
+                                  <Checkbox
+                                    checked={(config.constructorV2?.assembly.coldStartIds ?? []).includes(
+                                      sequence.id,
+                                    )}
+                                    onCheckedChange={(checked) =>
+                                      toggleAssemblyAnchor('coldStartIds', sequence.id, checked === true)
+                                    }
+                                  />
+                                  <span>cold</span>
+                                </label>
+                                <label className="flex items-center gap-2 text-xs">
+                                  <Checkbox
+                                    checked={config.constructorV2?.assembly.alwaysEndIds.includes(sequence.id)}
+                                    onCheckedChange={(checked) =>
+                                      toggleAssemblyAnchor('alwaysEndIds', sequence.id, checked === true)
+                                    }
+                                  />
+                                  <span>end</span>
+                                </label>
+                              </div>
+                            )
+                          })}
                         </div>
+                        {coldStartIds.length > 0 ? (
+                          <div className="mt-3 space-y-1">
+                            <p className="text-muted-foreground text-xs font-medium">Порядок Cold</p>
+                            <div className="overflow-hidden rounded-lg border">
+                              {coldStartIds.map((id, index) => {
+                                const label = config.sequences[id]?.label?.trim() || id
+                                const title = label === id ? id : `${label} · ${id}`
+                                return (
+                                  <div
+                                    key={id}
+                                    draggable={coldStartIds.length > 1}
+                                    className={[
+                                      'editor-seq-row',
+                                      dragColdId === id ? 'is-dragging' : '',
+                                      dragColdId && dropColdIndex === index ? 'is-drop-before' : '',
+                                      dragColdId &&
+                                      dropColdIndex === index + 1 &&
+                                      index === coldStartIds.length - 1
+                                        ? 'is-drop-after'
+                                        : '',
+                                    ]
+                                      .filter(Boolean)
+                                      .join(' ')}
+                                    onDragStart={(e) => {
+                                      if (!coldDragFromGrip.current || coldStartIds.length < 2) {
+                                        e.preventDefault()
+                                        return
+                                      }
+                                      setDragColdId(id)
+                                      e.dataTransfer.effectAllowed = 'move'
+                                      e.dataTransfer.setData('text/plain', `assembly-cold:${id}`)
+                                    }}
+                                    onDragEnd={() => {
+                                      coldDragFromGrip.current = false
+                                      setDragColdId(null)
+                                      setDropColdIndex(null)
+                                    }}
+                                    onDragOver={(e) => {
+                                      if (!dragColdId) return
+                                      e.preventDefault()
+                                      e.dataTransfer.dropEffect = 'move'
+                                      const rect = e.currentTarget.getBoundingClientRect()
+                                      const before = e.clientY < rect.top + rect.height / 2
+                                      setDropColdIndex(before ? index : index + 1)
+                                    }}
+                                    onDrop={(e) => {
+                                      e.preventDefault()
+                                      const raw = e.dataTransfer.getData('text/plain')
+                                      const fromId = raw.startsWith('assembly-cold:')
+                                        ? raw.slice('assembly-cold:'.length)
+                                        : dragColdId
+                                      const to = dropColdIndex ?? index
+                                      if (fromId) reorderColdStart(fromId, to)
+                                      setDragColdId(null)
+                                      setDropColdIndex(null)
+                                    }}
+                                  >
+                                    <div className="editor-seq h-auto min-h-10 justify-start whitespace-normal font-normal flex min-w-0 flex-1 items-center gap-1.5 px-2.5">
+                                      {coldStartIds.length > 1 ? (
+                                        <span
+                                          className="editor-seq-grip"
+                                          aria-hidden
+                                          title="Перетащить"
+                                          onClick={(e) => e.stopPropagation()}
+                                          onPointerDown={() => {
+                                            coldDragFromGrip.current = true
+                                          }}
+                                          onPointerUp={() => {
+                                            coldDragFromGrip.current = false
+                                          }}
+                                          onPointerCancel={() => {
+                                            coldDragFromGrip.current = false
+                                          }}
+                                        >
+                                          <GripVertical />
+                                        </span>
+                                      ) : null}
+                                      <span className="editor-seq-copy">
+                                        <span title={title}>
+                                          {index + 1}. {label}
+                                        </span>
+                                      </span>
+                                    </div>
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-amber-700 dark:text-amber-400 mt-3 text-xs">
+                            Cold пока пуст — отметьте обзорные блоки (лечение, питание, досуг…), иначе при
+                            «только имя» в autoplay останутся лишь start и end.
+                          </p>
+                        )}
+                        {coldStartIds.length > 0 && !isColdStartPreview ? (
+                          <p className="text-amber-700 dark:text-amber-400 mt-2 text-xs">
+                            Сейчас cold не используется в превью: в «Профиль гостя» заданы тип компании /
+                            темы / возражения. Очистите их, чтобы увидеть cold-start.
+                          </p>
+                        ) : null}
                       </div>
                     </>
                   ) : null}
@@ -1519,7 +1735,9 @@ export function ConstructorV2({
                       <CardTitle>Результат макет-сборки</CardTitle>
                       <CardDescription>
                         {adaptiveEnabled
-                          ? 'Preview отбора по параметрам гостя. При выдаче ссылки гость получит этот порядок.'
+                          ? isColdStartPreview
+                            ? 'Режим cold-start: только имя — тело из списка Cold.'
+                            : 'Preview отбора по параметрам гостя. При выдаче ссылки гость получит этот порядок.'
                           : 'Порядок autoplay шаблона. Перетащите за grip — это и есть flow.'}
                       </CardDescription>
                     </div>

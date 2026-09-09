@@ -79,6 +79,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
   const stageRef = useRef<HTMLDivElement | null>(null)
   const soundArmedRef = useRef(false)
   const userPausedRef = useRef(false)
+  const userMutedRef = useRef(false)
   const musicVolRef = useRef(0)
 
   const flowSeqId = property.flow[flowIndex]
@@ -86,12 +87,14 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
   const branchSeq = sequenceId ? property.sequences[sequenceId] : undefined
   const theme = normalizeTheme(property.theme)
   const isLandscape = orientationFromSearch(theme.orientation) === 'landscape'
+  // volume=0 на iOS/WebKit часто игнорируется — mute через .muted (см. applyMuteToAudio).
   const musicVol = userMuted ? 0 : theme.musicVolume
   const ttsVol = userMuted ? 0 : theme.ttsVolume
   const musicSrc = backgroundMusicSrc(property.id, property.musicSrc)
 
   soundArmedRef.current = soundArmed
   userPausedRef.current = userPaused
+  userMutedRef.current = userMuted
   musicVolRef.current = musicVol
 
   const track = useCallback(
@@ -177,19 +180,26 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
     }
   }, [])
 
+  /** iOS/WebKit: volume почти read-only — глушим через muted (+ volume для десктопа). */
+  const applyMuteToAudio = useCallback((el: HTMLAudioElement | null | undefined, muted: boolean, volume: number) => {
+    if (!el) return
+    el.muted = muted
+    el.volume = muted ? 0 : Math.min(1, Math.max(0, volume))
+  }, [])
+
   /** Фон часто глохнет после unlock TTS / смены src — дожимаем play, пока сессия активна. */
   const kickMusic = useCallback(() => {
     const music = musicRef.current
     if (!music || !soundArmedRef.current || userPausedRef.current) return
-    music.volume = musicVolRef.current
+    applyMuteToAudio(music, userMutedRef.current, musicVolRef.current)
     if (music.paused) void music.play().catch(() => {})
-  }, [])
+  }, [applyMuteToAudio])
 
   const armSound = useCallback(() => {
     const resumeMusic = () => {
       const music = musicRef.current
       if (!music) return
-      music.volume = musicVolRef.current
+      applyMuteToAudio(music, userMutedRef.current, musicVolRef.current)
       void music.play().catch(() => {})
     }
 
@@ -204,7 +214,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
       const srcNow = tts.getAttribute('src') || ''
       const hasRealSrc = Boolean(srcNow) && !srcNow.startsWith('data:')
       if (hasRealSrc) {
-        tts.muted = false
+        applyMuteToAudio(tts, userMutedRef.current, theme.ttsVolume)
         unlockingTts = true
         void tts.play().finally(() => {
           resumeMusic()
@@ -214,6 +224,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
           'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
         unlockingTts = true
         tts.volume = 0
+        tts.muted = true
         tts.src = silent
         void tts.play().finally(() => {
           try {
@@ -225,6 +236,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
           } catch {
             /* ignore */
           }
+          applyMuteToAudio(tts, userMutedRef.current, theme.ttsVolume)
           resumeMusic()
         })
       }
@@ -245,13 +257,14 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
         isLandscape ? 'landscape' : 'portrait',
       )
     }
-  }, [soundArmed, isLandscape, embedded])
+  }, [soundArmed, isLandscape, embedded, applyMuteToAudio, theme.ttsVolume])
 
   useEffect(() => {
     const music = musicRef.current
     const tts = ttsAudioRef.current
     if (!music) return
-    music.volume = musicVol
+    applyMuteToAudio(music, userMuted, theme.musicVolume)
+    applyMuteToAudio(tts, userMuted, theme.ttsVolume)
     if (!soundArmed) return
     if (userPaused) {
       music.pause()
@@ -276,7 +289,19 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
       music.removeEventListener('canplay', onReady)
       music.removeEventListener('loadeddata', onReady)
     }
-  }, [musicVol, soundArmed, userPaused, phase, musicSrc, kickMusic])
+  }, [
+    musicVol,
+    ttsVol,
+    userMuted,
+    soundArmed,
+    userPaused,
+    phase,
+    musicSrc,
+    kickMusic,
+    applyMuteToAudio,
+    theme.musicVolume,
+    theme.ttsVolume,
+  ])
 
   const ensureMusicPlaying = useCallback(() => {
     kickMusic()
@@ -297,18 +322,29 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
       if (music) {
         if (next) music.pause()
         else {
-          music.volume = musicVol
+          applyMuteToAudio(music, userMutedRef.current, musicVolRef.current)
           void music.play().catch(() => {})
         }
       }
       return next
     })
-  }, [soundArmed, armSound, musicVol])
+  }, [soundArmed, armSound, applyMuteToAudio])
 
-  const toggleMute = useCallback((e: MouseEvent) => {
-    e.stopPropagation()
-    setUserMuted((m) => !m)
-  }, [])
+  const toggleMute = useCallback(
+    (e: MouseEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setUserMuted((m) => {
+        const next = !m
+        // Сразу, до re-render — иначе на iOS следующий cue успевает сыграть громко.
+        applyMuteToAudio(musicRef.current, next, theme.musicVolume)
+        applyMuteToAudio(ttsAudioRef.current, next, theme.ttsVolume)
+        userMutedRef.current = next
+        return next
+      })
+    },
+    [applyMuteToAudio, theme.musicVolume, theme.ttsVolume],
+  )
 
   useEffect(() => {
     if (embedded) return
@@ -481,13 +517,13 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
   }, [phase, flowIndex, sequenceId])
 
   useEffect(() => {
-    if (phase === 'menu' || showEndButtons || !soundArmed || userPaused) {
+    if (phase === 'menu' || showEndButtons || !soundArmed || userPaused || !theme.showNextButton) {
       setShowNextBtn(false)
       return
     }
     const timer = window.setTimeout(() => setShowNextBtn(true), NEXT_BTN_DELAY_MS)
     return () => window.clearTimeout(timer)
-  }, [phase, flowIndex, sequenceId, showEndButtons, soundArmed, userPaused])
+  }, [phase, flowIndex, sequenceId, showEndButtons, soundArmed, userPaused, theme.showNextButton])
 
   const skipAhead = useCallback((e: MouseEvent) => {
     e.stopPropagation()
@@ -721,6 +757,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
             bgSrc={activeMenu.menuBgSrc}
             ttsSrc={menuVisitTtsSrc}
             ttsVolume={ttsVol}
+            userMuted={userMuted}
             ttsAudioRef={ttsAudioRef}
           />
         )}
@@ -804,7 +841,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
                   <LayoutGrid size={22} strokeWidth={2} aria-hidden />
                 </button>
               </div>
-              {showNextBtn ? (
+              {showNextBtn && theme.showNextButton ? (
                 <button
                   type="button"
                   className="player-next-btn"
@@ -854,7 +891,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
                   <LayoutGrid size={22} strokeWidth={2} aria-hidden />
                 </button>
               </div>
-              {showNextBtn ? (
+              {showNextBtn && theme.showNextButton ? (
                 <button
                   type="button"
                   className="player-next-btn"

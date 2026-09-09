@@ -27,6 +27,8 @@ type Props = {
   /** Озвучка при появлении меню */
   ttsSrc?: string
   ttsVolume?: number
+  /** Гость выключил звук (на iOS volume=0 не глушит — нужен muted) */
+  userMuted?: boolean
   /** Внешний audio, уже размученный жестом в плеере (iOS) */
   ttsAudioRef?: { current: HTMLAudioElement | null }
   onTtsPlayingChange?: (playing: boolean) => void
@@ -88,6 +90,7 @@ export function MenuScreen({
   bgSrc,
   ttsSrc,
   ttsVolume = 1,
+  userMuted = false,
   ttsAudioRef,
   onTtsPlayingChange,
   editable = false,
@@ -101,6 +104,10 @@ export function MenuScreen({
   onLayoutPatchRef.current = onLayoutPatch
   const onTtsPlayingChangeRef = useRef(onTtsPlayingChange)
   onTtsPlayingChangeRef.current = onTtsPlayingChange
+  const ttsVolumeRef = useRef(ttsVolume)
+  ttsVolumeRef.current = ttsVolume
+  const userMutedRef = useRef(userMuted)
+  userMutedRef.current = userMuted
   const { kicker, title, hint } = resolveMenuCopy(menuCopy, brandName, guestName)
   const theme = normalizeMenuTheme(menuTheme)
   const photo = bgSrc?.trim()
@@ -140,6 +147,13 @@ export function MenuScreen({
 
   useEffect(() => {
     const audio = ttsRef.current
+    if (!audio) return
+    audio.muted = userMuted
+    audio.volume = userMuted ? 0 : Math.min(1, Math.max(0, ttsVolume))
+  }, [userMuted, ttsVolume])
+
+  useEffect(() => {
+    const audio = ttsRef.current
     const src = ttsSrc?.trim()
     if (!audio || !src) {
       onTtsPlayingChangeRef.current?.(false)
@@ -160,7 +174,10 @@ export function MenuScreen({
     audio.onended = done
     audio.onerror = done
     audio.src = ttsPlaybackUrl(src)
-    audio.volume = Math.min(1, Math.max(0, ttsVolume))
+    audio.muted = userMutedRef.current
+    audio.volume = userMutedRef.current
+      ? 0
+      : Math.min(1, Math.max(0, ttsVolumeRef.current))
     try {
       audio.currentTime = 0
     } catch {
@@ -190,7 +207,7 @@ export function MenuScreen({
       }
       onTtsPlayingChangeRef.current?.(false)
     }
-  }, [ttsSrc, ttsVolume])
+  }, [ttsSrc])
 
   const applyDrag = (clientX: number, clientY: number) => {
     const drag = dragRef.current

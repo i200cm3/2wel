@@ -87,6 +87,7 @@ const adaptiveConfig = {
       maxBlocks: 3,
       alwaysStartIds: ['intro'],
       alwaysEndIds: [],
+      coldStartIds: [],
       lowConfidenceBehavior: 'menu',
     },
   },
@@ -286,11 +287,14 @@ describe('deriveFlowIds · plaza2 name-only (matches Constructor V2)', () => {
     assert.equal(nextSteps.length, 0, `expected no next_step blocks, got: ${nextSteps.join(', ')}`)
     assert.equal(flow[flow.length - 1], 'cta_whatsapp')
     assert.ok(flow.includes('intro_generic'))
-    assert.ok(flow.includes('greeting_warm'))
   })
 
-  it('builds a neutral overview instead of niche audience blocks', () => {
+  it('follows coldStartIds and skips niche audience blocks', () => {
     const config = JSON.parse(readFileSync(plazaConfigPath, 'utf8'))
+    const cold = Array.isArray(config.constructorV2?.assembly?.coldStartIds)
+      ? config.constructorV2.assembly.coldStartIds
+      : []
+    assert.ok(cold.length > 0, 'plaza2 template should declare coldStartIds')
     const flow = deriveFlowIds(config, {
       guestName: 'Иван',
       dates: '',
@@ -306,18 +310,25 @@ describe('deriveFlowIds · plaza2 name-only (matches Constructor V2)', () => {
     assert.equal(flow.includes('senior_calm_rhythm'), false)
     assert.equal(flow.includes('objection_dates_not_fixed'), false)
     assert.equal(flow.includes('treatment_profile_cardio'), false)
-    assert.ok(
-      flow.some((id) => id.startsWith('treatment_') || id.startsWith('food_') || id.startsWith('territory_') || id.startsWith('leisure_') || id.startsWith('wellness_')),
-      `expected overview body blocks, got: ${flow.join(' -> ')}`,
-    )
+    const body = flow.slice(0, -1).filter((id) => cold.includes(id))
+    assert.ok(body.length > 0, `expected some cold-start body, got: ${flow.join(' -> ')}`)
+    assert.deepEqual(body, cold.slice(0, body.length), 'cold body must be a prefix of coldStartIds')
+    for (const id of flow) {
+      if (id === flow[flow.length - 1]) continue
+      const isStart = (config.constructorV2.assembly.alwaysStartIds ?? []).includes(id)
+      const isCold = cold.includes(id)
+      assert.ok(isStart || isCold, `unexpected non-cold body block ${id}`)
+    }
   })
 })
 
 const plazaCopyPath = join(__dirname, '../web/public/properties/adm-plaza-copy-v2.json')
 
 describe('deriveFlowIds · adm-plaza-copy-v2 name-only', () => {
-  it('assembles place / treatment / food / leisure overview', () => {
+  it('assembles curated cold-start overview', () => {
     const config = JSON.parse(readFileSync(plazaCopyPath, 'utf8'))
+    const cold = config.constructorV2.assembly.coldStartIds
+    assert.ok(Array.isArray(cold) && cold.length > 0)
     const flow = deriveFlowIds(config, {
       guestName: 'Иван',
       dates: '',
@@ -330,16 +341,12 @@ describe('deriveFlowIds · adm-plaza-copy-v2 name-only', () => {
     })
     assert.equal(flow[0], 'intro_generic')
     assert.equal(flow[flow.length - 1], 'cta_whatsapp')
-    assert.ok(flow.includes('territory_walks'), flow.join(' -> '))
-    assert.ok(flow.includes('treatment_individual_plan') || flow.includes('treatment_detox_antistress'), flow.join(' -> '))
-    assert.ok(flow.includes('food_diet'), flow.join(' -> '))
-    assert.ok(flow.includes('leisure_active') || flow.includes('leisure_evening') || flow.includes('wellness_pool') || flow.includes('wellness_sleep_recovery'), flow.join(' -> '))
+    assert.deepEqual(flow.slice(1, -1), cold)
+    assert.equal(flow.includes('territory_walks'), false)
     assert.equal(flow.includes('family_with_kids'), false)
     assert.equal(flow.includes('couple_quiet_rest'), false)
-    assert.equal(flow.includes('senior_calm_rhythm'), false)
+    assert.equal(flow.includes('rooms_luxury'), false)
     assert.equal(flow.includes('objection_dates_not_fixed'), false)
-    assert.equal(flow.includes('food_family'), false)
-    assert.equal(flow.includes('rooms_family'), false)
   })
 })
 

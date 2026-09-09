@@ -235,7 +235,7 @@
       "cues": [
         {
           "id": "cue-cta_call-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "+7 (87932) 2-60-88",
           "ttsText": "Номер на экране — ответит служба бронирования.",
@@ -311,7 +311,7 @@
       "cues": [
         {
           "id": "cue-food_diet-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Лёгкие блюда на общей линии",
           "ttsText": "На шведской линии есть лёгкие блюда — не отдельная столовая.",
@@ -387,7 +387,7 @@
       "cues": [
         {
           "id": "cue-rooms_view-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Люкс премиум с балконом, 7 этаж",
           "ttsText": "Если хотите утро на воздухе, берите люкс премиум с балконом на седьмом.",
@@ -463,7 +463,7 @@
       "cues": [
         {
           "id": "cue-food_buffet-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.5,
           "text": "«Панорама»: шведский стол, 14 кухонь",
           "ttsText": "Основной стол в «Панораме»: много выбора и свободная посадка.",
@@ -479,7 +479,7 @@
         },
         {
           "id": "cue-food_buffet-03",
-          "startSec": 9.0,
+          "startSec": 9,
           "durationSec": 4.5,
           "text": "«Роял»: тише, подача от шефа",
           "ttsText": "«Роял» берут, когда хочется спокойного ужина без общего гула.",
@@ -568,7 +568,7 @@
       "cues": [
         {
           "id": "cue-food_family-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Детский уголок в «Панораме»",
           "ttsText": "В зале есть уголок, где ребёнку проще досидеть обед.",
@@ -644,7 +644,7 @@
       "cues": [
         {
           "id": "cue-purpose_mix-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Процедуры с утра, день свободнее",
           "ttsText": "Утро врачам, день и вечер — бассейну, парку или концерту.",
@@ -720,7 +720,7 @@
       "cues": [
         {
           "id": "cue-rooms_quiet-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Пожелание по тишине — в заявке",
           "ttsText": "Напишите, что важен сон: поставим дальше от шумных зон.",
@@ -796,7 +796,7 @@
       "cues": [
         {
           "id": "cue-cta_whatsapp-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.2,
           "text": "Номер и сумма на ваши даты",
           "ttsText": "{name}, напишите: подберём номер и пришлём расчёт.",
@@ -843,7 +843,7 @@
       "cues": [
         {
           "id": "cue-rooms_deluxe-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "4–7 этаж, 22 метра",
           "ttsText": "Делюкс на верхних этажах: те же двадцать два метра, но тише и светлее.",
@@ -919,7 +919,7 @@
       "cues": [
         {
           "id": "cue-rooms_double-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Широкая кровать или две раздельные",
           "ttsText": "Для двоих поставим широкую кровать или две раздельные, как вам спится.",
@@ -995,7 +995,7 @@
       "cues": [
         {
           "id": "cue-rooms_family-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Люкс от 40 м или апартаменты",
           "ttsText": "С детьми лучше две комнаты: люкс от сорока метров или апартаменты.",
@@ -1071,7 +1071,7 @@
       "cues": [
         {
           "id": "cue-rooms_luxury-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Спальня отдельно, гостиная отдельно",
           "ttsText": "Люкс от сорока метров: спальня своя, день можно провести не на кровати.",
@@ -1147,7 +1147,7 @@
       "cues": [
         {
           "id": "cue-rooms_single-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Стандарт или делюкс — свой ритм",
           "ttsText": "Для поездки одному хватает стандарта или делюкса.",
@@ -1223,7 +1223,7 @@
       "cues": [
         {
           "id": "cue-solo_support-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Консьерж на связи круглосуточно",
           "ttsText": "Консьерж поможет с трансфером, экскурсией или бытовым вопросом.",
@@ -1299,7 +1299,7 @@
       "cues": [
         {
           "id": "cue-wellness_spa-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Бассейн и термы 7:00–23:00",
           "ttsText": "Вода и термы открыты с семи до одиннадцати вечера — приходите, когда удобно.",
@@ -1375,7 +1375,7 @@
       "cues": [
         {
           "id": "cue-greeting_warm-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.2,
           "text": "Здравствуйте, {name}",
           "ttsText": "Здравствуйте, {name}.",
@@ -1392,7 +1392,7 @@
         {
           "id": "cue-greeting_warm-03",
           "startSec": 8.4,
-          "durationSec": 4.0,
+          "durationSec": 4,
           "text": "Где жить, как лечат, чем кормят",
           "ttsText": "Покажем, где вы будете жить, как здесь лечат и чем кормят.",
           "showText": true
@@ -1480,7 +1480,7 @@
       "cues": [
         {
           "id": "cue-si1o6np",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 3.8,
           "text": "Здравствуйте, {name}",
           "ttsText": "Здравствуйте, {name}.",
@@ -1547,7 +1547,7 @@
       "cues": [
         {
           "id": "cue-rooms_comfort-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.5,
           "text": "От стандарта до апартаментов",
           "ttsText": "Двести сорок номеров: от простого стандарта до многокомнатных апартаментов.",
@@ -1563,7 +1563,7 @@
         },
         {
           "id": "cue-rooms_comfort-03",
-          "startSec": 9.0,
+          "startSec": 9,
           "durationSec": 4.5,
           "text": "Категорию подбираем под состав",
           "ttsText": "Смотрим, кто едет, и предлагаем формат под вашу поездку.",
@@ -1652,7 +1652,7 @@
       "cues": [
         {
           "id": "cue-wellness_pool-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.5,
           "text": "25 метров, гидромассаж, детский",
           "ttsText": "Бассейн двадцать пять метров, есть гидромассаж и отдельная вода для детей.",
@@ -1728,7 +1728,7 @@
       "cues": [
         {
           "id": "cue-intro_by_dates-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.4,
           "text": "Свободные категории на период",
           "ttsText": "Берём ваши даты и показываем, какие номера ещё открыты.",
@@ -1804,7 +1804,7 @@
       "cues": [
         {
           "id": "cue-leisure_active-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Тренажёры, йога, растяжка",
           "ttsText": "В зал заходите, когда сами хотите, не по звонку группы.",
@@ -1880,7 +1880,7 @@
       "cues": [
         {
           "id": "cue-rooms_standard-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "22 метра, третий этаж",
           "ttsText": "Стандарт — двадцать два метра на третьем этаже, если люкс не нужен.",
@@ -1956,7 +1956,7 @@
       "cues": [
         {
           "id": "cue-couple_wellness-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Бассейн, сауна и хаммам",
           "ttsText": "День можно провести в воде, не подстраиваясь под группу.",
@@ -2032,7 +2032,7 @@
       "cues": [
         {
           "id": "cue-cta_get_options-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Что входит и сколько стоит",
           "ttsText": "Пришлём короткую подборку: номер, что входит и сумма.",
@@ -2108,7 +2108,7 @@
       "cues": [
         {
           "id": "cue-leisure_evening-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.5,
           "text": "Живая музыка и кино в лобби",
           "ttsText": "После ужина в лобби поют, играют на рояле или ставят кино.",
@@ -2184,7 +2184,7 @@
       "cues": [
         {
           "id": "cue-objection_price-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Номер, стол, бассейн — в путёвке",
           "ttsText": "Проживание, шведский стол, вода и сауны уже в цене.",
@@ -2260,7 +2260,7 @@
       "cues": [
         {
           "id": "cue-territory_walks-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Свой вход на терренкуры",
           "ttsText": "От дверей санатория несколько шагов — и вы уже на маршрутах парка.",
@@ -2336,7 +2336,7 @@
       "cues": [
         {
           "id": "cue-treatment_start-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.5,
           "text": "Осмотр в день заезда",
           "ttsText": "Курс начинается с терапевта и обследований, не с первой попавшейся ванны.",
@@ -2352,7 +2352,7 @@
         },
         {
           "id": "cue-treatment_start-03",
-          "startSec": 9.0,
+          "startSec": 9,
           "durationSec": 4.5,
           "text": "Три-семь процедур с паузами",
           "ttsText": "В день ставят три-семь процедур и оставляют паузы между ними.",
@@ -2441,7 +2441,7 @@
       "cues": [
         {
           "id": "cue-family_with_kids-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Детский клуб открыт с девяти",
           "ttsText": "С девяти детей ждут в клубе: присмотр, игры, творчество.",
@@ -2517,7 +2517,7 @@
       "cues": [
         {
           "id": "cue-about_positioning-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.5,
           "text": "Проспект Ленина, 26–28",
           "ttsText": "Мы на Ленина: от номера до парка несколько шагов.",
@@ -2533,7 +2533,7 @@
         },
         {
           "id": "cue-about_positioning-03",
-          "startSec": 9.0,
+          "startSec": 9,
           "durationSec": 4.5,
           "text": "Врачи, бювет, бассейн, два ресторана",
           "ttsText": "Лечебница, вода, бассейн и кухня собраны в одном доме.",
@@ -2622,7 +2622,7 @@
       "cues": [
         {
           "id": "cue-couple_quiet_rest-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Спокойный номер на двоих",
           "ttsText": "Подберём номер, где вам двоим тихо и удобно.",
@@ -2698,7 +2698,7 @@
       "cues": [
         {
           "id": "cue-family_activities-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Анимация с утра до вечера",
           "ttsText": "Пока вы отдыхаете, детей занимают игры и аниматоры.",
@@ -2774,7 +2774,7 @@
       "cues": [
         {
           "id": "cue-objection_compare-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Парк у двери, не через город",
           "ttsText": "Смотрите, сколько времени уходит от номера до парка и врача.",
@@ -2850,7 +2850,7 @@
       "cues": [
         {
           "id": "cue-purpose_long_stay-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Люкс с гостиной на длинный заезд",
           "ttsText": "На две недели берут двухкомнатный люкс: день не на кровати.",
@@ -2926,7 +2926,7 @@
       "cues": [
         {
           "id": "cue-objection_distance-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Встреча в аэропорту Минвод",
           "ttsText": "Водитель встретит у прилёта с табличкой и довезёт до входа.",
@@ -3002,7 +3002,7 @@
       "cues": [
         {
           "id": "cue-objection_food_fit-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Диетические блюда на линии",
           "ttsText": "В «Панораме» на линии есть диетические и вегетарианские блюда.",
@@ -3078,7 +3078,7 @@
       "cues": [
         {
           "id": "cue-objection_room_fit-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "От 22 до 116 метров",
           "ttsText": "Есть компактный стандарт и многокомнатные апартаменты — смотрим состав.",
@@ -3154,7 +3154,7 @@
       "cues": [
         {
           "id": "cue-purpose_rest_reset-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Оздоровление от трёх ночей",
           "ttsText": "Короткий заезд — чтобы выспаться и сменить воздух, без полного курса.",
@@ -3230,7 +3230,7 @@
       "cues": [
         {
           "id": "cue-purpose_short_stay-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "От трёх ночей: воздух, стол, СПА",
           "ttsText": "За три-четыре ночи успеваете выспаться, поесть и побыть в воде.",
@@ -3306,7 +3306,7 @@
       "cues": [
         {
           "id": "cue-senior_calm_rhythm-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Процедуры с паузами в течение дня",
           "ttsText": "Кабинеты ставят с промежутками: остаётся время поесть и пройтись.",
@@ -3382,7 +3382,7 @@
       "cues": [
         {
           "id": "cue-next_step_ask_price-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Когда едете и с кем",
           "ttsText": "Напишите, когда и с кем едете — посчитаем категорию и состав.",
@@ -3458,7 +3458,7 @@
       "cues": [
         {
           "id": "cue-next_step_pick_room-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Что для вас важно в номере",
           "ttsText": "Сначала поймём, кто едет и что важно в номере.",
@@ -3534,7 +3534,7 @@
       "cues": [
         {
           "id": "cue-price_what_included-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.5,
           "text": "Номер, три стола, бассейн, сауны",
           "ttsText": "В путёвке номер, завтрак, обед, ужин, бассейн и сауны.",
@@ -3610,7 +3610,7 @@
       "cues": [
         {
           "id": "cue-cta_whatsapp_generic-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.2,
           "text": "Номер и сумма на ваши даты",
           "ttsText": "Напишите нам: подберём номер и пришлём расчёт на даты.",
@@ -3657,7 +3657,7 @@
       "cues": [
         {
           "id": "cue-location_where_is_it-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.5,
           "text": "Проспект Ленина, 26–28",
           "ttsText": "Санаторий стоит на Ленина, в спокойной части Кисловодска.",
@@ -3733,7 +3733,7 @@
       "cues": [
         {
           "id": "cue-objection_family_fit-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Клуб, анимация, детский бассейн",
           "ttsText": "Пока вы на процедурах, дети в клубе или в детской воде.",
@@ -3809,7 +3809,7 @@
       "cues": [
         {
           "id": "cue-treatment_day_rhythm-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Процедуры утром, день свободнее",
           "ttsText": "Кабинеты ставят в первую половину, чтобы день не превращался в очередь.",
@@ -3885,7 +3885,7 @@
       "cues": [
         {
           "id": "cue-food_restaurant_space-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Большой светлый зал «Панорама»",
           "ttsText": "«Панорама» — светлый зал, удобно семье и после процедур.",
@@ -3961,7 +3961,7 @@
       "cues": [
         {
           "id": "cue-objection_uncertainty-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Оздоровление от трёх ночей",
           "ttsText": "Если нужны воздух, стол и СПА — достаточно заезда от трёх ночей.",
@@ -4037,7 +4037,7 @@
       "cues": [
         {
           "id": "cue-next_step_manager_chat-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Телефон или почта — как удобно",
           "ttsText": "Можно позвонить или написать: один человек ответит на всё.",
@@ -4113,7 +4113,7 @@
       "cues": [
         {
           "id": "cue-next_step_confirm_dates-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Месяц или точные дни",
           "ttsText": "Достаточно месяца или пары дат — сверим свободные категории.",
@@ -4189,7 +4189,7 @@
       "cues": [
         {
           "id": "cue-objection_treatment_fit-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Сердце, спина, дыхание, желудок",
           "ttsText": "Лечебница ведёт эти профили — не обещаем вылечить всё сразу.",
@@ -4265,7 +4265,7 @@
       "cues": [
         {
           "id": "cue-purpose_health_recovery-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Санаторный курс от семи ночей",
           "ttsText": "На лечение лучше семь ночей: хватает на осмотр, адаптацию и курс.",
@@ -4341,7 +4341,7 @@
       "cues": [
         {
           "id": "cue-territory_season_summer-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Горы и тень парка вместо зноя",
           "ttsText": "Летом помогает высота и аллеи парка — не тот жар, что на равнине.",
@@ -4417,7 +4417,7 @@
       "cues": [
         {
           "id": "cue-territory_season_winter-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Ясные дни, мягкая зима",
           "ttsText": "Кисловодск зимой часто солнечный: в парк выходят, а не сидят в номере.",
@@ -4493,7 +4493,7 @@
       "cues": [
         {
           "id": "cue-treatment_profile_neuro-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Хвойные ванны, массаж, спелеокамера",
           "ttsText": "Для снятия напряжения ставят хвойные ванны, массаж и соляную пещеру.",
@@ -4569,7 +4569,7 @@
       "cues": [
         {
           "id": "cue-wellness_sleep_recovery-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Бассейн и хаммам в конце дня",
           "ttsText": "Вечером лучше вода и хаммам, чем ещё один кабинет — так проще уснуть.",
@@ -4645,7 +4645,7 @@
       "cues": [
         {
           "id": "cue-next_step_pick_treatment-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Зачем едете и что беспокоит",
           "ttsText": "Напишите, зачем едете — пришлём состав программы, без лишнего.",
@@ -4721,7 +4721,7 @@
       "cues": [
         {
           "id": "cue-treatment_profile_cardio-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "ЭКГ и наблюдение в первый день",
           "ttsText": "Начинают с контроля и ЭКГ, без резких нагрузок «на глаз».",
@@ -4797,7 +4797,7 @@
       "cues": [
         {
           "id": "cue-objection_dates_not_fixed-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Цена зависит от сезона",
           "ttsText": "Если дни ещё плавают, покажем месяцы спокойнее по цене и наличию.",
@@ -4873,7 +4873,7 @@
       "cues": [
         {
           "id": "cue-senior_medical_confidence-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Врачи с курортной практикой",
           "ttsText": "Здесь работают врачи, которые каждый сезон ведут санаторных гостей.",
@@ -4949,7 +4949,7 @@
       "cues": [
         {
           "id": "cue-treatment_individual_plan-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Сначала осмотр, потом назначения",
           "ttsText": "Терапевт собирает план по осмотру, а не по готовому пакету.",
@@ -5025,7 +5025,7 @@
       "cues": [
         {
           "id": "cue-treatment_detox_antistress-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "«Детокс» и «Антистресс» от 7 дней",
           "ttsText": "От семи дней: осмотр, процедуры и рацион, собранный под программу.",
@@ -5101,7 +5101,7 @@
       "cues": [
         {
           "id": "cue-treatment_profile_breathing-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Спелеокамера и ингаляции",
           "ttsText": "Соляная пещера и ингаляции ставят, когда важны дыхательные пути.",
@@ -5177,7 +5177,7 @@
       "cues": [
         {
           "id": "cue-treatment_profile_digestive-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Нарзан, Славяновская, Ессентуки",
           "ttsText": "Воду пьёте в своём бювете: какую и как — скажет врач.",
@@ -5253,7 +5253,7 @@
       "cues": [
         {
           "id": "cue-treatment_profile_musculoskeletal-01",
-          "startSec": 0.0,
+          "startSec": 0,
           "durationSec": 4.6,
           "text": "Тамбукан и гидротерапия",
           "ttsText": "Грязь Тамбукана и водные процедуры ставят, если врачу это подходит.",
@@ -6026,8 +6026,8 @@
         "group": "about",
         "subgroup": "positioning",
         "enabled": true,
-        "autoplayEligible": false,
-        "menuOnly": true,
+        "autoplayEligible": true,
+        "menuOnly": false,
         "priority": 4,
         "durationClass": "medium",
         "audienceTags": [],
@@ -6905,7 +6905,14 @@
         "cta_whatsapp",
         "cta_whatsapp_generic"
       ],
-      "lowConfidenceBehavior": "menu"
+      "lowConfidenceBehavior": "menu",
+      "coldStartIds": [
+        "treatment_individual_plan",
+        "food_diet",
+        "wellness_sleep_recovery",
+        "leisure_active",
+        "price_what_included"
+      ]
     }
   },
   "defaultMenuId": "main",

@@ -599,6 +599,8 @@ export type PropertyTheme = {
   musicVolume: number
   /** Громкость озвучки слайда 0..1 */
   ttsVolume: number
+  /** Показывать кнопку «Далее» в плеере (пропуск текущего блока). */
+  showNextButton: boolean
 }
 
 export const DEFAULT_THEME: PropertyTheme = {
@@ -621,6 +623,7 @@ export const DEFAULT_THEME: PropertyTheme = {
   textStroke: false,
   musicVolume: 0.22,
   ttsVolume: 1,
+  showNextButton: true,
 }
 
 export type MenuTheme = {
@@ -854,6 +857,11 @@ export type AssemblyRules = {
   maxBlocks: number
   alwaysStartIds: string[]
   alwaysEndIds: string[]
+  /**
+   * Упорядоченный cold-start: при пустых partyType/topics/objections в тело autoplay
+   * попадают только эти блоки (после alwaysStart, до alwaysEnd), в этом порядке.
+   */
+  coldStartIds: string[]
   lowConfidenceBehavior: 'exclude' | 'menu' | 'tail'
 }
 
@@ -1032,6 +1040,7 @@ export function defaultAssemblyRules(): AssemblyRules {
     maxBlocks: 5,
     alwaysStartIds: [],
     alwaysEndIds: [],
+    coldStartIds: [],
     lowConfidenceBehavior: 'menu',
   }
 }
@@ -1047,6 +1056,7 @@ export function normalizeAssemblyRules(value: unknown, sequences: Record<string,
     maxBlocks: normalizeFontSize(rules.maxBlocks, fallback.maxBlocks, 1, 20),
     alwaysStartIds: filterSeqIds(rules.alwaysStartIds),
     alwaysEndIds: filterSeqIds(rules.alwaysEndIds),
+    coldStartIds: filterSeqIds(rules.coldStartIds),
     lowConfidenceBehavior:
       rules.lowConfidenceBehavior === 'exclude' ||
       rules.lowConfidenceBehavior === 'menu' ||
@@ -1133,6 +1143,7 @@ export function normalizeTheme(theme?: Partial<PropertyTheme> | null): PropertyT
     textStroke: normalizeBool(theme?.textStroke, DEFAULT_THEME.textStroke),
     musicVolume: normalizeUnit(theme?.musicVolume, DEFAULT_THEME.musicVolume),
     ttsVolume: normalizeUnit(theme?.ttsVolume, DEFAULT_THEME.ttsVolume),
+    showNextButton: normalizeBool(theme?.showNextButton, DEFAULT_THEME.showNextButton),
   }
 }
 

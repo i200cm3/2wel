@@ -123,6 +123,7 @@ function adaptiveConfig(): PropertyConfig {
         maxBlocks: 7,
         alwaysStartIds: ['intro', 'greeting'],
         alwaysEndIds: ['cta_whatsapp', 'cta_whatsapp_generic'],
+        coldStartIds: [],
         lowConfidenceBehavior: 'menu',
       },
     },
@@ -326,6 +327,11 @@ describe('deriveFlowIds · adaptive slots', () => {
       config.sequences[id] = sequence(id)
       config.constructorV2!.sequenceMetaById[id] = meta(patch)
     }
+    config.constructorV2!.assembly.coldStartIds = [
+      'treatment_individual_plan',
+      'food_diet',
+      'leisure_active',
+    ]
 
     const flow = deriveFlowIds(config, {
       guestName: 'Иван',
@@ -338,17 +344,83 @@ describe('deriveFlowIds · adaptive slots', () => {
       fillRemaining: 'off',
     })
 
-    assert.equal(flow[0], 'intro')
-    assert.equal(flow[flow.length - 1], 'cta_whatsapp')
-    assert.ok(flow.includes('territory_walks'))
-    assert.ok(flow.includes('treatment_individual_plan'))
-    assert.ok(flow.includes('food_diet'))
-    assert.ok(flow.includes('leisure_active'))
+    assert.deepEqual(flow, [
+      'intro',
+      'greeting',
+      'treatment_individual_plan',
+      'food_diet',
+      'leisure_active',
+      'cta_whatsapp',
+    ])
+    assert.equal(flow.includes('territory_walks'), false)
     assert.equal(flow.includes('family_with_kids'), false)
     assert.equal(flow.includes('couple_quiet_rest'), false)
-    assert.equal(flow.includes('food_family'), false)
     assert.equal(flow.includes('treatment_profile_cardio'), false)
     assert.equal(flow.includes('objection_dates_not_fixed'), false)
+  })
+
+  it('uses only coldStartIds order and skips unlisted blocks on name-only', () => {
+    const config = adaptiveConfig()
+    config.constructorV2!.assembly.maxAutoplaySec = 120
+    config.constructorV2!.assembly.maxBlocks = 8
+    config.sequences.food_diet = sequence('food_diet')
+    config.sequences.leisure_active = sequence('leisure_active')
+    config.constructorV2!.sequenceMetaById.food_diet = meta({
+      group: 'food',
+      priority: 9,
+      topicTags: ['food'],
+    })
+    config.constructorV2!.sequenceMetaById.leisure_active = meta({
+      group: 'leisure',
+      priority: 9,
+      topicTags: ['leisure'],
+    })
+    config.constructorV2!.assembly.coldStartIds = ['leisure_active', 'food_diet']
+
+    const flow = deriveFlowIds(config, {
+      guestName: 'Иван',
+      dates: '',
+      partyType: '',
+      topics: '',
+      objections: '',
+      confidence: '0.8',
+      room: '',
+      fillRemaining: 'aggressive',
+    })
+
+    assert.deepEqual(flow, ['intro', 'greeting', 'leisure_active', 'food_diet', 'cta_whatsapp'])
+  })
+
+  it('includes menu-only blocks when they are listed in coldStartIds', () => {
+    const config = adaptiveConfig()
+    config.constructorV2!.assembly.maxAutoplaySec = 120
+    config.constructorV2!.assembly.maxBlocks = 8
+    config.sequences.about_positioning = sequence('about_positioning')
+    config.constructorV2!.sequenceMetaById.about_positioning = meta({
+      group: 'about',
+      subgroup: 'positioning',
+      priority: 4,
+      menuOnly: true,
+      autoplayEligible: false,
+      topicTags: ['about'],
+      requiresFields: ['dates'],
+    })
+    config.constructorV2!.assembly.coldStartIds = ['about_positioning']
+
+    const flow = deriveFlowIds(config, {
+      guestName: 'Иван',
+      dates: '',
+      partyType: '',
+      topics: '',
+      objections: '',
+      confidence: '0.8',
+      room: '',
+      fillRemaining: 'off',
+    })
+
+    assert.ok(flow.includes('about_positioning'), flow.join(' -> '))
+    assert.equal(flow[0], 'intro')
+    assert.equal(flow[flow.length - 1], 'cta_whatsapp')
   })
 
   it('keeps directed personalization when partyType is known', () => {
@@ -361,6 +433,7 @@ describe('deriveFlowIds · adaptive slots', () => {
       priority: 9,
       topicTags: ['territory'],
     })
+    config.constructorV2!.assembly.coldStartIds = ['territory_walks']
 
     const flow = deriveFlowIds(config, {
       guestName: 'Анна',

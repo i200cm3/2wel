@@ -2615,6 +2615,13 @@ export function TimelineEditor({
               />
               Альбомная ориентация (16:9)
             </Label>
+            <Label className="text-muted-foreground font-normal">
+              <Checkbox
+                checked={theme.showNextButton}
+                onCheckedChange={(checked) => patchTheme({ showNextButton: checked === true })}
+              />
+              Кнопка «Далее» в плеере
+            </Label>
             <Field>
               <FieldLabel className="justify-between">
                 Музыка

@@ -240,6 +240,7 @@ export function StoryPlayer({
   const onMediaProgressRef = useRef(onMediaProgress)
   const onPlaybackProgressRef = useRef(onPlaybackProgress)
   const ttsVolumeRef = useRef(ttsVolume)
+  const userMutedRef = useRef(userMuted)
   const pausedRef = useRef(paused)
   const imgElsRef = useRef(new Map<string, HTMLImageElement>())
   const videoElsRef = useRef(new Map<string, HTMLVideoElement>())
@@ -250,6 +251,7 @@ export function StoryPlayer({
   onMediaProgressRef.current = onMediaProgress
   onPlaybackProgressRef.current = onPlaybackProgress
   ttsVolumeRef.current = ttsVolume
+  userMutedRef.current = userMuted
   pausedRef.current = paused
 
   useEffect(() => {
@@ -298,8 +300,11 @@ export function StoryPlayer({
 
   useEffect(() => {
     const audio = ttsRef.current
-    if (audio) audio.volume = Math.min(1, Math.max(0, ttsVolume))
-  }, [ttsVolume])
+    if (!audio) return
+    // iOS: volume не глушит — только muted.
+    audio.muted = userMuted
+    audio.volume = userMuted ? 0 : Math.min(1, Math.max(0, ttsVolume))
+  }, [ttsVolume, userMuted])
 
   const copyRef = useRef<HTMLDivElement>(null)
   const [barHeight, setBarHeight] = useState<number | null>(null)
@@ -619,7 +624,8 @@ export function StoryPlayer({
           audio.addEventListener('ended', onEnded)
           audio.addEventListener('error', onError)
           audio.addEventListener('playing', onPlaying)
-          audio.muted = false
+          // Не сбрасывать muted: на iOS volume=0 не работает, mute только через .muted.
+          audio.muted = userMutedRef.current
           const playbackSrc = ttsPlaybackUrl(src)
           const abs = (() => {
             try {
@@ -630,7 +636,9 @@ export function StoryPlayer({
           })()
           // src ставим только здесь — иначе iOS-жест «размутить» затирает файл, а ended не приходит
           if (audio.src !== abs) audio.src = playbackSrc
-          audio.volume = Math.min(1, Math.max(0, ttsVolumeRef.current))
+          audio.volume = userMutedRef.current
+            ? 0
+            : Math.min(1, Math.max(0, ttsVolumeRef.current))
           try {
             if (audio.currentTime > 0.01) audio.currentTime = 0
           } catch {
