@@ -238,6 +238,8 @@ html.is-player-presentation #root {
   position: absolute;
   inset: 0;
   background: #000;
+  container-type: inline-size;
+  container-name: story;
 }
 
 .story-viewport {
@@ -362,6 +364,18 @@ html.is-player-presentation #root {
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   box-shadow: inset 0 1px 0 rgba(232, 223, 208, 0.12);
+  /* База 1em для размеров титров (desktop/mobile в em от неё) */
+  font-size: var(--story-copy-em, 16px);
+  --story-title-size: var(--story-title-size-desktop, 1.75em);
+  --story-text-size: var(--story-text-size-desktop, 0.9375em);
+}
+
+/* Узкий кадр (телефон, phone-preview в редакторе) — mobile-размеры */
+@container story (max-width: 560px) {
+  .story-copy {
+    --story-title-size: var(--story-title-size-mobile, var(--story-title-size-desktop, 1.5em));
+    --story-text-size: var(--story-text-size-mobile, var(--story-text-size-desktop, 0.875em));
+  }
 }
 
 .story-copy-title {
@@ -379,7 +393,7 @@ html.is-player-presentation #root {
   font-style: var(--story-title-style, normal);
   text-decoration: var(--story-title-decoration, none);
   text-underline-offset: 0.12em;
-  font-size: var(--story-title-size, 28px);
+  font-size: var(--story-title-size, 1.75em);
   line-height: 1.15;
   letter-spacing: 0.01em;
   color: var(--story-title-color, var(--sand));
@@ -409,7 +423,7 @@ html.is-player-presentation #root {
   text-decoration: var(--story-text-decoration, none);
   text-underline-offset: 0.12em;
   color: var(--story-text-color, var(--sand));
-  font-size: var(--story-text-size, 15px);
+  font-size: var(--story-text-size, 0.9375em);
   line-height: 1.35;
   -webkit-text-stroke: var(--story-text-stroke, 0 transparent);
   paint-order: stroke fill;

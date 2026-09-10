@@ -581,10 +581,20 @@ export type PropertyTheme = {
   titleFont: StoryFontId
   /** Шрифт текста / титров-строк */
   textFont: StoryFontId
-  /** Размер заголовка, px */
+  /**
+   * Размер заголовка на широком кадре (desktop).
+   * В CSS уходит как em от базы `--story-copy-em` (16px).
+   */
   titleFontSize: number
-  /** Размер текста, px */
+  /**
+   * Размер текста на широком кадре (desktop).
+   * В CSS уходит как em от базы `--story-copy-em` (16px).
+   */
   textFontSize: number
+  /** Размер заголовка на узком кадре (mobile / phone preview) */
+  titleFontSizeMobile: number
+  /** Размер текста на узком кадре (mobile / phone preview) */
+  textFontSizeMobile: number
   /** Начертание заголовка */
   titleBold: boolean
   titleItalic: boolean
@@ -603,6 +613,16 @@ export type PropertyTheme = {
   showNextButton: boolean
 }
 
+/** База 1em для титров в плеере; слайдеры в теме в «дизайн-единицах» этой базы. */
+export const STORY_COPY_EM_BASE = 16
+
+/** Переводит дизайн-размер темы в CSS em. */
+export function storyFontSizeEm(size: number): string {
+  const n = Number.isFinite(size) ? size : STORY_COPY_EM_BASE
+  const em = n / STORY_COPY_EM_BASE
+  return `${Number(em.toFixed(4))}em`
+}
+
 export const DEFAULT_THEME: PropertyTheme = {
   orientation: 'portrait',
   captionBarColor: '#0a100e',
@@ -613,6 +633,8 @@ export const DEFAULT_THEME: PropertyTheme = {
   textFont: 'manrope',
   titleFontSize: 28,
   textFontSize: 15,
+  titleFontSizeMobile: 24,
+  textFontSizeMobile: 14,
   titleBold: true,
   titleItalic: false,
   titleUnderline: false,
@@ -1123,6 +1145,26 @@ export function normalizeTheme(theme?: Partial<PropertyTheme> | null): PropertyT
       : DEFAULT_THEME.captionBarOpacity
   const orientation: ViewOrientation =
     theme?.orientation === 'landscape' ? 'landscape' : 'portrait'
+  const titleFontSize = normalizeFontSize(
+    theme?.titleFontSize,
+    DEFAULT_THEME.titleFontSize,
+    14,
+    56,
+  )
+  const textFontSize = normalizeFontSize(theme?.textFontSize, DEFAULT_THEME.textFontSize, 10, 32)
+  // Старые конфиги без mobile-полей: mobile = desktop. Новые — из DEFAULT_THEME.
+  const titleFontSizeMobile =
+    theme?.titleFontSizeMobile != null
+      ? normalizeFontSize(theme.titleFontSizeMobile, DEFAULT_THEME.titleFontSizeMobile, 14, 56)
+      : theme?.titleFontSize != null
+        ? titleFontSize
+        : DEFAULT_THEME.titleFontSizeMobile
+  const textFontSizeMobile =
+    theme?.textFontSizeMobile != null
+      ? normalizeFontSize(theme.textFontSizeMobile, DEFAULT_THEME.textFontSizeMobile, 10, 32)
+      : theme?.textFontSize != null
+        ? textFontSize
+        : DEFAULT_THEME.textFontSizeMobile
   return {
     orientation,
     captionBarColor: normalizeHex(theme?.captionBarColor, DEFAULT_THEME.captionBarColor),
@@ -1131,8 +1173,10 @@ export function normalizeTheme(theme?: Partial<PropertyTheme> | null): PropertyT
     textColor: normalizeHex(theme?.textColor, DEFAULT_THEME.textColor),
     titleFont: normalizeFont(theme?.titleFont, DEFAULT_THEME.titleFont),
     textFont: normalizeFont(theme?.textFont, DEFAULT_THEME.textFont),
-    titleFontSize: normalizeFontSize(theme?.titleFontSize, DEFAULT_THEME.titleFontSize, 14, 56),
-    textFontSize: normalizeFontSize(theme?.textFontSize, DEFAULT_THEME.textFontSize, 10, 32),
+    titleFontSize,
+    textFontSize,
+    titleFontSizeMobile,
+    textFontSizeMobile,
     titleBold: normalizeBool(theme?.titleBold, DEFAULT_THEME.titleBold),
     titleItalic: normalizeBool(theme?.titleItalic, DEFAULT_THEME.titleItalic),
     titleUnderline: normalizeBool(theme?.titleUnderline, DEFAULT_THEME.titleUnderline),
@@ -1187,12 +1231,15 @@ export function captionBarStyle(
     'text',
   )
   const typography = {
+    '--story-copy-em': `${STORY_COPY_EM_BASE}px`,
     '--story-title-color': t.titleColor,
     '--story-text-color': t.textColor,
     '--story-title-font': storyFontCss(t.titleFont, DEFAULT_THEME.titleFont),
     '--story-text-font': storyFontCss(t.textFont, DEFAULT_THEME.textFont),
-    '--story-title-size': `${t.titleFontSize}px`,
-    '--story-text-size': `${t.textFontSize}px`,
+    '--story-title-size-desktop': storyFontSizeEm(t.titleFontSize),
+    '--story-text-size-desktop': storyFontSizeEm(t.textFontSize),
+    '--story-title-size-mobile': storyFontSizeEm(t.titleFontSizeMobile),
+    '--story-text-size-mobile': storyFontSizeEm(t.textFontSizeMobile),
     '--story-title-weight': titleStyle.weight,
     '--story-title-style': titleStyle.style,
     '--story-title-decoration': titleStyle.decoration,

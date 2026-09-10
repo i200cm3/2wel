@@ -1,6 +1,8 @@
 import {
+  STORY_COPY_EM_BASE,
   STORY_FONTS,
   normalizeTheme,
+  storyFontSizeEm,
   type PropertyTheme,
   type StoryFontId,
 } from '@/types/story'
@@ -10,6 +12,10 @@ import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Slider } from '@/components/ui/slider'
 import { TextStyleToggle } from './TextStyleToggle'
 import { sliderNumber } from './timelineMath'
+
+function sizeLabel(size: number) {
+  return storyFontSizeEm(size)
+}
 
 export function CaptionThemeFields({
   theme,
@@ -83,8 +89,8 @@ export function CaptionThemeFields({
         />
         <Field>
           <FieldLabel className="justify-between">
-            Размер заголовка
-            <span className="text-muted-foreground font-normal">{t.titleFontSize}px</span>
+            Заголовок · desktop
+            <span className="text-muted-foreground font-normal">{sizeLabel(t.titleFontSize)}</span>
           </FieldLabel>
           <Slider
             min={14}
@@ -96,8 +102,8 @@ export function CaptionThemeFields({
         </Field>
         <Field>
           <FieldLabel className="justify-between">
-            Размер текста
-            <span className="text-muted-foreground font-normal">{t.textFontSize}px</span>
+            Текст · desktop
+            <span className="text-muted-foreground font-normal">{sizeLabel(t.textFontSize)}</span>
           </FieldLabel>
           <Slider
             min={10}
@@ -107,6 +113,40 @@ export function CaptionThemeFields({
             onValueChange={(v) => onPatch({ textFontSize: sliderNumber(v) })}
           />
         </Field>
+        <Field>
+          <FieldLabel className="justify-between">
+            Заголовок · mobile
+            <span className="text-muted-foreground font-normal">
+              {sizeLabel(t.titleFontSizeMobile)}
+            </span>
+          </FieldLabel>
+          <Slider
+            min={14}
+            max={56}
+            step={1}
+            value={[t.titleFontSizeMobile]}
+            onValueChange={(v) => onPatch({ titleFontSizeMobile: sliderNumber(v) })}
+          />
+        </Field>
+        <Field>
+          <FieldLabel className="justify-between">
+            Текст · mobile
+            <span className="text-muted-foreground font-normal">
+              {sizeLabel(t.textFontSizeMobile)}
+            </span>
+          </FieldLabel>
+          <Slider
+            min={10}
+            max={32}
+            step={1}
+            value={[t.textFontSizeMobile]}
+            onValueChange={(v) => onPatch({ textFontSizeMobile: sliderNumber(v) })}
+          />
+        </Field>
+        <p className="text-muted-foreground col-span-2 text-[11px] leading-snug">
+          Размеры в em от базы {STORY_COPY_EM_BASE}px. Mobile — при ширине кадра ≤ 560px (телефон и
+          превью в редакторе).
+        </p>
         <Field orientation="horizontal" className="items-center">
           <Input
             type="color"
