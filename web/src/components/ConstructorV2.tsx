@@ -455,6 +455,8 @@ export function ConstructorV2({
   }, [isAdmin, workspace])
   const [blockTab, setBlockTab] = useState<'block' | 'params'>('block')
   const [seqId, setSeqId] = useState(() => preferredEditorSeqId(config))
+  /** Каждый клик в библиотеке — снова открыть первый титр (даже тот же блок). */
+  const [blockFocusTick, setBlockFocusTick] = useState(0)
   const [blockLibraryQuery, setBlockLibraryQuery] = useState('')
   const libraryScrollRef = useRef<HTMLDivElement>(null)
   const [summary, setSummary] = useState<GuestSummary>({
@@ -582,6 +584,7 @@ export function ConstructorV2({
   const selectBlock = (id: string) => {
     if (!config.sequences[id]) return
     setSeqId(id)
+    setBlockFocusTick((n) => n + 1)
     setWorkspace('blocks')
     setBlockTab('block')
   }
@@ -867,11 +870,11 @@ export function ConstructorV2({
         return { ...next, flow }
       }
       if (placement === 'flow') {
-        return { ...next, flow: [...flow, id] }
+        return updateBlockMeta({ ...next, flow: [...flow, id] }, id, menuOnlyBlockPatch(false))
       }
       const targetMenuId = menuId ?? prev.defaultMenuId ?? getDefaultMenuId(prev)
       const menu = resolveMenu(next, targetMenuId)
-      return {
+      next = {
         ...updateMenu(next, targetMenuId, {
           branches: [
             ...menu.branches.filter((branch) => branch.sequenceId !== id),
@@ -880,6 +883,8 @@ export function ConstructorV2({
         }),
         flow,
       }
+      // «Меню» в размещении = только ручной заход, не кандидат adaptive autoplay.
+      return updateBlockMeta(next, id, menuOnlyBlockPatch(true))
     })
   }
 
@@ -1167,6 +1172,10 @@ export function ConstructorV2({
                             <Badge variant="outline" className="font-normal">
                               только меню
                             </Badge>
+                          ) : placementLabel === 'меню' ? (
+                            <Badge variant="outline" className="text-amber-800 border-amber-600/30 bg-amber-500/10 font-normal dark:text-amber-400">
+                              в меню · ещё в сборке
+                            </Badge>
                           ) : null}
                           {logicLabel ? (
                             <Badge variant="secondary" className="max-w-full font-normal whitespace-normal">
@@ -1232,6 +1241,7 @@ export function ConstructorV2({
             <TimelineEditor
               blockPanel
               blockSeqId={selectedSequence.id}
+              blockFocusTick={blockFocusTick}
               config={config}
               onChange={setConfig}
               projectCode={projectCode}
@@ -1272,8 +1282,9 @@ export function ConstructorV2({
                     <div>
                       <p className="font-medium">Размещение в сценарии</p>
                       <p className="text-muted-foreground text-xs">
-                        Куда встроен блок: автопоказ, меню или пока ни туда (черновик в библиотеке).
-              
+                        Бейдж «меню» ≠ исключение из сборки. Чтобы не попадал в autoplay — пункт
+                        «Меню» здесь или переключатель «Запускается только через меню» ниже, затем
+                        опубликуйте.
                       </p>
                     </div>
                     <NativeSelect

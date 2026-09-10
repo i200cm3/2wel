@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import type { CabinetOutlet } from '@/cabinet/CabinetLayout'
 import { SkipTtsOnLinkIssueSetting } from '@/cabinet/SkipTtsOnLinkIssueSetting'
 import { CaptionsFromTtsSetting } from '@/cabinet/CaptionsFromTtsSetting'
+import { FillMissingTtsSetting } from '@/cabinet/FillMissingTtsSetting'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -202,6 +203,11 @@ export function VoicePage() {
           <SkipTtsOnLinkIssueSetting
             projectCode={projectCode}
             enabled={Boolean(project?.skipTtsOnLinkIssue)}
+            onUpdated={() => void reloadProjects()}
+          />
+          <FillMissingTtsSetting
+            projectCode={projectCode}
+            enabled={project?.fillMissingTts !== false}
             onUpdated={() => void reloadProjects()}
           />
           <CaptionsFromTtsSetting

@@ -14,6 +14,7 @@ import { JoinPage } from '@/cabinet/JoinPage'
 import { AccountPage } from '@/cabinet/AccountPage'
 import { AdminUsersPage } from '@/cabinet/AdminUsersPage'
 import { AdminTtsUsagePage } from '@/cabinet/AdminTtsUsagePage'
+import { AdminApiPage } from '@/cabinet/AdminApiPage'
 import { AppIndex, OverviewPage } from '@/cabinet/OverviewPage'
 import { PlanPage } from '@/cabinet/PlanPage'
 import { TeamPage } from '@/cabinet/TeamPage'
@@ -102,6 +103,7 @@ export default function App() {
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/:userId" element={<AdminUsersPage />} />
           <Route path="tts-usage" element={<AdminTtsUsagePage />} />
+          <Route path="api" element={<AdminApiPage />} />
           <Route path="projects/:code" element={<OverviewPage />} />
           <Route path="projects/:code/templates" element={<TemplatesPage />} />
           <Route path="projects/:code/templates/:templateCode/edit" element={<EditorPage />} />

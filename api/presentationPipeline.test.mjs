@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
+import {
+  shouldQueueAmoPresentationUrl,
+  shouldWriteAmoPresentationUrl,
+} from './presentationPipeline.mjs'
 
 /**
  * Логика «URL в amo только после ready» — чистая проверка контракта пайплайна.
@@ -7,52 +11,66 @@ import { describe, it } from 'node:test'
  */
 
 describe('presentation pipeline amo write contract', () => {
-  it('writes amo URL only when assembly succeeded', async () => {
-    const writes = []
-    const writeAmo = async (_connection, leadId, url) => {
-      writes.push({ leadId, url })
-    }
-
-    async function finishPipeline({ assembleOk, url, leadId, connection }) {
-      if (!assembleOk) return { ok: false, writtenToAmo: false }
-      if (connection && leadId && url) {
-        await writeAmo(connection, leadId, url)
-        return { ok: true, writtenToAmo: true, url }
-      }
-      return { ok: true, writtenToAmo: false, url }
-    }
-
-    const failed = await finishPipeline({
-      assembleOk: false,
-      url: 'https://x.example/abc',
-      leadId: '1',
-      connection: {},
-    })
-    assert.equal(failed.writtenToAmo, false)
-    assert.equal(writes.length, 0)
-
-    const ok = await finishPipeline({
-      assembleOk: true,
-      url: 'https://x.example/abc',
-      leadId: '1',
-      connection: {},
-    })
-    assert.equal(ok.writtenToAmo, true)
-    assert.deepEqual(writes, [{ leadId: '1', url: 'https://x.example/abc' }])
+  it('не пишет URL пока extract не готов при наличии звонков', () => {
+    assert.equal(
+      shouldQueueAmoPresentationUrl({
+        assembleOk: true,
+        extractOk: false,
+        eligibleCalls: 5,
+        failedTranscriptions: 0,
+      }).ok,
+      false,
+    )
+    assert.equal(
+      shouldQueueAmoPresentationUrl({
+        assembleOk: true,
+        extractOk: true,
+        eligibleCalls: 5,
+        failedTranscriptions: 0,
+      }).ok,
+      true,
+    )
   })
 
-  it('webhook processing payload marks amo URL as pending', () => {
+  it('не пишет URL если транскрибации упали', () => {
+    assert.equal(
+      shouldQueueAmoPresentationUrl({
+        assembleOk: true,
+        extractOk: true,
+        eligibleCalls: 3,
+        failedTranscriptions: 1,
+      }).reason,
+      'transcribe_incomplete',
+    )
+  })
+
+  it('ждёт параллельные пайплайны по той же сделке', () => {
+    assert.equal(
+      shouldWriteAmoPresentationUrl({
+        assembleOk: true,
+        extractOk: true,
+        eligibleCalls: 2,
+        failedTranscriptions: 0,
+        peerPipelinesRunning: 1,
+      }).reason,
+      'peer_pipelines_running',
+    )
+  })
+
+  it('webhook processing payload marks amo URL as pending without early url', () => {
     const payload = {
       ok: true,
       status: 'success',
       pipeline: 'pending',
       amoUrlPending: true,
       publicId: 'abc123',
-      url: 'https://djinal.example/abc123',
+      // Не отдаём url Salesbot’у до write_amo — иначе письмо уходит на «только имя».
+      url: '',
     }
     assert.equal(payload.amoUrlPending, true)
     assert.equal(payload.pipeline, 'pending')
     assert.equal(payload.status, 'success')
+    assert.equal(payload.url, '')
   })
 })
 

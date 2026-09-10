@@ -23,6 +23,7 @@ import {
   extractPhonesFromAmoWebhook,
   shouldIssueGuestLinkFromAmoWebhook,
   shouldIssueAfterPipelineCheck,
+  isPipelineAllowedForIssue,
   shouldRetryAmoCallSync,
   shouldSyncCallsFromNoteEvents,
   summarizeAmoWebhookBody,
@@ -493,14 +494,18 @@ async function handleAmoWebhook(req, res, url, json, extras) {
   if (!(await rateLimitLinks(req, res, json, key))) return true
 
   const parsed = await resolveGuestFields(key, body, query)
-  if (!shouldIssueAfterPipelineCheck(parsed.pipelineId)) {
-    amoLog('webhook.issue.skip_pipeline', {
+  if (!shouldIssueAfterPipelineCheck(parsed.pipelineId, parsed.statusId)) {
+    const pipelineOk = isPipelineAllowedForIssue(parsed.pipelineId)
+    const reason = pipelineOk ? 'status_not_allowed' : 'pipeline_not_allowed'
+    amoLog(pipelineOk ? 'webhook.issue.skip_status' : 'webhook.issue.skip_pipeline', {
       project: key.project.code,
       externalId: parsed.externalId || null,
       pipelineId: parsed.pipelineId || null,
+      statusId: parsed.statusId || null,
       allowlist: String(process.env.AMO_ISSUE_PIPELINE_IDS || '') || null,
+      statusAllowlist: String(process.env.AMO_ISSUE_STATUS_IDS || '') || null,
     })
-    json(res, 200, { ok: true, status: 'success', accepted: true, skipped: 'pipeline_not_allowed' })
+    json(res, 200, { ok: true, status: 'success', accepted: true, skipped: reason })
     if (connection && parsed.externalId) {
       // Звонки всё равно можно подтянуть к уже существующей ссылке — через note sync path.
     }
@@ -590,9 +595,12 @@ async function handleAmoWebhook(req, res, url, json, extras) {
   }
 
   const payload = issuedPayload(key.project.code, issued)
-  // Salesbot ждёт status=success; пайплайн идёт фоном, URL в CRM — позже.
+  // Salesbot часто сразу пишет {{url}} в сделку и шлёт письмо.
+  // Пока пайплайн не собрал персональную презентацию — url не отдаём.
+  // В CRM ссылка появится только в write_amo после assemble.
   json(res, 200, {
     ...payload,
+    url: '',
     status: 'success',
     pipeline: 'pending',
     amoUrlPending: true,

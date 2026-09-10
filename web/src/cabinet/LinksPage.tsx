@@ -20,6 +20,7 @@ import { Combobox } from '@/components/Combobox'
 import { PlanUsageBanner } from '@/components/plan-usage'
 import { SingleTagCombobox, TagsCombobox } from '@/components/TagsCombobox'
 import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 import {
   Accordion,
   AccordionContent,
@@ -70,6 +71,7 @@ import {
   fetchProjectLinkStats,
   fetchTemplateConfig,
   fetchTemplates,
+  isLinkPreparing,
   reassembleProjectLink,
   syncProjectLinkAmoCalls,
   transcribeProjectLinkRawSource,
@@ -164,6 +166,27 @@ function formatDt(value: string | null) {
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+function linkPipelineStatus(link: Pick<ProjectLink, 'pipelineStatus'> | ProjectLinkDetail): string | null {
+  if ('pipelineStatus' in link && link.pipelineStatus) return String(link.pipelineStatus)
+  const meta = 'summaryMeta' in link ? link.summaryMeta : null
+  if (meta && typeof meta === 'object' && 'pipeline' in meta) {
+    const value = meta.pipeline
+    return value != null ? String(value) : null
+  }
+  return null
+}
+
+function preparingLabel(step?: string | null): string {
+  const raw = String(step ?? '').trim().toLowerCase()
+  if (raw === 'transcribe') return 'Транскрибация'
+  if (raw === 'extract') return 'Сводка'
+  if (raw === 'assemble') return 'Сборка / TTS'
+  if (raw === 'sync_calls' || raw === 'probe' || raw === 'select') return 'Звонки'
+  if (raw === 'write_amo') return 'CRM'
+  if (raw === 'queued' || raw === 'init' || raw === 'load_link') return 'Очередь'
+  return 'Готовится'
 }
 
 async function copyText(value: string) {
@@ -519,6 +542,44 @@ export function LinksPage() {
     })
   }, [links, query])
 
+  const hasPreparingLinks = useMemo(
+    () => Boolean(links?.some((link) => isLinkPreparing(link.pipelineStatus))),
+    [links],
+  )
+
+  const detailPreparing = Boolean(detail && isLinkPreparing(linkPipelineStatus(detail)))
+  const detailPreparingStep =
+    detail?.summaryMeta &&
+    typeof detail.summaryMeta === 'object' &&
+    'pipelineStep' in detail.summaryMeta
+      ? String(detail.summaryMeta.pipelineStep ?? '')
+      : null
+
+  // Пока идут транскрибация / сборка / TTS — обновляем список, чтобы снять disable.
+  useEffect(() => {
+    if (!code || !hasPreparingLinks) return
+    const timer = window.setInterval(() => {
+      void fetchLinks(code)
+        .then((data) => setLinks(data.links))
+        .catch(() => undefined)
+    }, 4000)
+    return () => window.clearInterval(timer)
+  }, [code, hasPreparingLinks])
+
+  // Обновляем карточку, если открыта готовящаяся ссылка.
+  useEffect(() => {
+    if (!code || !selectedPublicId || !detailPreparing) return
+    const timer = window.setInterval(() => {
+      void fetchProjectLink(code, selectedPublicId)
+        .then((data) => setDetail(data.link))
+        .catch(() => undefined)
+      void fetchLinks(code)
+        .then((data) => setLinks(data.links))
+        .catch(() => undefined)
+    }, 4000)
+    return () => window.clearInterval(timer)
+  }, [code, selectedPublicId, detailPreparing])
+
   const includedBlocks = useMemo(
     () => (detail ? orderedIncludedBlocks(detail) : []),
     [detail],
@@ -663,6 +724,7 @@ export function LinksPage() {
     setReassemblePending(true)
     void reassembleProjectLink(code, detail.publicId, {
       name: summaryDraft.guestName || detail.guestName,
+      applyDraft: true,
       summary: {
         dates: summaryDraft.dates,
         partyType: summaryDraft.partyType,
@@ -680,8 +742,20 @@ export function LinksPage() {
     })
       .then((data) => {
         setDetail(data.link)
-        toast.success('Презентация пересобрана')
-        return reload(code)
+        toast.success(
+          data.publishedDraft
+            ? 'Черновик опубликован, презентация на ссылке обновлена'
+            : 'Презентация на ссылке обновлена из шаблона',
+        )
+        return Promise.all([
+          reload(code),
+          detail.templateCode
+            ? fetchTemplateConfig(code, detail.templateCode).then((tpl) => {
+                const raw = tpl.config ?? tpl.draft
+                setLinkTemplateConfig(isPropertyConfig(raw) ? normalizeProperty(raw) : null)
+              })
+            : Promise.resolve(),
+        ])
       })
       .catch((err) =>
         toast.error(err instanceof Error ? err.message : 'Не удалось пересобрать'),
@@ -747,7 +821,7 @@ export function LinksPage() {
             }
           : prev,
       )
-      toast.success('Звонок транскрибирован')
+      toast.success('Транскрипт обновлён')
       void reload(code)
     } catch (err) {
       if (signal?.aborted) return
@@ -922,6 +996,7 @@ export function LinksPage() {
               {filtered.map((link) => {
                 const url = guestShareUrl(code ?? '', link.url)
                 const demoEmail = emailFromDemoExternalId(link.externalId)
+                const preparing = isLinkPreparing(link.pipelineStatus)
                 return (
                   <div
                     key={link.id}
@@ -935,15 +1010,35 @@ export function LinksPage() {
                           {link.templateName} · открытий: {link.openCount}
                           {demoEmail ? ` · ${demoEmail}` : ''}
                         </p>
+                        {preparing ? (
+                          <p className="text-muted-foreground mt-1 flex items-center gap-1.5 text-xs">
+                            <Spinner className="size-3 shrink-0" />
+                            {preparingLabel(link.pipelineStep)}…
+                          </p>
+                        ) : null}
                       </div>
                       <div className="flex shrink-0 items-center gap-0.5" onClick={(event) => event.stopPropagation()}>
                         <Button
                           type="button"
                           variant="outline"
                           size="icon-sm"
-                          title={copiedId === link.publicId ? 'Скопировано' : 'Копировать'}
-                          aria-label={copiedId === link.publicId ? 'Скопировано' : 'Копировать'}
+                          disabled={preparing}
+                          title={
+                            preparing
+                              ? preparingLabel(link.pipelineStep)
+                              : copiedId === link.publicId
+                                ? 'Скопировано'
+                                : 'Копировать'
+                          }
+                          aria-label={
+                            preparing
+                              ? preparingLabel(link.pipelineStep)
+                              : copiedId === link.publicId
+                                ? 'Скопировано'
+                                : 'Копировать'
+                          }
                           onClick={() => {
+                            if (preparing) return
                             void copyText(url)
                               .then(() => {
                                 markCopied(link.publicId)
@@ -978,14 +1073,20 @@ export function LinksPage() {
                         </Button>
                       </div>
                     </div>
-                    <a
-                      className="text-primary truncate text-sm underline-offset-4 hover:underline"
-                      href={url}
-                      title={url}
-                      onClick={(event) => event.stopPropagation()}
-                    >
-                      /{link.publicId}
-                    </a>
+                    {preparing ? (
+                      <span className="text-muted-foreground truncate text-sm" title={url}>
+                        /{link.publicId}
+                      </span>
+                    ) : (
+                      <a
+                        className="text-primary truncate text-sm underline-offset-4 hover:underline"
+                        href={url}
+                        title={url}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        /{link.publicId}
+                      </a>
+                    )}
                   </div>
                 )
               })}
@@ -1009,6 +1110,7 @@ export function LinksPage() {
                 {filtered.map((link) => {
                   const url = guestShareUrl(code ?? '', link.url)
                   const preview = link.summaryPreview
+                  const preparing = isLinkPreparing(link.pipelineStatus)
                   return (
                     <TableRow
                       key={link.id}
@@ -1016,25 +1118,33 @@ export function LinksPage() {
                       onClick={() => setSelectedPublicId(link.publicId)}
                     >
                       <TableCell className="max-w-0 font-medium">
-                        <span className="inline-flex max-w-full items-center gap-1.5">
-                          <span className="truncate">{link.guestName}</span>
-                          {isMarketingDemoExternalId(link.externalId) ? (
-                            <span
-                              className="bg-muted text-muted-foreground shrink-0 rounded px-1 text-[10px] font-normal tracking-wide uppercase"
-                              title="Демо с лендинга"
-                            >
-                              демо
+                        <div className="flex min-w-0 flex-col gap-0.5">
+                          <span className="inline-flex max-w-full items-center gap-1.5">
+                            <span className="truncate">{link.guestName}</span>
+                            {isMarketingDemoExternalId(link.externalId) ? (
+                              <span
+                                className="bg-muted text-muted-foreground shrink-0 rounded px-1 text-[10px] font-normal tracking-wide uppercase"
+                                title="Демо с лендинга"
+                              >
+                                демо
+                              </span>
+                            ) : null}
+                            {link.hasRawSources ? (
+                              <span
+                                className="bg-muted text-muted-foreground shrink-0 rounded px-1 text-[10px] font-normal tracking-wide uppercase"
+                                title="Есть сохранённые диалоги"
+                              >
+                                диалоги
+                              </span>
+                            ) : null}
+                          </span>
+                          {preparing ? (
+                            <span className="text-muted-foreground inline-flex items-center gap-1 text-[11px]">
+                              <Spinner className="size-3 shrink-0" />
+                              {preparingLabel(link.pipelineStep)}…
                             </span>
                           ) : null}
-                          {link.hasRawSources ? (
-                            <span
-                              className="bg-muted text-muted-foreground shrink-0 rounded px-1 text-[10px] font-normal tracking-wide uppercase"
-                              title="Есть сохранённые диалоги"
-                            >
-                              диалоги
-                            </span>
-                          ) : null}
-                        </span>
+                        </div>
                       </TableCell>
                       <TableCell className="max-w-0 max-lg:hidden">
                         <div className="truncate" title={`${link.templateName} (${link.templateCode})`}>
@@ -1064,14 +1174,20 @@ export function LinksPage() {
                         )}
                       </TableCell>
                       <TableCell className="max-w-0">
-                        <a
-                          className="text-primary block truncate underline-offset-4 hover:underline"
-                          href={url}
-                          title={url}
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          /{link.publicId}
-                        </a>
+                        {preparing ? (
+                          <span className="text-muted-foreground block truncate" title={url}>
+                            /{link.publicId}
+                          </span>
+                        ) : (
+                          <a
+                            className="text-primary block truncate underline-offset-4 hover:underline"
+                            href={url}
+                            title={url}
+                            onClick={(event) => event.stopPropagation()}
+                          >
+                            /{link.publicId}
+                          </a>
+                        )}
                       </TableCell>
                       <TableCell className="max-md:hidden">{link.openCount}</TableCell>
                       <TableCell className="max-md:hidden">{formatDt(link.createdAt)}</TableCell>
@@ -1084,9 +1200,23 @@ export function LinksPage() {
                             type="button"
                             variant="outline"
                             size="icon-sm"
-                            title={copiedId === link.publicId ? 'Скопировано' : 'Копировать'}
-                            aria-label={copiedId === link.publicId ? 'Скопировано' : 'Копировать'}
+                            disabled={preparing}
+                            title={
+                              preparing
+                                ? preparingLabel(link.pipelineStep)
+                                : copiedId === link.publicId
+                                  ? 'Скопировано'
+                                  : 'Копировать'
+                            }
+                            aria-label={
+                              preparing
+                                ? preparingLabel(link.pipelineStep)
+                                : copiedId === link.publicId
+                                  ? 'Скопировано'
+                                  : 'Копировать'
+                            }
                             onClick={() => {
+                              if (preparing) return
                               void copyText(url)
                                 .then(() => {
                                   markCopied(link.publicId)
@@ -1176,28 +1306,42 @@ export function LinksPage() {
                     <div className="space-y-2">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <p className="text-sm font-medium">Ссылка для гостя</p>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            const url = guestShareUrl(code ?? '', detail.url)
-                            void copyText(url)
-                              .then(() => toast.success('Ссылка скопирована'))
-                              .catch(() => toast.error('Не удалось скопировать'))
-                          }}
-                        >
-                          Копировать
-                        </Button>
+                        {detailPreparing ? (
+                          <Badge variant="secondary" className="gap-1">
+                            <Spinner className="size-3" />
+                            {preparingLabel(detailPreparingStep)}
+                          </Badge>
+                        ) : (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const url = guestShareUrl(code ?? '', detail.url)
+                              void copyText(url)
+                                .then(() => toast.success('Ссылка скопирована'))
+                                .catch(() => toast.error('Не удалось скопировать'))
+                            }}
+                          >
+                            Копировать
+                          </Button>
+                        )}
                       </div>
-                      <a
-                        className="text-primary block break-all text-sm underline-offset-4 hover:underline"
-                        href={guestShareUrl(code ?? '', detail.url)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {guestShareUrl(code ?? '', detail.url)}
-                      </a>
+                      {detailPreparing ? (
+                        <p className="text-muted-foreground break-all text-sm">
+                          Ссылка ещё готовится (транскрибация / сборка / TTS). Откроется, когда пайплайн
+                          завершится.
+                        </p>
+                      ) : (
+                        <a
+                          className="text-primary block break-all text-sm underline-offset-4 hover:underline"
+                          href={guestShareUrl(code ?? '', detail.url)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {guestShareUrl(code ?? '', detail.url)}
+                        </a>
+                      )}
                     </div>
 
                     <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
@@ -1576,7 +1720,9 @@ export function LinksPage() {
                         </div>
                       </CardAction>
                       <CardDescription>
-                        Данные о госте для адаптивной сборки. После правок нажмите «Пересобрать».
+                        После правок нажмите «Пересобрать»: блоки пересчитаются, а презентация на
+                        этой же ссылке обновится из шаблона (черновик опубликуется, устаревшая
+                        озвучка пересоберётся).
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="grid gap-3">

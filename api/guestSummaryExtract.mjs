@@ -2,7 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { normalizeGuestSummary } from './assembly.mjs'
-import { generateTextWithGemini, geminiTextConfigured } from './geminiTranscribe.mjs'
+import { assemblyTextConfigured, generateAssemblyText } from './yandexGpt.mjs'
+import { assemblyTextConfigError } from './platformIntegrations.mjs'
 
 const API_DIR = path.dirname(fileURLToPath(import.meta.url))
 const PROMPT_NAME = 'guest-summary-extract.md'
@@ -172,8 +173,12 @@ export function buildExtractPrompt(rawText) {
 }
 
 export async function extractGuestSummaryFromRawText(rawText, options = {}) {
-  if (!geminiTextConfigured()) {
-    return { ok: false, status: 503, error: 'Извлечение не настроено (GEMINI_TRANSCRIBE_URL или GEMINI_API_KEY)' }
+  if (!(await assemblyTextConfigured())) {
+    return {
+      ok: false,
+      status: 503,
+      error: (await assemblyTextConfigError()) || 'Извлечение не настроено',
+    }
   }
   const text = String(rawText ?? '').trim()
   if (!text) {
@@ -181,7 +186,7 @@ export async function extractGuestSummaryFromRawText(rawText, options = {}) {
   }
 
   const prompt = buildExtractPrompt(text)
-  const generated = await generateTextWithGemini(prompt, options)
+  const generated = await generateAssemblyText(prompt, options)
   if (!generated.ok) return generated
 
   const parsed = parseGuestSummaryExtractResponse(generated.text)

@@ -14,7 +14,7 @@ const DEFAULT_PROMPT =
   'Транскрибируй этот аудиофайл. Выведи только текст расшифровки на языке оригинала. ' +
   'Если несколько говорящих — помечай «Говорящий 1:», «Говорящий 2:» и т.д.'
 
-const DEFAULT_MODEL_FALLBACKS = ['gemini-3.6-flash', 'gemini-2.5-pro']
+const DEFAULT_MODEL_FALLBACKS = ['gemini-3.6-flash']
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))

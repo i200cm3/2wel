@@ -128,9 +128,17 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
     if (audienceHit) {
       score += 2
       reasons.push(`аудитория: ${partyType}`)
+    } else if (meta.audienceTags.length > 0) {
+      // Блок размечен под другую аудиторию (family/couple/…) — не в autoplay по общей теме.
+      score -= 999
+      reasons.push(
+        partyType
+          ? `аудитория не совпала: нужен ${meta.audienceTags.join('/')}, есть ${partyType}`
+          : 'нужна аудитория',
+      )
     }
     if (meta.menuOnly) {
-      score -= 99
+      score -= 999
       reasons.push('menu-only')
     }
     if (meta.enabled === false) {
@@ -138,7 +146,7 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
       reasons.push('выключен')
     }
     if (!meta.autoplayEligible) {
-      score -= 50
+      score -= 999
       reasons.push('autoplay выключен')
     }
     const missingFields = missingRequiredGuestFields(summary, meta.requiresFields)

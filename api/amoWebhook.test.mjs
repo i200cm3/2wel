@@ -15,6 +15,7 @@ import {
   shouldIssueGuestLinkFromAmoWebhook,
   shouldIssueAfterPipelineCheck,
   isPipelineAllowedForIssue,
+  isStatusAllowedForIssue,
   shouldRetryAmoCallSync,
   shouldSyncCallsFromNoteEvents,
   summarizeAmoWebhookBody,
@@ -394,6 +395,38 @@ describe('isPipelineAllowedForIssue', () => {
     } finally {
       if (prev == null) delete process.env.AMO_ISSUE_PIPELINE_IDS
       else process.env.AMO_ISSUE_PIPELINE_IDS = prev
+    }
+  })
+})
+
+describe('isStatusAllowedForIssue', () => {
+  it('без allowlist пускает любой этап', () => {
+    const prev = process.env.AMO_ISSUE_STATUS_IDS
+    delete process.env.AMO_ISSUE_STATUS_IDS
+    try {
+      assert.equal(isStatusAllowedForIssue('87975206'), true)
+      assert.equal(shouldIssueAfterPipelineCheck('3813037', '36750040'), true)
+    } finally {
+      if (prev == null) delete process.env.AMO_ISSUE_STATUS_IDS
+      else process.env.AMO_ISSUE_STATUS_IDS = prev
+    }
+  })
+
+  it('с allowlist пускает только этап «Тест»', () => {
+    const prevP = process.env.AMO_ISSUE_PIPELINE_IDS
+    const prevS = process.env.AMO_ISSUE_STATUS_IDS
+    process.env.AMO_ISSUE_PIPELINE_IDS = '3813037'
+    process.env.AMO_ISSUE_STATUS_IDS = '87975206'
+    try {
+      assert.equal(isStatusAllowedForIssue('87975206'), true)
+      assert.equal(isStatusAllowedForIssue('36750040'), false)
+      assert.equal(shouldIssueAfterPipelineCheck('3813037', '87975206'), true)
+      assert.equal(shouldIssueAfterPipelineCheck('3813037', '36750040'), false)
+    } finally {
+      if (prevP == null) delete process.env.AMO_ISSUE_PIPELINE_IDS
+      else process.env.AMO_ISSUE_PIPELINE_IDS = prevP
+      if (prevS == null) delete process.env.AMO_ISSUE_STATUS_IDS
+      else process.env.AMO_ISSUE_STATUS_IDS = prevS
     }
   })
 })

@@ -3,11 +3,12 @@
  * Webhook отвечает сразу; запись URL в CRM — только после успешной персональной сборки.
  */
 
-import { writeAmoLeadPresentationUrl } from './amoAuth.mjs'
+import { clearAmoLeadPresentationUrl, writeAmoLeadPresentationUrl } from './amoAuth.mjs'
 import { syncAmoCallsToLink, probeRecordingUrlsDetailed, recordingProbeAvailability } from './amoCalls.mjs'
 import { selectCallsForPresentationPipeline } from './callSourceFilters.mjs'
 import { amoError, amoLog } from './amoLog.mjs'
 import { geminiTranscribeConfigured, geminiTextConfigured, transcribeAudioFromUrl } from './geminiTranscribe.mjs'
+import { assemblyTextConfigured } from './yandexGpt.mjs'
 import {
   buildRawTextFromSources,
   extractGuestSummaryFromRawText,
@@ -25,10 +26,165 @@ import { recordingUrlFromSource } from './recordingUrl.mjs'
 import { reassembleProjectLink } from './cabinet.mjs'
 
 const runningPublicIds = new Set()
+/** leadId → Set(publicId) — несколько объектов по одной сделке не должны рано писать URL. */
+const runningByLead = new Map()
+/** leadId → лучший кандидат на запись в amo, пока по сделке ещё есть другие пайплайны. */
+const pendingAmoWriteByLead = new Map()
+/** leadId → timer — пишем URL только после паузы, когда все пайплайны сделки затихли. */
+const amoFlushTimers = new Map()
+const AMO_WRITE_DEBOUNCE_MS = 20_000
 
 /** Единый лог этапов: grep `pipeline.` */
 function pipeLog(step, data = {}) {
   amoLog(`pipeline.${step}`, data)
+}
+
+/**
+ * Можно ли ставить URL в очередь на запись в amo.
+ * Сама запись — после debounce, когда по сделке нет бегущих пайплайнов.
+ */
+export function shouldWriteAmoPresentationUrl({
+  assembleOk = false,
+  extractOk = false,
+  eligibleCalls = 0,
+  failedTranscriptions = 0,
+  peerPipelinesRunning = 0,
+} = {}) {
+  if (!assembleOk) return { ok: false, reason: 'assemble_failed' }
+  if (failedTranscriptions > 0) return { ok: false, reason: 'transcribe_incomplete' }
+  if (eligibleCalls > 0 && !extractOk) return { ok: false, reason: 'extract_incomplete' }
+  if (peerPipelinesRunning > 0) return { ok: false, reason: 'peer_pipelines_running' }
+  return { ok: true }
+}
+
+/** Годится ли результат, чтобы запомнить его как кандидата (peers не смотрим). */
+export function shouldQueueAmoPresentationUrl({
+  assembleOk = false,
+  extractOk = false,
+  eligibleCalls = 0,
+  failedTranscriptions = 0,
+} = {}) {
+  return shouldWriteAmoPresentationUrl({
+    assembleOk,
+    extractOk,
+    eligibleCalls,
+    failedTranscriptions,
+    peerPipelinesRunning: 0,
+  })
+}
+
+function trackLeadPipelineStart(leadId, publicId) {
+  const id = String(leadId ?? '').trim()
+  const pid = String(publicId ?? '').trim()
+  if (!id || !pid) return
+  let set = runningByLead.get(id)
+  if (!set) {
+    set = new Set()
+    runningByLead.set(id, set)
+  }
+  set.add(pid)
+}
+
+function peerPipelinesRunningCount(leadId, publicId) {
+  const id = String(leadId ?? '').trim()
+  const pid = String(publicId ?? '').trim()
+  const set = runningByLead.get(id)
+  if (!set) return 0
+  let n = 0
+  for (const item of set) {
+    if (item !== pid) n += 1
+  }
+  return n
+}
+
+function trackLeadPipelineEnd(leadId, publicId) {
+  const id = String(leadId ?? '').trim()
+  const pid = String(publicId ?? '').trim()
+  if (!id || !pid) return 0
+  const set = runningByLead.get(id)
+  if (!set) return 0
+  set.delete(pid)
+  const left = set.size
+  if (!left) runningByLead.delete(id)
+  return left
+}
+
+function rememberPendingAmoWrite(leadId, candidate) {
+  const id = String(leadId ?? '').trim()
+  if (!id || !candidate?.url) return
+  const prev = pendingAmoWriteByLead.get(id)
+  if (!prev) {
+    pendingAmoWriteByLead.set(id, candidate)
+    return
+  }
+  const betterExtract = candidate.extractOk && !prev.extractOk
+  const sameExtractMoreCalls =
+    candidate.extractOk === prev.extractOk &&
+    Number(candidate.transcribed || 0) >= Number(prev.transcribed || 0)
+  if (betterExtract || sameExtractMoreCalls) {
+    pendingAmoWriteByLead.set(id, candidate)
+  }
+}
+
+async function flushPendingAmoWrite(leadId, ctx = {}) {
+  const id = String(leadId ?? '').trim()
+  if (!id) return
+  const running = runningByLead.get(id)
+  if (running && running.size > 0) {
+    pipeLog('write_amo.flush_wait', { ...ctx, leadId: id, running: running.size })
+    scheduleDebouncedAmoFlush(id, ctx)
+    return
+  }
+  const pending = pendingAmoWriteByLead.get(id)
+  if (!pending?.url || !pending.connection) {
+    pipeLog('write_amo.flush_skip', { ...ctx, leadId: id, reason: pending ? 'incomplete' : 'none' })
+    pendingAmoWriteByLead.delete(id)
+    return
+  }
+  const decision = shouldWriteAmoPresentationUrl({
+    assembleOk: true,
+    extractOk: pending.extractOk,
+    eligibleCalls: pending.eligibleCalls ?? 0,
+    failedTranscriptions: pending.failedTranscriptions ?? 0,
+    peerPipelinesRunning: 0,
+  })
+  if (!decision.ok) {
+    pipeLog('write_amo.flush_skip', { ...ctx, leadId: id, reason: decision.reason, url: pending.url })
+    pendingAmoWriteByLead.delete(id)
+    return
+  }
+  try {
+    pipeLog('write_amo.flush_start', { ...ctx, leadId: id, url: pending.url, publicId: pending.publicId })
+    await writeAmoLeadPresentationUrl(
+      pending.connection,
+      id,
+      pending.url,
+      pending.redirectUri || '',
+    )
+    pendingAmoWriteByLead.delete(id)
+    pipeLog('write_amo.flush_ok', { ...ctx, leadId: id, url: pending.url, publicId: pending.publicId })
+  } catch (err) {
+    amoError('pipeline.write_amo.flush', err, { leadId: id, publicId: pending.publicId })
+    pipeLog('write_amo.flush_fail', {
+      ...ctx,
+      leadId: id,
+      url: pending.url,
+      error: err?.message || String(err),
+    })
+  }
+}
+
+function scheduleDebouncedAmoFlush(leadId, ctx = {}, delayMs = AMO_WRITE_DEBOUNCE_MS) {
+  const id = String(leadId ?? '').trim()
+  if (!id) return
+  const prev = amoFlushTimers.get(id)
+  if (prev) clearTimeout(prev)
+  const timer = setTimeout(() => {
+    amoFlushTimers.delete(id)
+    void flushPendingAmoWrite(id, ctx)
+  }, delayMs)
+  amoFlushTimers.set(id, timer)
+  pipeLog('write_amo.flush_scheduled', { ...ctx, leadId: id, delayMs })
 }
 
 function buildTranscribeMeta(existingMeta, { audioUrl, model }) {
@@ -107,7 +263,7 @@ async function transcribeEligibleCalls(linkId, eligible, ctx = {}) {
   const already = eligible.filter((item) => !item.needsTranscribe).length
   const todo = eligible.filter((item) => item.needsTranscribe && item.url)
 
-  if (!geminiTranscribeConfigured()) {
+  if (!(await geminiTranscribeConfigured())) {
     pipeLog('transcribe.skip', { ...ctx, reason: 'not_configured', todo: todo.length, already })
     return {
       transcribed,
@@ -196,8 +352,9 @@ export async function runPresentationPipeline(args) {
   pipeLog('run.start', {
     ...ctx,
     hasConnection: Boolean(connection),
-    geminiTranscribe: geminiTranscribeConfigured(),
-    geminiText: geminiTextConfigured(),
+    geminiTranscribe: await geminiTranscribeConfigured(),
+    geminiText: await geminiTextConfigured(),
+    assemblyText: await assemblyTextConfigured(),
   })
 
   if (!project?.id || !publicId) {
@@ -213,6 +370,7 @@ export async function runPresentationPipeline(args) {
   const started = Date.now()
   let linkRow = null
   let step = 'init'
+  let trackedLeadId = ''
 
   try {
     step = 'load_link'
@@ -223,7 +381,22 @@ export async function runPresentationPipeline(args) {
     }
 
     const externalId = leadId || String(linkRow.external_id ?? '').trim()
+    trackedLeadId = externalId
+    if (trackedLeadId) trackLeadPipelineStart(trackedLeadId, publicId)
     const runCtx = { ...ctx, linkId: linkRow.id, leadId: externalId || null, guestName: linkRow.guest_name || '' }
+
+    // Старое значение поля в CRM иначе уезжает в письмо до конца пайплайна.
+    if (connection && externalId) {
+      try {
+        await clearAmoLeadPresentationUrl(connection, externalId, redirectUri)
+        pipeLog('write_amo.cleared', runCtx)
+      } catch (err) {
+        pipeLog('write_amo.clear_fail', {
+          ...runCtx,
+          error: err?.message || String(err),
+        })
+      }
+    }
 
     step = 'sync_calls'
     await markPipeline(linkRow.id, {
@@ -291,12 +464,14 @@ export async function runPresentationPipeline(args) {
     await markPipeline(linkRow.id, { pipelineStep: step })
     sources = await listLinkRawSources(linkRow.id)
     const packed = buildRawTextFromSources(sources)
+    const geminiTextReady = await assemblyTextConfigured()
     pipeLog('extract.start', {
       ...runCtx,
       packedOk: packed.ok,
       dialogItems: packed.items?.length ?? 0,
       rawTextLen: packed.rawText?.length ?? 0,
-      geminiText: geminiTextConfigured(),
+      geminiText: geminiTextReady,
+      assemblyText: geminiTextReady,
       packedError: packed.ok ? null : packed.error,
     })
 
@@ -317,7 +492,7 @@ export async function runPresentationPipeline(args) {
     }
     let extractOk = false
 
-    if (packed.ok && geminiTextConfigured()) {
+    if (packed.ok && geminiTextReady) {
       const tExtract = Date.now()
       const extracted = await extractGuestSummaryFromRawText(packed.rawText)
       if (extracted.ok) {
@@ -428,48 +603,64 @@ export async function runPresentationPipeline(args) {
 
     const detail = assembled.link || (await getProjectLinkDetail(project.id, publicId))
     const url = detail?.url || guestLinkUrl(project.code, publicId)
+    const peers = peerPipelinesRunningCount(externalId, publicId)
+    const queueDecision = shouldQueueAmoPresentationUrl({
+      assembleOk: true,
+      extractOk,
+      eligibleCalls: eligible.length,
+      failedTranscriptions: stt.failed.length,
+    })
 
     let writtenToAmo = false
-    if (connection && externalId && url) {
-      step = 'write_amo'
-      await markPipeline(linkRow.id, { pipelineStep: step })
-      pipeLog('write_amo.start', { ...runCtx, url })
-      try {
-        const tWrite = Date.now()
-        await writeAmoLeadPresentationUrl(connection, externalId, url, redirectUri)
-        writtenToAmo = true
-        pipeLog('write_amo.ok', { ...runCtx, url, ms: Date.now() - tWrite })
-      } catch (err) {
-        amoError('pipeline.write_amo', err, { project: project.code, publicId, leadId: externalId })
-        pipeLog('write_amo.fail', { ...runCtx, url, error: err?.message || String(err) })
-        await markPipeline(linkRow.id, {
-          pipeline: 'ready',
-          pipelineStep: 'write_amo_failed',
-          pipelineError: err?.message || String(err),
-          writtenToAmo: false,
-        })
-        return {
-          ok: true,
-          url,
-          writtenToAmo: false,
-          error: 'amo_write_failed',
-          ms: Date.now() - started,
-        }
-      }
+    let amoWriteReason = queueDecision.ok ? 'queued' : queueDecision.reason
+    if (connection && externalId && url && queueDecision.ok) {
+      rememberPendingAmoWrite(externalId, {
+        url,
+        publicId,
+        extractOk,
+        transcribed: stt.transcribed.length,
+        eligibleCalls: eligible.length,
+        failedTranscriptions: stt.failed.length,
+        connection,
+        redirectUri,
+      })
+      pipeLog('write_amo.queued', {
+        ...runCtx,
+        url,
+        peers,
+        extractOk,
+        eligible: eligible.length,
+      })
+      // Не пишем сразу: по одной сделке часто стартуют несколько объектов (adm/djinal/plaza2).
+      scheduleDebouncedAmoFlush(externalId, { project: project.code })
+      amoWriteReason = peers > 0 ? 'queued_wait_peers' : 'queued_debounce'
     } else {
+      const reason = !connection
+        ? 'no_connection'
+        : !externalId
+          ? 'no_lead_id'
+          : !url
+            ? 'no_url'
+            : queueDecision.reason
+      amoWriteReason = reason
       pipeLog('write_amo.skip', {
         ...runCtx,
         url,
-        reason: !connection ? 'no_connection' : !externalId ? 'no_lead_id' : 'no_url',
+        reason,
+        peers,
+        extractOk,
+        failedTranscriptions: stt.failed.length,
+        eligible: eligible.length,
       })
     }
 
     await markPipeline(linkRow.id, {
-      pipeline: 'ready',
+      pipeline: queueDecision.ok ? 'ready_pending_amo' : 'ready_pending_amo',
       pipelineStep: 'done',
-      pipelineError: null,
-      writtenToAmo,
+      pipelineError: queueDecision.ok ? null : queueDecision.reason,
+      writtenToAmo: false,
       presentationUrl: url,
+      amoWriteBlocked: amoWriteReason,
     })
 
     pipeLog('run.done', {
@@ -479,6 +670,7 @@ export async function runPresentationPipeline(args) {
       transcribed: stt.transcribed.length,
       extractOk,
       writtenToAmo,
+      amoWriteReason,
       url,
     })
 
@@ -510,6 +702,10 @@ export async function runPresentationPipeline(args) {
     return { ok: false, error: err?.message || String(err) }
   } finally {
     runningPublicIds.delete(publicId)
+    if (trackedLeadId) {
+      trackLeadPipelineEnd(trackedLeadId, publicId)
+      scheduleDebouncedAmoFlush(trackedLeadId, { project: project?.code || null })
+    }
   }
 }
 
@@ -521,6 +717,44 @@ export function schedulePresentationPipeline(args) {
     leadId: args?.leadId || null,
     hasConnection: Boolean(args?.connection),
   })
+  // Сразу помечаем ссылку «готовится», чтобы в кабинете нельзя было копировать сырую выдачу.
+  void (async () => {
+    try {
+      const projectId = args?.project?.id
+      const publicId = String(args?.publicId ?? '').trim()
+      const leadId = String(args?.leadId ?? '').trim()
+      if (projectId && publicId) {
+        const row = await getProjectLinkRow(projectId, publicId)
+        if (row?.id) {
+          await markPipeline(row.id, {
+            pipeline: 'pending',
+            pipelineStep: 'queued',
+            pipelineError: null,
+          })
+        }
+      }
+      // Чистим CRM-поле сразу: иначе Salesbot шлёт старую/чужую ссылку, пока Яндекс ещё работает.
+      if (args?.connection && leadId) {
+        try {
+          await clearAmoLeadPresentationUrl(args.connection, leadId, args.redirectUri || '')
+          pipeLog('write_amo.cleared_on_schedule', {
+            project: args?.project?.code || null,
+            publicId,
+            leadId,
+          })
+        } catch (err) {
+          pipeLog('write_amo.clear_on_schedule_fail', {
+            project: args?.project?.code || null,
+            publicId,
+            leadId,
+            error: err?.message || String(err),
+          })
+        }
+      }
+    } catch (err) {
+      console.error('pipeline mark pending', args?.project?.code, args?.publicId, err)
+    }
+  })()
   // Не unref: пайплайн должен гарантированно стартовать после ответа webhook.
   const timer = setTimeout(() => {
     pipeLog('schedule.fire', {

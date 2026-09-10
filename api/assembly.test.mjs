@@ -248,6 +248,10 @@ describe('applyDerivedFlowToConfig', () => {
   })
 })
 
+const __dirname = dirname(fileURLToPath(import.meta.url))
+const plazaConfigPath = join(__dirname, '../web/public/properties/plaza-kislovodsk-adaptive-draft2.json')
+const plazaCopyPath = join(__dirname, '../web/public/properties/adm-plaza-copy-v2.json')
+
 describe('computeLinkAssembly', () => {
   it('returns summary and fixed trace for fixed template', () => {
     const result = computeLinkAssembly(baseConfig, 'Иван', { topics: 'room' })
@@ -265,10 +269,26 @@ describe('computeLinkAssembly', () => {
     assert.ok(result.assemblyTrace.some((item) => item.id === 'rooms' && item.included))
     assert.match(result.assemblyTrace.find((item) => item.id === 'rooms').reason, /темы: room/)
   })
-})
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const plazaConfigPath = join(__dirname, '../web/public/properties/plaza-kislovodsk-adaptive-draft2.json')
+  it('does not pull family blocks for solo guest via shared room topic', () => {
+    const config = JSON.parse(readFileSync(plazaCopyPath, 'utf8'))
+    const result = computeLinkAssembly(config, 'Vitaliy', {
+      room: 'single',
+      dates: 'с 15 ноября на 14 дней',
+      topics: 'room, price, treatment, location',
+      partyType: 'solo',
+      objections: 'price',
+      confidence: '0.60',
+      fillRemaining: 'soft',
+    })
+    assert.equal(result.derivedFlow?.includes('family_with_kids'), false)
+    assert.equal(result.derivedFlow?.includes('couple_quiet_rest'), false)
+    const kids = result.assemblyTrace.find((item) => item.id === 'family_with_kids')
+    assert.ok(kids)
+    assert.equal(kids.included, false)
+    assert.match(kids.reason, /аудитория не совпала/)
+  })
+})
 
 describe('deriveFlowIds · plaza2 name-only (matches Constructor V2)', () => {
   it('does not stack three next_step blocks when only guest name is known', () => {
@@ -321,8 +341,6 @@ describe('deriveFlowIds · plaza2 name-only (matches Constructor V2)', () => {
     }
   })
 })
-
-const plazaCopyPath = join(__dirname, '../web/public/properties/adm-plaza-copy-v2.json')
 
 describe('deriveFlowIds · adm-plaza-copy-v2 name-only', () => {
   it('assembles curated cold-start overview', () => {

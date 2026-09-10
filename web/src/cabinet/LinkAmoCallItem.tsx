@@ -1,5 +1,15 @@
 import { useRef, useState } from 'react'
-import { Ban, ExternalLink, Phone, PhoneIncoming, PhoneOutgoing, RotateCcw, Trash2, X } from 'lucide-react'
+import {
+  Ban,
+  ExternalLink,
+  Phone,
+  PhoneIncoming,
+  PhoneOutgoing,
+  RefreshCw,
+  RotateCcw,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Accordion,
@@ -252,20 +262,33 @@ export function LinkAmoCallItem({
               <ExternalLink className="size-3.5 shrink-0" aria-hidden />
               Слушать запись
             </a>
-            {!hasTranscript && !transcribing ? (
+            {!transcribing ? (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 disabled={busy}
                 title={
-                  transcribeEstimate
-                    ? `Примерное время расшифровки: ${transcribeEstimate}`
-                    : undefined
+                  hasTranscript
+                    ? transcribeEstimate
+                      ? `Перетранскрибировать заново · ~${transcribeEstimate}`
+                      : 'Перетранскрибировать запись заново'
+                    : transcribeEstimate
+                      ? `Примерное время расшифровки: ${transcribeEstimate}`
+                      : undefined
                 }
                 onClick={() => void transcribe()}
               >
-                {transcribeEstimate ? `Расшифровать ${transcribeEstimate}` : 'Расшифровать'}
+                {hasTranscript ? (
+                  <>
+                    <RefreshCw aria-hidden className="size-3.5" />
+                    Перетранскрибировать
+                  </>
+                ) : transcribeEstimate ? (
+                  `Расшифровать ${transcribeEstimate}`
+                ) : (
+                  'Расшифровать'
+                )}
               </Button>
             ) : null}
           </div>

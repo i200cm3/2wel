@@ -184,6 +184,8 @@ type Props = {
   /** Встроенный редактор одного блока (Constructor V2). */
   blockPanel?: boolean
   blockSeqId?: string
+  /** Инкремент при клике в библиотеке — снова выбрать первый титр. */
+  blockFocusTick?: number
   isAdmin?: boolean
   hasDraft?: boolean
   saveState?: 'idle' | 'saving' | 'saved' | 'error'
@@ -215,6 +217,7 @@ export function TimelineEditor({
   onReset,
   blockPanel = false,
   blockSeqId,
+  blockFocusTick = 0,
   isAdmin = false,
   hasDraft = false,
   saveState = 'idle',
@@ -1762,7 +1765,11 @@ export function TimelineEditor({
   })
 
   const selectBlock = (id: string) => {
-    const firstClipId = config.sequences[id]?.clips[0]?.id ?? null
+    const seq = config.sequences[id]
+    const firstCueId = seq
+      ? (seq.cues?.[0]?.id ?? migrateSequenceCues(seq)[0]?.id ?? null)
+      : null
+    const firstClipId = seq?.clips[0]?.id ?? null
     for (const menu of menusList) {
       if (menu.branches.some((b) => b.sequenceId === id)) {
         setSectionsMenuId(menu.id)
@@ -1773,10 +1780,16 @@ export function TimelineEditor({
     setAwaitingPreviewPick(false)
     setSelectedMenuId(null)
     setSeqId(id)
-    setSelectedId(firstClipId)
-    setSelectedCueId(null)
     setSlidePreview(false)
-    setFocusFirstClipTick((n) => n + 1)
+    if (firstCueId) {
+      setSelectedCueId(firstCueId)
+      setSelectedId(null)
+      setFocusCaptionTick((n) => n + 1)
+    } else {
+      setSelectedCueId(null)
+      setSelectedId(firstClipId)
+      setFocusFirstClipTick((n) => n + 1)
+    }
   }
 
   const selectMenu = (menuId: string) => {
@@ -1809,21 +1822,49 @@ export function TimelineEditor({
     }
   }, [config, selectedMenuId, sectionsMenuId])
 
+  // При смене блока сразу открываем параметры первого титра (основная работа в редакторе).
   useEffect(() => {
-    setSelectedCueId(null)
     setSlidePreview(false)
-    setSelectedId((cur) => {
-      const clips = config.sequences[seqId]?.clips ?? []
-      if (cur && clips.some((c) => c.id === cur)) return cur
-      return clips[0]?.id ?? null
-    })
+    const seq = config.sequences[seqId]
+    const firstCueId = seq
+      ? (seq.cues?.[0]?.id ?? migrateSequenceCues(seq)[0]?.id ?? null)
+      : null
+    if (firstCueId) {
+      setSelectedCueId(firstCueId)
+      setSelectedId(null)
+      setFocusCaptionTick((n) => n + 1)
+      return
+    }
+    setSelectedCueId(null)
+    setSelectedId(seq?.clips[0]?.id ?? null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- только смена блока, не правки cues
   }, [seqId])
+
+  // Повторный клик в библиотеке (тот же блок) — снова первый титр.
+  useEffect(() => {
+    if (!isBlockPanel || !blockFocusTick || !blockSeqId) return
+    const seq = config.sequences[blockSeqId]
+    const firstCueId = seq
+      ? (seq.cues?.[0]?.id ?? migrateSequenceCues(seq)[0]?.id ?? null)
+      : null
+    setSlidePreview(false)
+    if (firstCueId) {
+      setSelectedCueId(firstCueId)
+      setSelectedId(null)
+      setFocusCaptionTick((n) => n + 1)
+    } else {
+      setSelectedCueId(null)
+      setSelectedId(seq?.clips[0]?.id ?? null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- только tick клика в библиотеке
+  }, [isBlockPanel, blockFocusTick, blockSeqId])
 
   useEffect(() => {
     const clips = config.sequences[seqId]?.clips ?? []
     setSelectedId((cur) => {
       if (!cur) return null
-      return clips.some((c) => c.id === cur) ? cur : (clips[0]?.id ?? null)
+      // Не подставляем первый клип автоматически — иначе перекрывает выбор титра.
+      return clips.some((c) => c.id === cur) ? cur : null
     })
   }, [seqId, config.sequences])
 

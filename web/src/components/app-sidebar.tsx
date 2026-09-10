@@ -19,6 +19,7 @@ import {
   LinkIcon,
   MicIcon,
   AudioLinesIcon,
+  KeyRoundIcon,
   PlugIcon,
   UsersIcon,
   UsersRoundIcon,
@@ -58,6 +59,7 @@ export function AppSidebar({
   const adminNav = user.isAdmin
     ? [
         { title: "Пользователи", url: "/app/users", icon: <UsersIcon /> },
+        { title: "API", url: "/app/api", icon: <KeyRoundIcon /> },
         { title: "Расход TTS", url: "/app/tts-usage", icon: <AudioLinesIcon /> },
       ]
     : []

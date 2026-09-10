@@ -11,7 +11,6 @@ const TITLES: Record<string, string> = {
   '': 'Аналитика',
   templates: 'Шаблоны',
   links: 'Ссылки',
-  api: 'Интеграции',
   integrations: 'Интеграции',
   edit: 'Конструктор',
   'edit-v2': 'Конструктор V2',
@@ -21,6 +20,7 @@ const TITLES: Record<string, string> = {
   account: 'Аккаунт',
   users: 'Пользователи',
   'tts-usage': 'Расход TTS',
+  api: 'API',
 }
 
 export type CabinetOutlet = {
@@ -123,6 +123,7 @@ export function CabinetLayout() {
   const segment = location.pathname.split('/').filter(Boolean).at(-1) ?? ''
   const isUsersSection = location.pathname.startsWith('/app/users')
   const isTtsUsageSection = location.pathname.startsWith('/app/tts-usage')
+  const isApiSection = location.pathname === '/app/api' || location.pathname.startsWith('/app/api/')
   const isEditor = segment === 'edit' || segment === 'edit-v2'
   const [sidebarOpen, setSidebarOpen] = useState(!isEditor)
   const sidebarBeforeEditor = useRef(true)
@@ -145,7 +146,9 @@ export function CabinetLayout() {
         ? 'Пользователи'
         : isTtsUsageSection
           ? 'Расход TTS'
-          : 'Объект'
+          : isApiSection
+            ? 'API'
+            : 'Объект'
     : (TITLES[segment] ?? (segment === code ? 'Аналитика' : project?.name ?? 'Кабинет'))
 
   if (unauthorized) {

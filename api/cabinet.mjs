@@ -3,7 +3,9 @@ import { amoRedirectUri, clearAmoLeadPresentationUrl } from './amoAuth.mjs'
 import { syncAmoCallsToLink, probeRecordingUrlsDetailed, recordingProbeAvailability } from './amoCalls.mjs'
 import { getAmoConnection } from './amoConnections.mjs'
 import { query } from './db.js'
-import { geminiTranscribeConfigured, geminiTextConfigured, transcribeAudioFromUrl } from './geminiTranscribe.mjs'
+import { geminiTranscribeConfigured, transcribeAudioFromUrl } from './geminiTranscribe.mjs'
+import { assemblyTextConfigured } from './yandexGpt.mjs'
+import { assemblyTextConfigError } from './platformIntegrations.mjs'
 import {
   buildRawTextFromSources,
   extractGuestSummaryFromRawText,
@@ -45,7 +47,7 @@ import { decideGuestLink, parseGuestLinkBody, resolveTemplateCode } from './gues
 import { listAmoStatusMaps } from './amoStatusMaps.mjs'
 import { parseProjectCode } from './projectCode.mjs'
 import { blankPresentationConfig, trialPresentationConfig } from './starter.mjs'
-import { personalizeConfigTts } from './ttsPersonalize.mjs'
+import { ensureMissingStaticTts, personalizeConfigTts, resyncStaleStaticTts } from './ttsPersonalize.mjs'
 import {
   applyDuePlanChanges,
   changeProjectPlan,
@@ -67,7 +69,7 @@ import {
 
 const CODE_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 
-const PROJECT_SELECT = `id, code, name, user_id, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, ${planColumns()}`
+const PROJECT_SELECT = `id, code, name, user_id, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, fill_missing_tts, ${planColumns()}`
 
 export async function projectForUser(userId, code) {
   if (!code || !CODE_RE.test(code)) return null
@@ -105,6 +107,7 @@ function mapProject(row, stats, periodLinks) {
     updatedAt: row.updated_at,
     skipTtsOnLinkIssue: Boolean(row.skip_tts_on_link_issue),
     captionsFromTts: Boolean(row.captions_from_tts),
+    fillMissingTts: row.fill_missing_tts == null ? true : Boolean(row.fill_missing_tts),
     role,
     stats: {
       templates: Number(stats?.templates ?? 0),
@@ -120,8 +123,24 @@ async function projectSkipsTtsOnLinkIssue(project) {
   if (Object.prototype.hasOwnProperty.call(project, 'skip_tts_on_link_issue')) {
     return Boolean(project.skip_tts_on_link_issue)
   }
+  if (Object.prototype.hasOwnProperty.call(project, 'skipTtsOnLinkIssue')) {
+    return Boolean(project.skipTtsOnLinkIssue)
+  }
   const { rows } = await query(`SELECT skip_tts_on_link_issue FROM projects WHERE id = $1`, [project.id])
   return Boolean(rows[0]?.skip_tts_on_link_issue)
+}
+
+/** Догенерировать ttsSrc по ttsText, если файла ещё нет (по умолчанию включено). */
+async function projectFillsMissingTts(project) {
+  if (!project?.id) return true
+  if (Object.prototype.hasOwnProperty.call(project, 'fill_missing_tts')) {
+    return project.fill_missing_tts == null ? true : Boolean(project.fill_missing_tts)
+  }
+  if (Object.prototype.hasOwnProperty.call(project, 'fillMissingTts')) {
+    return project.fillMissingTts == null ? true : Boolean(project.fillMissingTts)
+  }
+  const { rows } = await query(`SELECT fill_missing_tts FROM projects WHERE id = $1`, [project.id])
+  return rows[0]?.fill_missing_tts == null ? true : Boolean(rows[0].fill_missing_tts)
 }
 
 async function projectPayload(row, stats) {
@@ -133,7 +152,7 @@ export async function listProjects(userId) {
   await applyDuePlanChanges()
   const { rows } = await query(
     `SELECT
-       p.id, p.code, p.name, p.type, p.status, p.created_at, p.updated_at, p.skip_tts_on_link_issue, p.captions_from_tts, ${planColumns('p')},
+       p.id, p.code, p.name, p.type, p.status, p.created_at, p.updated_at, p.skip_tts_on_link_issue, p.captions_from_tts, p.fill_missing_tts, ${planColumns('p')},
        (SELECT count(*) FROM templates t WHERE t.project_id = p.id)::int AS templates,
        (SELECT count(*) FROM links l WHERE l.project_id = p.id)::int AS links,
        (SELECT coalesce(sum(l.open_count), 0) FROM links l WHERE l.project_id = p.id)::int AS opens,
@@ -212,7 +231,7 @@ export async function listTemplates(projectId) {
 export async function listLinks(projectId) {
   const { rows } = await query(
     `SELECT l.id, l.public_id, l.guest_name, l.external_id, l.created_at, l.first_opened_at, l.open_count,
-            l.guest_summary, l.derived_flow,
+            l.guest_summary, l.derived_flow, l.summary_meta,
             t.code AS template_code, t.name AS template_name, p.code AS project_code,
             EXISTS (
               SELECT 1 FROM link_raw_sources r WHERE r.link_id = l.id
@@ -228,6 +247,11 @@ export async function listLinks(projectId) {
   return rows.map((row) => {
     const summary = row.guest_summary && typeof row.guest_summary === 'object' ? row.guest_summary : null
     const flow = Array.isArray(row.derived_flow) ? row.derived_flow : null
+    const meta =
+      row.summary_meta && typeof row.summary_meta === 'object' && !Array.isArray(row.summary_meta)
+        ? row.summary_meta
+        : null
+    const pipelineRaw = meta?.pipeline != null ? String(meta.pipeline).trim() : ''
     return {
       id: row.id,
       publicId: row.public_id,
@@ -251,6 +275,8 @@ export async function listLinks(projectId) {
         : null,
       flowBlockCount: flow ? flow.length : 0,
       hasRawSources: Boolean(row.has_raw_sources),
+      pipelineStatus: pipelineRaw || null,
+      pipelineStep: meta?.pipelineStep != null ? String(meta.pipelineStep) : null,
     }
   })
 }
@@ -436,6 +462,13 @@ export async function updateProjectForUser(project, body) {
         ? body.captions_from_tts
         : null
 
+  const fillMissingTts =
+    typeof body?.fillMissingTts === 'boolean'
+      ? body.fillMissingTts
+      : typeof body?.fill_missing_tts === 'boolean'
+        ? body.fill_missing_tts
+        : null
+
   let nextCode = project.code
   if (typeof body?.code === 'string') {
     const parsed = parseProjectCode(body.code)
@@ -462,10 +495,11 @@ export async function updateProjectForUser(project, body) {
            code = $3,
            skip_tts_on_link_issue = COALESCE($4, skip_tts_on_link_issue),
            captions_from_tts = COALESCE($5, captions_from_tts),
+           fill_missing_tts = COALESCE($6, fill_missing_tts),
            updated_at = now()
        WHERE id = $1
-       RETURNING id, code, name, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, ${planColumns()}`,
-      [project.id, name, nextCode, skipTtsOnLinkIssue, captionsFromTts],
+       RETURNING id, code, name, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, fill_missing_tts, ${planColumns()}`,
+      [project.id, name, nextCode, skipTtsOnLinkIssue, captionsFromTts, fillMissingTts],
     )
     row = updated.rows[0]
   } catch (err) {
@@ -896,14 +930,78 @@ async function prepareTemplateForGuest(project, templateRow, guestName, assembly
   let row = templateRow
   // В эфир только templates.config. Черновик сам по себе не публикуем при выдаче ссылки —
   // иначе гонка с автосохранением затирает только что опубликованный конфиг.
-  const published = asConfig(row.config)
+  let published = asConfig(row.config)
   if (!published) {
     return { status: 400, error: 'Шаблон ещё не опубликован' }
   }
-  const configForGuest = applyDerivedFlowToConfig(published, assembly?.derivedFlow)
   const skipTts = Boolean(options.skipTts) || (await projectSkipsTtsOnLinkIssue(project))
+  const fillMissing = await projectFillsMissingTts(project)
+  const refreshStaleTts = Boolean(options.refreshStaleTts)
+
+  // Статика независима от «не генерировать TTS при выдаче» (там про {name}).
+  if (fillMissing) {
+    const baked = await ensureMissingStaticTts(project, published, { required: true })
+    if (!baked.ok) {
+      return {
+        status: baked.status || 502,
+        error: baked.error || 'Не удалось сгенерировать озвучку шаблона',
+      }
+    }
+    if (baked.changed) {
+      const templateId = row.template_id || row.id
+      console.info(
+        'tts.fill_missing',
+        JSON.stringify({
+          project: project.code,
+          templateId,
+          generated: baked.staticGenerated ?? 0,
+          cached: baked.staticCached ?? 0,
+        }),
+      )
+      await query(
+        `UPDATE templates SET config = $2::jsonb, updated_at = now() WHERE id = $1 AND project_id = $3`,
+        [templateId, JSON.stringify(baked.config), project.id],
+      )
+      published = baked.config
+      row = { ...row, config: baked.config }
+    }
+  }
+
+  // Явная пересборка ссылки: текст в блоке поменяли, а старый ttsSrc оставили.
+  if (refreshStaleTts) {
+    const synced = await resyncStaleStaticTts(project, published, { required: true })
+    if (!synced.ok) {
+      return {
+        status: synced.status || 502,
+        error: synced.error || 'Не удалось обновить озвучку шаблона',
+      }
+    }
+    if (synced.changed) {
+      const templateId = row.template_id || row.id
+      console.info(
+        'tts.resync_stale',
+        JSON.stringify({
+          project: project.code,
+          templateId,
+          generated: synced.staticGenerated ?? 0,
+          cached: synced.staticCached ?? 0,
+        }),
+      )
+      await query(
+        `UPDATE templates SET config = $2::jsonb, updated_at = now() WHERE id = $1 AND project_id = $3`,
+        [templateId, JSON.stringify(synced.config), project.id],
+      )
+      published = synced.config
+      row = { ...row, config: synced.config }
+    }
+  }
+
   if (!skipTts) {
-    const prep = await personalizeConfigTts(project, configForGuest, guestName, { required: true })
+    const configForGuest = applyDerivedFlowToConfig(published, assembly?.derivedFlow)
+    const prep = await personalizeConfigTts(project, configForGuest, guestName, {
+      required: true,
+      fillMissingStatic: false,
+    })
     if (!prep.ok) {
       return {
         status: prep.status || 502,
@@ -917,8 +1015,11 @@ async function prepareTemplateForGuest(project, templateRow, guestName, assembly
 export async function extractProjectLinkSummary(project, publicId) {
   const linkRow = await getProjectLinkRow(project.id, publicId)
   if (!linkRow) return { status: 404, error: 'link not found' }
-  if (!geminiTextConfigured()) {
-    return { status: 503, error: 'Извлечение не настроено (GEMINI_TRANSCRIBE_URL или GEMINI_API_KEY)' }
+  if (!(await assemblyTextConfigured())) {
+    return {
+      status: 503,
+      error: (await assemblyTextConfigError()) || 'Извлечение не настроено',
+    }
   }
 
   const detail = await getProjectLinkDetail(project.id, publicId)
@@ -949,8 +1050,27 @@ export async function extractProjectLinkSummary(project, publicId) {
 export async function reassembleProjectLink(project, publicId, body = {}) {
   const linkRow = await getProjectLinkRow(project.id, publicId)
   if (!linkRow) return { status: 404, error: 'link not found' }
-  const published = asConfig(linkRow.config)
-  if (!published || linkRow.status !== 'published') {
+
+  // Свежий шаблон (не только join с момента открытия диалога): черновик → в эфир,
+  // затем пересборка блоков и озвучки на той же publicId.
+  let templateRow = linkRow.template_code
+    ? await templateByCode(project.id, linkRow.template_code)
+    : null
+  if (!templateRow) {
+    return { status: 404, error: 'Шаблон ссылки не найден' }
+  }
+
+  let publishedDraft = false
+  if (Boolean(body?.applyDraft) && asConfig(templateRow.draft_config)) {
+    const published = await publishStoredTemplate(templateRow)
+    if (published.error) return published
+    publishedDraft = true
+    templateRow = await templateByCode(project.id, templateRow.code)
+    if (!templateRow) return { status: 404, error: 'Шаблон ссылки не найден' }
+  }
+
+  const published = asConfig(templateRow.config)
+  if (!published || templateRow.status !== 'published') {
     return { status: 400, error: 'Шаблон ещё не опубликован' }
   }
 
@@ -963,7 +1083,9 @@ export async function reassembleProjectLink(project, publicId, body = {}) {
   const guestName =
     String(body?.name ?? body?.guestName ?? linkRow.guest_name ?? '').trim() || linkRow.guest_name
   const assembly = computeLinkAssembly(published, guestName, summaryInput)
-  const prepared = await prepareTemplateForGuest(project, linkRow, guestName, assembly)
+  const prepared = await prepareTemplateForGuest(project, templateRow, guestName, assembly, {
+    refreshStaleTts: true,
+  })
   if (prepared.error) return prepared
 
   const summaryMeta =
@@ -974,16 +1096,20 @@ export async function reassembleProjectLink(project, publicId, body = {}) {
           extractedAt: new Date().toISOString(),
         }
 
-  const updated = await updateLinkTemplate(linkRow.id, linkRow.template_id, {
+  const updated = await updateLinkTemplate(linkRow.id, prepared.row.id, {
     guestSummary: assembly.guestSummary,
     derivedFlow: assembly.derivedFlow,
     assemblyTrace: assembly.assemblyTrace,
-    summaryMeta,
+    summaryMeta: {
+      ...summaryMeta,
+      reassembledAt: new Date().toISOString(),
+      ...(publishedDraft ? { publishedDraft: true } : {}),
+    },
     guestName,
   })
   if (!updated) return { status: 500, error: 'Не удалось пересобрать' }
   const detail = await getProjectLinkDetail(project.id, updated.publicId)
-  return { status: 200, link: detail }
+  return { status: 200, link: detail, publishedDraft }
 }
 
 function geminiUserMessage(error, detail) {
@@ -1103,7 +1229,7 @@ export async function addLinkRawSource(project, publicId, body = {}) {
   if (audioUrl && !text) {
     if (kind === 'call_transcript') {
       text = audioUrl
-    } else if (!geminiTranscribeConfigured()) {
+    } else if (!(await geminiTranscribeConfigured())) {
       return { status: 503, error: 'Транскрибация не настроена (GEMINI_TRANSCRIBE_URL или GEMINI_API_KEY)' }
     } else {
       const transcribed = await transcribeAudioFromUrl(audioUrl)
@@ -1186,7 +1312,7 @@ export async function transcribeLinkRawSourceEntry(project, publicId, sourceId, 
 
   const audioUrl = String(body?.audioUrl ?? body?.url ?? '').trim()
   if (!audioUrl) return { status: 400, error: 'Укажите URL записи звонка' }
-  if (!geminiTranscribeConfigured()) {
+  if (!(await geminiTranscribeConfigured())) {
     return { status: 503, error: 'Транскрибация не настроена (GEMINI_TRANSCRIBE_URL или GEMINI_API_KEY)' }
   }
 
@@ -1739,7 +1865,11 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
         json(res, result.status, { error: result.error })
         return true
       }
-      json(res, 200, { ok: true, link: result.link })
+      json(res, 200, {
+        ok: true,
+        link: result.link,
+        publishedDraft: Boolean(result.publishedDraft),
+      })
       return true
     }
     json(res, 405, { error: 'method not allowed' })

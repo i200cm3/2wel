@@ -128,6 +128,8 @@ export type Project = {
   skipTtsOnLinkIssue?: boolean
   /** В гостевой презентации в титрах показывать текст TTS вместо короткого caption. */
   captionsFromTts?: boolean
+  /** Догенерировать отсутствующие ttsSrc по ttsText при выдаче / открытии. */
+  fillMissingTts?: boolean
   /** owner — владелец, member — сотрудник, admin — системный администратор. */
   role?: 'owner' | 'member' | 'admin'
   stats: {
@@ -233,6 +235,15 @@ export type ProjectLink = {
   summaryPreview?: ProjectLinkSummaryPreview | null
   flowBlockCount?: number
   hasRawSources?: boolean
+  /** pending/running — транскрибация/сборка/TTS ещё идут. */
+  pipelineStatus?: string | null
+  pipelineStep?: string | null
+}
+
+/** Ссылка ещё собирается (не копировать / не открывать гостю). */
+export function isLinkPreparing(pipelineStatus?: string | null): boolean {
+  const status = String(pipelineStatus ?? '').trim().toLowerCase()
+  return status === 'pending' || status === 'running'
 }
 
 export type AssemblyTraceEntry = {
@@ -383,6 +394,7 @@ export function patchProject(
     code?: string
     skipTtsOnLinkIssue?: boolean
     captionsFromTts?: boolean
+    fillMissingTts?: boolean
   },
 ) {
   return apiSend<{
@@ -598,9 +610,11 @@ export function reassembleProjectLink(
     name?: string
     summary?: Record<string, string>
     summaryMeta?: Record<string, unknown>
+    /** Опубликовать черновик шаблона перед пересборкой (кнопка в кабинете). */
+    applyDraft?: boolean
   },
 ) {
-  return apiSend<{ ok: true; link: ProjectLinkDetail }>(
+  return apiSend<{ ok: true; link: ProjectLinkDetail; publishedDraft?: boolean }>(
     `/api/projects/${encodeURIComponent(projectCode)}/links/${encodeURIComponent(publicId)}/reassemble`,
     'POST',
     payload ?? {},
@@ -1180,4 +1194,50 @@ export type AdminTtsUsageOverview = {
 export function fetchAdminTtsUsage(days = 0) {
   const qs = days > 0 ? `?days=${encodeURIComponent(String(days))}` : ''
   return apiGet<AdminTtsUsageOverview>(`/api/admin/tts-usage${qs}`)
+}
+
+export type AdminIntegrationProvider = {
+  id: string
+  label: string
+  comingSoon: boolean
+  hasKey: boolean
+  keyHint: string | null
+  source: 'database' | 'env' | 'none'
+  folderId?: string | null
+  hasFolderId?: boolean
+  folderIdSource?: 'database' | 'env' | 'none'
+}
+
+export type AdminTranscribeProvider = {
+  id: string
+  label: string
+  available: boolean
+}
+
+export type AdminAssemblyProvider = {
+  id: string
+  label: string
+  available: boolean
+}
+
+export type AdminIntegrationsOverview = {
+  ok: true
+  transcribeProvider: string
+  transcribeProviders: AdminTranscribeProvider[]
+  assemblyProvider: string
+  assemblyProviders: AdminAssemblyProvider[]
+  integrations: AdminIntegrationProvider[]
+}
+
+export function fetchAdminIntegrations() {
+  return apiGet<AdminIntegrationsOverview>('/api/admin/integrations')
+}
+
+export function saveAdminIntegrations(payload: {
+  transcribeProvider?: string
+  assemblyProvider?: string
+  secrets?: Record<string, string>
+  configs?: { yandexFolderId?: string }
+}) {
+  return apiSend<AdminIntegrationsOverview>('/api/admin/integrations', 'PATCH', payload)
 }

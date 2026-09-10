@@ -194,6 +194,11 @@ describe('deriveFlowIds · adaptive slots', () => {
     const config = adaptiveConfig()
     config.constructorV2!.assembly.maxAutoplaySec = 120
     config.constructorV2!.assembly.maxBlocks = 12
+    config.constructorV2!.sequenceMetaById.food_family = meta({
+      group: 'food',
+      priority: 8,
+      topicTags: ['food'],
+    })
     config.sequences.treatment_start = sequence('treatment_start')
     config.sequences.leisure_calm = sequence('leisure_calm')
     config.sequences.location_where = sequence('location_where')
@@ -448,6 +453,22 @@ describe('deriveFlowIds · adaptive slots', () => {
 
     assert.ok(flow.includes('family_with_kids'))
     assert.equal(flow.includes('territory_walks'), false)
+  })
+
+  it('does not include family_with_kids for solo guest just because topic is room', () => {
+    const flow = deriveFlowIds(adaptiveConfig(), {
+      guestName: 'Vitaliy',
+      dates: 'ноябрь',
+      partyType: 'solo',
+      topics: 'room, price',
+      objections: 'price',
+      confidence: '0.6',
+      room: 'single',
+      fillRemaining: 'soft',
+    })
+    assert.equal(flow.includes('family_with_kids'), false)
+    assert.equal(flow.includes('rooms_family'), false)
+    assert.ok(flow.includes('rooms_standard'), flow.join(' -> '))
   })
 })
 

@@ -62,6 +62,10 @@ import { isOtpPurpose, issueEmailOtp, verifyEmailOtp } from './otp.mjs'
 import { sendTeamJoinCredentialsMail } from './mail.mjs'
 import { getAdminTtsUsageOverview } from './ttsUsage.mjs'
 import { createDemoGuestLead } from './demoLead.mjs'
+import {
+  getAdminIntegrationsOverview,
+  updateAdminIntegrations,
+} from './platformIntegrations.mjs'
 
 const PORT = Number(process.env.PORT || 3000)
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024
@@ -306,7 +310,12 @@ const server = http.createServer(async (req, res) => {
               { id: row.project_id, code: row.project_code },
               playbackConfig,
               row.guest_name,
-              { required: false },
+              {
+                required: false,
+                // Массовую статику не генерируем на открытии — иначе таймаут гостевой ссылки.
+                // Статика дожимается при сборке (fill_missing_tts).
+                fillMissingStatic: false,
+              },
             )
           ).config,
           row.project_code,
@@ -831,6 +840,31 @@ const server = http.createServer(async (req, res) => {
         const days = Number.isFinite(daysRaw) ? daysRaw : 0
         const overview = await getAdminTtsUsageOverview({ days })
         json(res, 200, { ok: true, ...overview })
+        return
+      }
+      if (
+        (url === '/api/admin/integrations' || url === '/api/admin/integrations/') &&
+        (req.method === 'GET' || req.method === 'HEAD' || req.method === 'PATCH')
+      ) {
+        if (req.method === 'GET' || req.method === 'HEAD') {
+          const overview = await getAdminIntegrationsOverview()
+          json(res, 200, { ok: true, ...overview })
+          return
+        }
+        const raw = await readBuffer(req, MAX_JSON_BYTES)
+        let payload = {}
+        try {
+          payload = JSON.parse(raw.toString('utf8') || '{}')
+        } catch {
+          json(res, 400, { error: 'invalid json' })
+          return
+        }
+        const updated = await updateAdminIntegrations(payload)
+        if (!updated.ok) {
+          json(res, updated.status || 400, { error: updated.error || 'Не удалось сохранить' })
+          return
+        }
+        json(res, 200, { ok: true, ...updated })
         return
       }
       const adminPlanMatch = url.match(/^\/api\/admin\/projects\/([^/]+)\/plan\/?$/)

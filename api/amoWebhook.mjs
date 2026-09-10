@@ -520,6 +520,26 @@ export function isPipelineAllowedForIssue(pipelineId) {
 }
 
 /**
+ * Ограничение автовыдачи по этапам (status_id).
+ * AMO_ISSUE_STATUS_IDS=87975206 — пусто = любой этап (в рамках pipeline allowlist).
+ * Нужно, когда «Тест» — этап внутри боевой воронки, а не отдельная воронка.
+ */
+export function issueStatusAllowlist() {
+  const raw = String(process.env.AMO_ISSUE_STATUS_IDS ?? '')
+    .split(/[,;\s]+/)
+    .map((item) => item.trim())
+    .filter(Boolean)
+  return new Set(raw)
+}
+
+export function isStatusAllowedForIssue(statusId) {
+  const allow = issueStatusAllowlist()
+  if (!allow.size) return true
+  const id = String(statusId ?? '').trim()
+  return Boolean(id && allow.has(id))
+}
+
+/**
  * Выдавать гостевую ссылку:
  * — Salesbot с явным data/token/query (если вдруг передают);
  * — нативный status_lead: в теле уже есть id сделки, имя/звонки добираем через API.
@@ -530,12 +550,12 @@ export function shouldIssueGuestLinkFromAmoWebhook(body, query = {}) {
   if (!hasLeadStatusWebhook(body)) return false
   const parsed = extractAmoGuestLink(body, query)
   if (!parsed.externalId) return false
-  // pipeline_id может прийти в webhook; если нет — resolveGuestFields доберёт из API,
-  // а финальный фильтр воронки — в handleAmoWebhook после snapshot.
+  // pipeline/status могут прийти в webhook; если нет — resolveGuestFields доберёт из API,
+  // а финальный фильтр — в handleAmoWebhook после snapshot.
   return true
 }
 
-/** Финальная проверка воронки после snapshot (когда pipelineId уже известен). */
-export function shouldIssueAfterPipelineCheck(pipelineId) {
-  return isPipelineAllowedForIssue(pipelineId)
+/** Финальная проверка воронки/этапа после snapshot. */
+export function shouldIssueAfterPipelineCheck(pipelineId, statusId) {
+  return isPipelineAllowedForIssue(pipelineId) && isStatusAllowedForIssue(statusId)
 }

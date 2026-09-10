@@ -105,7 +105,8 @@ async function fetchSubscriptionViaProxy(proxyBase) {
 }
 
 async function fetchSubscriptionDirect() {
-  const apiKey = envPick('ELEVENLABS_API_KEY')
+  const { resolveElevenlabsApiKey } = await import('./platformIntegrations.mjs')
+  const apiKey = await resolveElevenlabsApiKey()
   if (!apiKey) {
     return { ok: false, error: 'ElevenLabs не настроен' }
   }
@@ -153,6 +154,9 @@ function normalizeSubscription(raw) {
 
 /** Баланс символов ElevenLabs (через proxy или напрямую). */
 export async function fetchElevenlabsBalance() {
+  const { getPlatformSetting, SETTING_KEYS } = await import('./platformIntegrations.mjs')
+  const dbKey = await getPlatformSetting(SETTING_KEYS.elevenlabsApiKey)
+  if (dbKey) return fetchSubscriptionDirect()
   const proxyUrl = envPick('ELEVENLABS_PROXY_URL')
   if (proxyUrl) return fetchSubscriptionViaProxy(proxyUrl)
   return fetchSubscriptionDirect()

@@ -500,7 +500,7 @@ export async function getPublicPlayback(publicId) {
   if (!PUBLIC_ID_RE.test(id)) return null
   const { rows } = await query(
     `SELECT l.id, l.public_id, l.guest_name, l.project_id, l.guest_summary, l.derived_flow, t.config,
-            p.code AS project_code, p.captions_from_tts
+            p.code AS project_code, p.captions_from_tts, p.fill_missing_tts
      FROM links l
      JOIN templates t ON t.id = l.template_id
      JOIN projects p ON p.id = l.project_id

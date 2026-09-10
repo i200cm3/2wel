@@ -1,4 +1,5 @@
 import { query } from './db.js'
+import { peekCachedSetting, SETTING_KEYS } from './platformIntegrations.mjs'
 import { loadEnv } from './env.js'
 import { elevenDemoAvailable, elevenDemoSrc } from './ttsVoiceDemo.mjs'
 
@@ -65,6 +66,7 @@ export function sberConfigured() {
 }
 
 export function elevenConfigured() {
+  if (peekCachedSetting(SETTING_KEYS.elevenlabsApiKey)) return true
   return Boolean(env('ELEVENLABS_API_KEY') || env('ELEVENLABS_PROXY_URL'))
 }
 
@@ -305,6 +307,8 @@ function coerceElevenSelection(selection) {
 
 /** Голос для генерации. */
 export async function resolveGenerationVoice(projectId) {
+  const { warmPlatformSettingsCache } = await import('./platformIntegrations.mjs')
+  await warmPlatformSettingsCache()
   const { rows } = await query(
     `SELECT tts_provider, tts_voice, tts_elevenlabs_enabled FROM projects WHERE id = $1`,
     [projectId],
@@ -323,6 +327,8 @@ export async function resolveGenerationVoice(projectId) {
 }
 
 export async function loadProjectVoice(projectId) {
+  const { warmPlatformSettingsCache } = await import('./platformIntegrations.mjs')
+  await warmPlatformSettingsCache()
   const { rows } = await query(
     `SELECT tts_provider, tts_voice, tts_elevenlabs_enabled FROM projects WHERE id = $1`,
     [projectId],

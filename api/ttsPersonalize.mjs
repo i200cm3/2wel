@@ -1,5 +1,11 @@
 import { formatGuestName } from './guestLink.mjs'
-import { ensureProjectTts } from './tts.mjs'
+import {
+  elevenSettings,
+  ensureProjectTts,
+  ttsCacheKey,
+  ttsCacheKeyParts,
+} from './tts.mjs'
+import { resolveGenerationVoice } from './ttsVoices.mjs'
 
 const NAME_TOKEN_RE = /\{\s*name\s*\}|\[\s*name\s*\]/i
 
@@ -52,6 +58,104 @@ export function collectPersonalizedTtsJobs(config, guestName) {
         cueId: `menu:${menuId}`,
         template,
         speak: fillTtsSpeakText(template, guestName),
+      })
+    }
+  }
+
+  return jobs
+}
+
+function hasTtsSrc(value) {
+  return typeof value === 'string' && value.trim().length > 0
+}
+
+/**
+ * Cue/меню с готовым ttsText, но без файла — не были сгенерированы вручную в конструкторе.
+ * Без `{name}`: один файл на весь шаблон.
+ */
+export function collectMissingStaticTtsJobs(config) {
+  const jobs = []
+  const sequences = config?.sequences
+  if (sequences && typeof sequences === 'object') {
+    for (const [sequenceId, seq] of Object.entries(sequences)) {
+      const cues = Array.isArray(seq?.cues) ? seq.cues : []
+      cues.forEach((cue, cueIndex) => {
+        const template = typeof cue?.ttsText === 'string' ? cue.ttsText.trim() : ''
+        if (!template || ttsTextNeedsGuestName(template) || hasTtsSrc(cue?.ttsSrc)) return
+        jobs.push({
+          kind: 'cue',
+          sequenceId,
+          cueIndex,
+          cueId: typeof cue.id === 'string' ? cue.id : `idx-${cueIndex}`,
+          template,
+          speak: template,
+        })
+      })
+    }
+  }
+
+  const menus = config?.menus
+  if (menus && typeof menus === 'object') {
+    for (const [menuId, menu] of Object.entries(menus)) {
+      const template = typeof menu?.menuTtsText === 'string' ? menu.menuTtsText.trim() : ''
+      if (!template || ttsTextNeedsGuestName(template) || hasTtsSrc(menu?.menuTtsSrc)) continue
+      jobs.push({
+        kind: 'menu',
+        menuId,
+        cueId: `menu:${menuId}`,
+        template,
+        speak: template,
+      })
+    }
+  }
+
+  return jobs
+}
+
+/**
+ * Статическая озвучка с файлом, но текст/голос уже не совпадают с ttsHash.
+ * `expectedHashForSpeak(speak)` — хеш текущего голоса проекта для текста.
+ */
+export function collectStaleStaticTtsJobs(config, expectedHashForSpeak) {
+  const jobs = []
+  if (typeof expectedHashForSpeak !== 'function') return jobs
+
+  const sequences = config?.sequences
+  if (sequences && typeof sequences === 'object') {
+    for (const [sequenceId, seq] of Object.entries(sequences)) {
+      const cues = Array.isArray(seq?.cues) ? seq.cues : []
+      cues.forEach((cue, cueIndex) => {
+        const template = typeof cue?.ttsText === 'string' ? cue.ttsText.trim() : ''
+        if (!template || ttsTextNeedsGuestName(template) || !hasTtsSrc(cue?.ttsSrc)) return
+        const expected = String(expectedHashForSpeak(template) ?? '')
+        const current = typeof cue?.ttsHash === 'string' ? cue.ttsHash.trim() : ''
+        if (expected && current && current === expected) return
+        jobs.push({
+          kind: 'cue',
+          sequenceId,
+          cueIndex,
+          cueId: typeof cue.id === 'string' ? cue.id : `idx-${cueIndex}`,
+          template,
+          speak: template,
+        })
+      })
+    }
+  }
+
+  const menus = config?.menus
+  if (menus && typeof menus === 'object') {
+    for (const [menuId, menu] of Object.entries(menus)) {
+      const template = typeof menu?.menuTtsText === 'string' ? menu.menuTtsText.trim() : ''
+      if (!template || ttsTextNeedsGuestName(template) || !hasTtsSrc(menu?.menuTtsSrc)) continue
+      const expected = String(expectedHashForSpeak(template) ?? '')
+      const current = typeof menu?.menuTtsHash === 'string' ? menu.menuTtsHash.trim() : ''
+      if (expected && current && current === expected) continue
+      jobs.push({
+        kind: 'menu',
+        menuId,
+        cueId: `menu:${menuId}`,
+        template,
+        speak: template,
       })
     }
   }
@@ -136,96 +240,48 @@ export function applyCaptionsFromTts(config) {
 }
 
 /**
- * Подставляет персональные ttsSrc/ttsHash в копию конфига.
- * Старый файл шаблона сбрасывается — гость не услышит чужое имя.
- * @param {{ required?: boolean }} opts — required: при выдаче ссылки ошибка генерации валит весь запрос
+ * Подставляет персональные ttsSrc/ttsHash в копию конфига
+ * и догенерирует отсутствующие статические озвучки (есть ttsText, нет ttsSrc).
+ * Старый файл шаблона с `{name}` сбрасывается — гость не услышит чужое имя.
+ * @param {{ required?: boolean, fillMissingStatic?: boolean }} opts
+ *   required: при выдаче ссылки ошибка генерации валит весь запрос
+ *   fillMissingStatic: догенерировать статические без ttsSrc (по умолчанию true)
  */
 export async function personalizeConfigTts(project, config, guestName, opts = {}) {
   const required = Boolean(opts.required)
-  const jobs = collectPersonalizedTtsJobs(config, guestName)
-  if (jobs.length === 0) {
-    return { ok: true, config, generated: 0, cached: 0 }
+  const fillMissingStatic = opts.fillMissingStatic !== false
+  const personalJobs = collectPersonalizedTtsJobs(config, guestName)
+  const staticJobs = fillMissingStatic ? collectMissingStaticTtsJobs(config) : []
+  if (personalJobs.length === 0 && staticJobs.length === 0) {
+    return { ok: true, config, generated: 0, cached: 0, staticGenerated: 0, staticCached: 0 }
   }
 
   const next = structuredClone(config)
   let generated = 0
   let cached = 0
+  let staticGenerated = 0
+  let staticCached = 0
 
-  for (const job of jobs) {
-    if (job.kind === 'menu') {
-      const menu = next.menus?.[job.menuId]
-      if (!menu) {
-        if (required) {
-          return {
-            ok: false,
-            status: 500,
-            error: `Не найдено меню для персональной озвучки (${job.cueId})`,
-          }
-        }
-        continue
-      }
+  for (const job of staticJobs) {
+    const applied = await applyTtsJob(project, next, job, {
+      required,
+      clearExisting: false,
+      label: 'статическую озвучку',
+    })
+    if (!applied.ok) return applied
+    if (applied.cached) staticCached += 1
+    else if (applied.generated) staticGenerated += 1
+  }
 
-      delete menu.menuTtsSrc
-      delete menu.menuTtsHash
-
-      const result = await ensureProjectTts(project, job.speak, { force: false })
-      if (result.status !== 200 || !result.body?.ok || !result.body.src) {
-        const error =
-          result.body?.error ||
-          result.body?.detail ||
-          `Не удалось озвучить меню с {name} (${job.cueId})`
-        if (required) {
-          return { ok: false, status: result.status >= 400 ? result.status : 502, error }
-        }
-        console.error('tts personalize', project.code, job.cueId, error)
-        continue
-      }
-
-      menu.menuTtsSrc = result.body.src
-      if (result.body.hash) menu.menuTtsHash = result.body.hash
-      if (result.body.cached) cached += 1
-      else generated += 1
-      continue
-    }
-
-    const seq = next.sequences?.[job.sequenceId]
-    const cue = Array.isArray(seq?.cues) ? seq.cues[job.cueIndex] : null
-    if (!cue) {
-      if (required) {
-        return {
-          ok: false,
-          status: 500,
-          error: `Не найден титр для персональной озвучки (${job.cueId})`,
-        }
-      }
-      continue
-    }
-
-    // Не оставляем файл шаблона («Гость» / превью редактора), если генерация сорвётся.
-    delete cue.ttsSrc
-    delete cue.ttsHash
-
-    const result = await ensureProjectTts(project, job.speak, { force: false })
-    if (result.status !== 200 || !result.body?.ok || !result.body.src) {
-      const error =
-        result.body?.error ||
-        result.body?.detail ||
-        `Не удалось озвучить текст с {name} (${job.cueId})`
-      if (required) {
-        return { ok: false, status: result.status >= 400 ? result.status : 502, error }
-      }
-      console.error('tts personalize', project.code, job.cueId, error)
-      continue
-    }
-
-    cue.ttsSrc = result.body.src
-    if (result.body.hash) cue.ttsHash = result.body.hash
-    const dur = result.body.durationSec
-    if (typeof dur === 'number' && Number.isFinite(dur) && dur > 0) {
-      extendCueDuration(seq, job.cueIndex, dur)
-    }
-    if (result.body.cached) cached += 1
-    else generated += 1
+  for (const job of personalJobs) {
+    const applied = await applyTtsJob(project, next, job, {
+      required,
+      clearExisting: true,
+      label: 'текст с {name}',
+    })
+    if (!applied.ok) return applied
+    if (applied.cached) cached += 1
+    else if (applied.generated) generated += 1
   }
 
   // Зеркало плоских полей главного меню после персонализации.
@@ -240,5 +296,195 @@ export async function personalizeConfigTts(project, config, guestName, opts = {}
     next.menuTtsSrc = main.menuTtsSrc
   }
 
-  return { ok: true, config: next, generated, cached }
+  return {
+    ok: true,
+    config: next,
+    generated,
+    cached,
+    staticGenerated,
+    staticCached,
+    changed: staticGenerated + staticCached + generated + cached > 0,
+  }
+}
+
+/**
+ * Только отсутствующие статические TTS (без `{name}`) — для записи обратно в шаблон.
+ */
+export async function ensureMissingStaticTts(project, config, opts = {}) {
+  const required = Boolean(opts.required)
+  const jobs = collectMissingStaticTtsJobs(config)
+  if (jobs.length === 0) {
+    return { ok: true, config, changed: false, staticGenerated: 0, staticCached: 0 }
+  }
+
+  const next = structuredClone(config)
+  let staticGenerated = 0
+  let staticCached = 0
+
+  for (const job of jobs) {
+    const applied = await applyTtsJob(project, next, job, {
+      required,
+      clearExisting: false,
+      label: 'статическую озвучку',
+    })
+    if (!applied.ok) return applied
+    if (applied.cached) staticCached += 1
+    else if (applied.generated) staticGenerated += 1
+  }
+
+  const defaultMenuId =
+    typeof next.defaultMenuId === 'string' && next.menus?.[next.defaultMenuId]
+      ? next.defaultMenuId
+      : next.menus?.main
+        ? 'main'
+        : Object.keys(next.menus ?? {})[0]
+  const main = defaultMenuId ? next.menus?.[defaultMenuId] : null
+  if (main) {
+    next.menuTtsSrc = main.menuTtsSrc
+  }
+
+  return {
+    ok: true,
+    config: next,
+    changed: true,
+    staticGenerated,
+    staticCached,
+  }
+}
+
+/**
+ * Пересобрать статическую озвучку, если ttsText/голос уже не совпадают с ttsHash.
+ * Пишет обновлённые src/hash обратно в копию конфига (для templates.config).
+ */
+export async function resyncStaleStaticTts(project, config, opts = {}) {
+  const required = Boolean(opts.required)
+  const selection = await resolveGenerationVoice(project.id)
+  const eleven = selection.provider === 'elevenlabs' ? elevenSettings() : null
+  const expectedHashForSpeak = (speak) =>
+    ttsCacheKey(ttsCacheKeyParts(speak, selection, eleven))
+
+  const jobs = collectStaleStaticTtsJobs(config, expectedHashForSpeak)
+  if (jobs.length === 0) {
+    return { ok: true, config, changed: false, staticGenerated: 0, staticCached: 0 }
+  }
+
+  const next = structuredClone(config)
+  let staticGenerated = 0
+  let staticCached = 0
+
+  for (const job of jobs) {
+    const applied = await applyTtsJob(project, next, job, {
+      required,
+      clearExisting: true,
+      label: 'устаревшую озвучку',
+    })
+    if (!applied.ok) return applied
+    if (applied.cached) staticCached += 1
+    else if (applied.generated) staticGenerated += 1
+  }
+
+  const defaultMenuId =
+    typeof next.defaultMenuId === 'string' && next.menus?.[next.defaultMenuId]
+      ? next.defaultMenuId
+      : next.menus?.main
+        ? 'main'
+        : Object.keys(next.menus ?? {})[0]
+  const main = defaultMenuId ? next.menus?.[defaultMenuId] : null
+  if (main) {
+    next.menuTtsSrc = main.menuTtsSrc
+  }
+
+  return {
+    ok: true,
+    config: next,
+    changed: true,
+    staticGenerated,
+    staticCached,
+  }
+}
+
+async function applyTtsJob(project, next, job, { required, clearExisting, label }) {
+  if (job.kind === 'menu') {
+    const menu = next.menus?.[job.menuId]
+    if (!menu) {
+      if (required) {
+        return {
+          ok: false,
+          status: 500,
+          error: `Не найдено меню для ${label} (${job.cueId})`,
+        }
+      }
+      return { ok: true, generated: false, cached: false }
+    }
+
+    if (clearExisting) {
+      delete menu.menuTtsSrc
+      delete menu.menuTtsHash
+    }
+
+    const result = await ensureProjectTts(project, job.speak, { force: false })
+    if (result.status !== 200 || !result.body?.ok || !result.body.src) {
+      const error =
+        result.body?.error ||
+        result.body?.detail ||
+        `Не удалось озвучить ${label} (${job.cueId})`
+      if (required) {
+        return { ok: false, status: result.status >= 400 ? result.status : 502, error }
+      }
+      console.error('tts personalize', project.code, job.cueId, error)
+      return { ok: true, generated: false, cached: false }
+    }
+
+    menu.menuTtsSrc = result.body.src
+    if (result.body.hash) menu.menuTtsHash = result.body.hash
+    return {
+      ok: true,
+      generated: !result.body.cached,
+      cached: Boolean(result.body.cached),
+    }
+  }
+
+  const seq = next.sequences?.[job.sequenceId]
+  const cue = Array.isArray(seq?.cues) ? seq.cues[job.cueIndex] : null
+  if (!cue) {
+    if (required) {
+      return {
+        ok: false,
+        status: 500,
+        error: `Не найден титр для ${label} (${job.cueId})`,
+      }
+    }
+    return { ok: true, generated: false, cached: false }
+  }
+
+  if (clearExisting) {
+    // Не оставляем файл шаблона («Гость» / превью редактора), если генерация сорвётся.
+    delete cue.ttsSrc
+    delete cue.ttsHash
+  }
+
+  const result = await ensureProjectTts(project, job.speak, { force: false })
+  if (result.status !== 200 || !result.body?.ok || !result.body.src) {
+    const error =
+      result.body?.error ||
+      result.body?.detail ||
+      `Не удалось озвучить ${label} (${job.cueId})`
+    if (required) {
+      return { ok: false, status: result.status >= 400 ? result.status : 502, error }
+    }
+    console.error('tts personalize', project.code, job.cueId, error)
+    return { ok: true, generated: false, cached: false }
+  }
+
+  cue.ttsSrc = result.body.src
+  if (result.body.hash) cue.ttsHash = result.body.hash
+  const dur = result.body.durationSec
+  if (typeof dur === 'number' && Number.isFinite(dur) && dur > 0) {
+    extendCueDuration(seq, job.cueIndex, dur)
+  }
+  return {
+    ok: true,
+    generated: !result.body.cached,
+    cached: Boolean(result.body.cached),
+  }
 }

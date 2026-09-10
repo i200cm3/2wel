@@ -209,7 +209,7 @@ export function parseCueCopyResponse(raw, { updateTitle = true, fallbackTitle = 
 
 export async function generateCueCopy(input = {}, options = {}) {
   const { generateTextWithGemini, geminiTextConfigured } = await import('./geminiTranscribe.mjs')
-  if (!geminiTextConfigured()) {
+  if (!(await geminiTextConfigured())) {
     return { ok: false, status: 503, error: 'Gemini text generate не настроен' }
   }
 

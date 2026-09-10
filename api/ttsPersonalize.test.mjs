@@ -3,7 +3,9 @@ import { describe, it } from 'node:test'
 import { ttsCacheKey, ttsCacheKeyParts } from './tts.mjs'
 import {
   applyCaptionsFromTts,
+  collectMissingStaticTtsJobs,
   collectPersonalizedTtsJobs,
+  collectStaleStaticTtsJobs,
   extendCueDuration,
   fillTtsSpeakText,
   ttsTextNeedsGuestName,
@@ -47,6 +49,80 @@ describe('collectPersonalizedTtsJobs', () => {
     assert.equal(jobs.length, 1)
     assert.equal(jobs[0].cueId, 'c1')
     assert.equal(jobs[0].speak, 'Здравствуйте, Иван!')
+  })
+})
+
+describe('collectMissingStaticTtsJobs', () => {
+  it('берёт cue/меню с ttsText без файла и без {name}', () => {
+    const jobs = collectMissingStaticTtsJobs({
+      sequences: {
+        greeting: {
+          cues: [
+            { id: 'c1', ttsText: 'Здравствуйте, {name}!' },
+            { id: 'c2', ttsText: 'Бассейн и тишина', ttsSrc: '' },
+            { id: 'c3', ttsText: 'Уже есть', ttsSrc: '/media/projects/x/tts/a.mp3' },
+            { id: 'c4', ttsText: '   ' },
+          ],
+        },
+      },
+      menus: {
+        main: { menuTtsText: 'Выберите раздел', menuTtsSrc: null },
+        spa: { menuTtsText: 'Привет, {name}', menuTtsSrc: '' },
+      },
+    })
+    assert.equal(jobs.length, 2)
+    assert.deepEqual(
+      jobs.map((j) => j.cueId).sort(),
+      ['c2', 'menu:main'],
+    )
+    assert.equal(jobs.find((j) => j.cueId === 'c2').speak, 'Бассейн и тишина')
+  })
+})
+
+describe('collectStaleStaticTtsJobs', () => {
+  it('берёт cue/меню с файлом, у которых hash не совпадает с текущим текстом', () => {
+    const expected = (speak) => (speak === 'Актуальный текст' ? 'hash-ok' : 'hash-other')
+    const jobs = collectStaleStaticTtsJobs(
+      {
+        sequences: {
+          rooms: {
+            cues: [
+              {
+                id: 'fresh',
+                ttsText: 'Актуальный текст',
+                ttsSrc: '/media/projects/x/tts/a.mp3',
+                ttsHash: 'hash-ok',
+              },
+              {
+                id: 'stale',
+                ttsText: 'Текст уже другой',
+                ttsSrc: '/media/projects/x/tts/old.mp3',
+                ttsHash: 'hash-old',
+              },
+              {
+                id: 'no-hash',
+                ttsText: 'Актуальный текст',
+                ttsSrc: '/media/projects/x/tts/b.mp3',
+              },
+              { id: 'personal', ttsText: 'Привет, {name}!', ttsSrc: '/media/x.mp3', ttsHash: 'x' },
+              { id: 'missing', ttsText: 'Без файла' },
+            ],
+          },
+        },
+        menus: {
+          main: {
+            menuTtsText: 'Меню устарело',
+            menuTtsSrc: '/media/projects/x/tts/m.mp3',
+            menuTtsHash: 'hash-old',
+          },
+        },
+      },
+      expected,
+    )
+    assert.deepEqual(
+      jobs.map((j) => j.cueId).sort(),
+      ['menu:main', 'no-hash', 'stale'],
+    )
   })
 })
 

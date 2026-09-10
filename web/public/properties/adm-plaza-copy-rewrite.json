@@ -6281,7 +6281,7 @@
         "group": "next-step",
         "subgroup": "ask-price",
         "enabled": true,
-        "autoplayEligible": true,
+        "autoplayEligible": false,
         "menuOnly": false,
         "priority": 9,
         "durationClass": "short",

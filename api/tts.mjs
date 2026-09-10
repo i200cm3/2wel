@@ -316,7 +316,8 @@ async function synthesizeElevenViaProxy(proxyBase, text, voice, settings) {
 }
 
 async function synthesizeElevenDirect(text, voice, settings) {
-  const apiKey = envPick(process.env, 'ELEVENLABS_API_KEY')
+  const { resolveElevenlabsApiKey } = await import('./platformIntegrations.mjs')
+  const apiKey = await resolveElevenlabsApiKey()
   if (!apiKey) return { ok: false, status: 500, error: 'Не задан ELEVENLABS_API_KEY' }
   if (!voice) return { ok: false, status: 500, error: 'Не задан голос ElevenLabs' }
 
@@ -367,6 +368,9 @@ async function synthesizeElevenDirect(text, voice, settings) {
 
 export async function synthesizeEleven(text, voice, settings) {
   if (!voice) return { ok: false, status: 500, error: 'Не задан голос ElevenLabs' }
+  const { getPlatformSetting, SETTING_KEYS } = await import('./platformIntegrations.mjs')
+  const dbKey = await getPlatformSetting(SETTING_KEYS.elevenlabsApiKey)
+  if (dbKey) return synthesizeElevenDirect(text, voice, settings)
   const proxyUrl = envPick(process.env, 'ELEVENLABS_PROXY_URL')
   if (proxyUrl) return synthesizeElevenViaProxy(proxyUrl, text, voice, settings)
   return synthesizeElevenDirect(text, voice, settings)
