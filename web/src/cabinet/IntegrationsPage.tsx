@@ -261,6 +261,26 @@ export function IntegrationsPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="font-sans">Виджет в сделке amo</CardTitle>
+          <CardDescription>
+            Кнопка «Сформировать презентацию» в правой колонке карточки сделки — без привязки к
+            воронке и Salesbot. Пакет: <code className="text-xs">amo-widget/</code> в репозитории
+            (см. README там). После установки укажите URL API, код проекта и ключ{' '}
+            <code className="text-xs">pk_live_…</code> ниже.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-muted-foreground space-y-2 text-sm">
+          <p>
+            API: <code className="text-xs">GET/POST …/amo-widget/leads/:leadId</code>
+          </p>
+          <p>
+            Ссылка пишется в поле «Ссылка для презентации» после персонализации — как у webhook.
+          </p>
+        </CardContent>
+      </Card>
+
       {data.connected ? (
         <Card>
           <CardHeader>

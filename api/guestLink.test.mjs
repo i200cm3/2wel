@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { decideGuestLink, parseGuestLinkBody, resolveTemplateCode } from './guestLink.mjs'
+import { decideGuestLink, fillGuestNameTemplate, looksLikePersonName, parseGuestLinkBody, resolveTemplateCode } from './guestLink.mjs'
 
 const published = { status: 'published', hasPublishedConfig: true }
 const existing = {
@@ -11,6 +11,25 @@ const existing = {
   templateCode: 'default',
 }
 
+describe('looksLikePersonName', () => {
+  it('принимает имя и отвергает телефон', () => {
+    assert.equal(looksLikePersonName('Иван'), true)
+    assert.equal(looksLikePersonName('89282648515'), false)
+    assert.equal(looksLikePersonName('+7 928 264-85-15'), false)
+  })
+})
+
+describe('fillGuestNameTemplate', () => {
+  it('убирает имя, если это телефон', () => {
+    assert.equal(fillGuestNameTemplate('Здравствуйте, {name}!', 'виталий'), 'Здравствуйте, Виталий!')
+    assert.equal(fillGuestNameTemplate('Здравствуйте, {name}!', '89282648515'), 'Здравствуйте!')
+    assert.equal(
+      fillGuestNameTemplate('{name}, добро пожаловать в санаторий.', '89282648515'),
+      'Добро пожаловать в санаторий.',
+    )
+  })
+})
+
 describe('parseGuestLinkBody', () => {
   it('читает name, category и externalId / external_id', () => {
     assert.deepEqual(
@@ -20,7 +39,7 @@ describe('parseGuestLinkBody', () => {
         category: 'single',
         externalId: 'crm-1',
         statusId: '',
-        summary: { dates: '', partyType: '', topics: '', objections: '', confidence: '0.8', room: '', fillRemaining: 'off' },
+        summary: { dates: '', partyType: '', topics: '', objections: '', confidence: '0.8', room: '', fillRemaining: 'off', hello: '' },
         amoSnapshot: null,
         summaryMeta: null,
         rawSources: [],
@@ -56,6 +75,7 @@ describe('parseGuestLinkBody', () => {
       confidence: '0.6',
       room: '',
       fillRemaining: 'off',
+      hello: '',
     })
     assert.equal(parseGuestLinkBody({ name: 'Иван', summary: { dates: '12-15 мая' } }).summary.dates, '12-15 мая')
     assert.equal(

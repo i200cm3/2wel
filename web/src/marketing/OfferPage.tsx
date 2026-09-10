@@ -525,13 +525,23 @@ export function OfferPage() {
                     {plan.tagline}
                   </p>
                   <p className="text-muted-foreground mt-3 text-sm leading-relaxed">{plan.blurb}</p>
-                  <p className="mt-6">
-                    <span className="font-heading text-[2.35rem] leading-none font-semibold">
-                      {plan.priceLabel}
-                    </span>
-                    <span className="text-muted-foreground ml-1.5 text-sm">₽ / мес</span>
-                  </p>
-                  <p className="text-muted-foreground mt-2 text-xs">Внедрение {plan.setup}</p>
+                  {plan.id === 'pro' ? (
+                    <p className="mt-6">
+                      <span className="font-heading text-[2.35rem] leading-none font-semibold">
+                        По запросу
+                      </span>
+                    </p>
+                  ) : (
+                    <>
+                      <p className="mt-6">
+                        <span className="font-heading text-[2.35rem] leading-none font-semibold">
+                          {plan.priceLabel}
+                        </span>
+                        <span className="text-muted-foreground ml-1.5 text-sm">₽ / мес</span>
+                      </p>
+                      <p className="text-muted-foreground mt-2 text-xs">Внедрение {plan.setup}</p>
+                    </>
+                  )}
                   <ul className="mt-5 flex flex-1 flex-col gap-2.5">
                     {plan.items.map((item) => (
                       <li key={item} className="flex gap-2 text-sm leading-snug">
@@ -584,8 +594,8 @@ export function OfferPage() {
               <div>
                 <h2 className="landing-h2">Как считать окупаемость</h2>
                 <p className="landing-lead pt-4">
-                  Один дополнительный заезд на 15–20 тыс. ₽ уже покрывает месяц тарифа «Про». Это
-                  ответ гостю после разговора — не ролик, который показали раз в год.
+                  Один дополнительный заезд уже окупает месяц работы канала. Это ответ гостю после
+                  разговора — не ролик, который показали раз в год.
                 </p>
               </div>
               <ul className="flex flex-col gap-3">

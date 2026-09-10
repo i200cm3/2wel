@@ -302,13 +302,26 @@ export async function clearAmoLeadPresentationUrl(connection, leadId, redirectUr
 export function leadSnapshotFromAmo(lead, contact) {
   const statusRaw = lead?.status_id ?? lead?.statusId
   const pipelineRaw = lead?.pipeline_id ?? lead?.pipelineId
+  const fromContact = guestFirstNameFromContact(contact)
+  const fromLead = formatLeadGuestName(lead?.name)
   return {
-    name: guestFirstNameFromContact(contact),
+    name: fromContact || fromLead,
     statusId: statusRaw != null && statusRaw !== '' ? String(statusRaw) : '',
     pipelineId: pipelineRaw != null && pipelineRaw !== '' ? String(pipelineRaw) : '',
     contactId: contact?.id != null ? String(contact.id) : '',
     phones: phonesFromAmoContact(contact),
   }
+}
+
+/** Имя сделки amo → короткое имя гостя (первое слово). */
+export function formatLeadGuestName(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return ''
+  const first = text.split(/\s+/)[0] || ''
+  if (!first || /^сделк/i.test(first) || /^\d+$/.test(first)) return ''
+  const chars = [...first]
+  chars[0] = chars[0].toLocaleUpperCase('ru-RU')
+  return chars.join('').slice(0, 80)
 }
 
 export async function fetchAmoLeadSnapshot(connection, leadId, redirectUri) {

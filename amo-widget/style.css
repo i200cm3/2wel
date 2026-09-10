@@ -1,0 +1,142 @@
+/* Caption (Amo markup) */
+.twoel-pres-widget-wrap .card-widgets__widget__caption__logo {
+  max-height: 28px;
+  width: auto;
+  object-fit: contain;
+}
+
+.twoel-pres-widget-wrap .card-widgets__widget__caption__logo_min {
+  max-height: 22px;
+  width: auto;
+  object-fit: contain;
+}
+
+.twoel-pres-widget {
+  --tw-ink: #1c2421;
+  --tw-muted: #5f6b66;
+  --tw-line: #e4e9e6;
+  --tw-soft: #f4f7f5;
+  --tw-accent: #2f6f5e;
+  --tw-accent-soft: #e8f3ef;
+  --tw-warn: #9a6b16;
+  --tw-warn-soft: #f8f1e2;
+  --tw-danger: #b42318;
+  --tw-danger-soft: #fef3f2;
+
+  box-sizing: border-box;
+  margin: 4px 0 8px;
+  padding: 10px 0 4px;
+  color: var(--tw-ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.twoel-pres-widget *,
+.twoel-pres-widget *::before,
+.twoel-pres-widget *::after {
+  box-sizing: border-box;
+}
+
+.twoel-pres-widget__status {
+  display: none;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--tw-soft);
+  color: var(--tw-muted);
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.twoel-pres-widget__status.is-visible {
+  display: block;
+}
+
+.twoel-pres-widget__status.is-ready {
+  background: var(--tw-accent-soft);
+  color: var(--tw-accent);
+}
+
+.twoel-pres-widget__status.is-error {
+  background: var(--tw-danger-soft);
+  color: var(--tw-danger);
+}
+
+.twoel-pres-widget__status.is-running {
+  background: var(--tw-warn-soft);
+  color: var(--tw-warn);
+}
+
+.twoel-pres-widget__link {
+  display: none;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--tw-soft);
+  border: 1px solid var(--tw-line);
+}
+
+.twoel-pres-widget__link.is-visible {
+  display: block;
+}
+
+.twoel-pres-widget__url {
+  display: block;
+  color: var(--tw-accent);
+  text-decoration: none;
+  word-break: break-all;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.twoel-pres-widget__url:hover {
+  text-decoration: underline;
+}
+
+.twoel-pres-widget__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.twoel-pres-widget__row {
+  display: none;
+  gap: 8px;
+}
+
+.twoel-pres-widget__row.is-visible {
+  display: flex;
+}
+
+.twoel-pres-widget__btn {
+  cursor: pointer;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  user-select: none;
+}
+
+.twoel-pres-widget__btn--primary {
+  background: var(--tw-accent);
+  border-color: var(--tw-accent);
+  color: #fff;
+}
+
+.twoel-pres-widget__btn--ghost {
+  flex: 1;
+  background: #fff;
+  border-color: var(--tw-line);
+  color: var(--tw-ink);
+  font-weight: 550;
+}
+
+.twoel-pres-widget__btn.is-busy,
+.twoel-pres-widget__btn[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: default;
+  pointer-events: none;
+}

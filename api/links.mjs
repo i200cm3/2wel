@@ -74,6 +74,32 @@ export async function getLinkByExternalId(projectId, externalId) {
   return rows[0] ? mapIssued(rows[0]) : null
 }
 
+/** Статус ссылки для виджета amo: + summary_meta (pipeline / presentationUrl). */
+export async function getLinkWidgetStatusByExternalId(projectId, externalId) {
+  const id = String(externalId ?? '').trim()
+  if (!id) return null
+  const { rows } = await query(
+    `SELECT l.id, l.public_id, l.guest_name, l.external_id, l.created_at, l.summary_meta,
+            t.code AS template_code, t.name AS template_name,
+            p.code AS project_code
+     FROM links l
+     JOIN templates t ON t.id = l.template_id
+     JOIN projects p ON p.id = l.project_id
+     WHERE l.project_id = $1 AND l.external_id = $2
+     ORDER BY l.created_at DESC
+     LIMIT 1`,
+    [projectId, id],
+  )
+  const row = rows[0]
+  if (!row) return null
+  const issued = mapIssued(row)
+  const meta =
+    row.summary_meta && typeof row.summary_meta === 'object' && !Array.isArray(row.summary_meta)
+      ? row.summary_meta
+      : null
+  return { ...issued, summaryMeta: meta }
+}
+
 export async function getLinksByExternalIds(projectId, externalIds) {
   const ids = [
     ...new Set(

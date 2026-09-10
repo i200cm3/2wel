@@ -1,0 +1,13 @@
+{
+  "widget": {
+    "name": "2wel · Presentation",
+    "description": "Deal-card button: build a personalized guest presentation and get the link. Writes URL into the presentation link custom field.",
+    "short_description": "Guest presentation from a deal",
+    "tour_description": "Open a deal → 2wel block on the right → Build presentation. The link appears in the widget and on the deal field."
+  },
+  "settings": {
+    "api_base": "API base URL (e.g. https://2wel.ru)",
+    "project_code": "Project code in 2wel cabinet",
+    "api_key": "Project API key (pk_live_…)"
+  }
+}

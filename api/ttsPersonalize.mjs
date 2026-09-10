@@ -1,4 +1,10 @@
-import { formatGuestName } from './guestLink.mjs'
+import { fillGuestNameTemplate } from './guestLink.mjs'
+import {
+  applyHelloPlaceholderInConfig,
+  configHasHelloPlaceholder,
+  fillHelloPlaceholder,
+  textHasHelloPlaceholder,
+} from './helloGenerate.mjs'
 import {
   elevenSettings,
   ensureProjectTts,
@@ -14,19 +20,20 @@ export function ttsTextNeedsGuestName(ttsText) {
   return typeof ttsText === 'string' && NAME_TOKEN_RE.test(ttsText)
 }
 
-/** Подставить имя гостя в шаблон озвучки (как в кабинете / плеере). */
-export function fillTtsSpeakText(ttsText, guestName) {
-  const name = formatGuestName(guestName) || 'гость'
-  return String(ttsText ?? '')
-    .replace(/\{\s*name\s*\}/gi, name)
-    .replace(/\[\s*name\s*\]/gi, name)
+export function ttsTextNeedsPersonalization(ttsText) {
+  return ttsTextNeedsGuestName(ttsText) || textHasHelloPlaceholder(ttsText)
+}
+
+/** Подставить {hello}, затем имя гостя в шаблон озвучки. */
+export function fillTtsSpeakText(ttsText, guestName, hello = '') {
+  return fillGuestNameTemplate(fillHelloPlaceholder(ttsText, hello), guestName)
 }
 
 /**
- * Cue и меню с `{name}` в тексте озвучки — пересобираются при выдаче ссылки.
+ * Cue и меню с `{name}` / `{hello}` в тексте озвучки — пересобираются при выдаче ссылки.
  * @returns {{ kind: 'cue'|'menu', sequenceId?: string, cueIndex?: number, menuId?: string, cueId: string, template: string, speak: string }[]}
  */
-export function collectPersonalizedTtsJobs(config, guestName) {
+export function collectPersonalizedTtsJobs(config, guestName, hello = '') {
   const jobs = []
   const sequences = config?.sequences
   if (sequences && typeof sequences === 'object') {
@@ -34,14 +41,14 @@ export function collectPersonalizedTtsJobs(config, guestName) {
       const cues = Array.isArray(seq?.cues) ? seq.cues : []
       cues.forEach((cue, cueIndex) => {
         const template = typeof cue?.ttsText === 'string' ? cue.ttsText.trim() : ''
-        if (!template || !ttsTextNeedsGuestName(template)) return
+        if (!template || !ttsTextNeedsPersonalization(template)) return
         jobs.push({
           kind: 'cue',
           sequenceId,
           cueIndex,
           cueId: typeof cue.id === 'string' ? cue.id : `idx-${cueIndex}`,
           template,
-          speak: fillTtsSpeakText(template, guestName),
+          speak: fillTtsSpeakText(template, guestName, hello),
         })
       })
     }
@@ -51,13 +58,13 @@ export function collectPersonalizedTtsJobs(config, guestName) {
   if (menus && typeof menus === 'object') {
     for (const [menuId, menu] of Object.entries(menus)) {
       const template = typeof menu?.menuTtsText === 'string' ? menu.menuTtsText.trim() : ''
-      if (!template || !ttsTextNeedsGuestName(template)) continue
+      if (!template || !ttsTextNeedsPersonalization(template)) continue
       jobs.push({
         kind: 'menu',
         menuId,
         cueId: `menu:${menuId}`,
         template,
-        speak: fillTtsSpeakText(template, guestName),
+        speak: fillTtsSpeakText(template, guestName, hello),
       })
     }
   }
@@ -81,7 +88,7 @@ export function collectMissingStaticTtsJobs(config) {
       const cues = Array.isArray(seq?.cues) ? seq.cues : []
       cues.forEach((cue, cueIndex) => {
         const template = typeof cue?.ttsText === 'string' ? cue.ttsText.trim() : ''
-        if (!template || ttsTextNeedsGuestName(template) || hasTtsSrc(cue?.ttsSrc)) return
+        if (!template || ttsTextNeedsPersonalization(template) || hasTtsSrc(cue?.ttsSrc)) return
         jobs.push({
           kind: 'cue',
           sequenceId,
@@ -98,7 +105,7 @@ export function collectMissingStaticTtsJobs(config) {
   if (menus && typeof menus === 'object') {
     for (const [menuId, menu] of Object.entries(menus)) {
       const template = typeof menu?.menuTtsText === 'string' ? menu.menuTtsText.trim() : ''
-      if (!template || ttsTextNeedsGuestName(template) || hasTtsSrc(menu?.menuTtsSrc)) continue
+      if (!template || ttsTextNeedsPersonalization(template) || hasTtsSrc(menu?.menuTtsSrc)) continue
       jobs.push({
         kind: 'menu',
         menuId,
@@ -126,7 +133,7 @@ export function collectStaleStaticTtsJobs(config, expectedHashForSpeak) {
       const cues = Array.isArray(seq?.cues) ? seq.cues : []
       cues.forEach((cue, cueIndex) => {
         const template = typeof cue?.ttsText === 'string' ? cue.ttsText.trim() : ''
-        if (!template || ttsTextNeedsGuestName(template) || !hasTtsSrc(cue?.ttsSrc)) return
+        if (!template || ttsTextNeedsPersonalization(template) || !hasTtsSrc(cue?.ttsSrc)) return
         const expected = String(expectedHashForSpeak(template) ?? '')
         const current = typeof cue?.ttsHash === 'string' ? cue.ttsHash.trim() : ''
         if (expected && current && current === expected) return
@@ -146,7 +153,7 @@ export function collectStaleStaticTtsJobs(config, expectedHashForSpeak) {
   if (menus && typeof menus === 'object') {
     for (const [menuId, menu] of Object.entries(menus)) {
       const template = typeof menu?.menuTtsText === 'string' ? menu.menuTtsText.trim() : ''
-      if (!template || ttsTextNeedsGuestName(template) || !hasTtsSrc(menu?.menuTtsSrc)) continue
+      if (!template || ttsTextNeedsPersonalization(template) || !hasTtsSrc(menu?.menuTtsSrc)) continue
       const expected = String(expectedHashForSpeak(template) ?? '')
       const current = typeof menu?.menuTtsHash === 'string' ? menu.menuTtsHash.trim() : ''
       if (expected && current && current === expected) continue
@@ -250,13 +257,16 @@ export function applyCaptionsFromTts(config) {
 export async function personalizeConfigTts(project, config, guestName, opts = {}) {
   const required = Boolean(opts.required)
   const fillMissingStatic = opts.fillMissingStatic !== false
-  const personalJobs = collectPersonalizedTtsJobs(config, guestName)
+  const hello = String(opts.hello ?? '')
+  const personalJobs = collectPersonalizedTtsJobs(config, guestName, hello)
   const staticJobs = fillMissingStatic ? collectMissingStaticTtsJobs(config) : []
-  if (personalJobs.length === 0 && staticJobs.length === 0) {
+  const needsHello = configHasHelloPlaceholder(config)
+  if (personalJobs.length === 0 && staticJobs.length === 0 && !needsHello) {
     return { ok: true, config, generated: 0, cached: 0, staticGenerated: 0, staticCached: 0 }
   }
 
   const next = structuredClone(config)
+  applyHelloPlaceholderInConfig(next, hello)
   let generated = 0
   let cached = 0
   let staticGenerated = 0
@@ -277,7 +287,7 @@ export async function personalizeConfigTts(project, config, guestName, opts = {}
     const applied = await applyTtsJob(project, next, job, {
       required,
       clearExisting: true,
-      label: 'текст с {name}',
+      label: 'персональную озвучку',
     })
     if (!applied.ok) return applied
     if (applied.cached) cached += 1
@@ -404,6 +414,7 @@ export async function resyncStaleStaticTts(project, config, opts = {}) {
 }
 
 async function applyTtsJob(project, next, job, { required, clearExisting, label }) {
+  const speak = String(job.speak ?? '').trim()
   if (job.kind === 'menu') {
     const menu = next.menus?.[job.menuId]
     if (!menu) {
@@ -417,12 +428,13 @@ async function applyTtsJob(project, next, job, { required, clearExisting, label 
       return { ok: true, generated: false, cached: false }
     }
 
-    if (clearExisting) {
+    if (clearExisting || !speak) {
       delete menu.menuTtsSrc
       delete menu.menuTtsHash
     }
+    if (!speak) return { ok: true, generated: false, cached: false }
 
-    const result = await ensureProjectTts(project, job.speak, { force: false })
+    const result = await ensureProjectTts(project, speak, { force: false })
     if (result.status !== 200 || !result.body?.ok || !result.body.src) {
       const error =
         result.body?.error ||
@@ -457,13 +469,14 @@ async function applyTtsJob(project, next, job, { required, clearExisting, label 
     return { ok: true, generated: false, cached: false }
   }
 
-  if (clearExisting) {
+  if (clearExisting || !speak) {
     // Не оставляем файл шаблона («Гость» / превью редактора), если генерация сорвётся.
     delete cue.ttsSrc
     delete cue.ttsHash
   }
+  if (!speak) return { ok: true, generated: false, cached: false }
 
-  const result = await ensureProjectTts(project, job.speak, { force: false })
+  const result = await ensureProjectTts(project, speak, { force: false })
   if (result.status !== 200 || !result.body?.ok || !result.body.src) {
     const error =
       result.body?.error ||

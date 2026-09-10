@@ -1,5 +1,5 @@
 import { authFetch } from './auth'
-import { displayGuestName } from '../content'
+import { DEFAULT_HELLO_TEMPLATE, fillGuestText } from '../content'
 
 /** sha256 hex — работает и без crypto.subtle (HTTP по LAN IP). */
 export async function sha256Hex(text: string): Promise<string> {
@@ -145,15 +145,17 @@ export function buildTtsTextFromCaption(opts: {
   return title || caption
 }
 
-/** Есть ли в тексте озвучки плейсхолдер имени гостя. */
+/** Есть ли в тексте озвучки плейсхолдер имени гостя или {hello}. */
 export function ttsTextNeedsGuestName(ttsText: string | undefined | null): boolean {
-  return typeof ttsText === 'string' && /\{\s*name\s*\}|\[\s*name\s*\]/i.test(ttsText)
+  return (
+    typeof ttsText === 'string' &&
+    (/\{\s*name\s*\}|\[\s*name\s*\]/i.test(ttsText) || /\{\s*hello\s*\}/i.test(ttsText))
+  )
 }
 
-/** Подставить имя гостя в шаблон озвучки. */
+/** Подставить {hello} (дефолт) и имя гостя в шаблон озвучки. */
 export function speakTextForTts(ttsText: string, guestName: string): string {
-  const name = displayGuestName(guestName) || 'гость'
-  return ttsText.replace(/\{\s*name\s*\}/gi, name).replace(/\[\s*name\s*\]/gi, name)
+  return fillGuestText(ttsText, guestName, DEFAULT_HELLO_TEMPLATE)
 }
 
 export type GenerateTtsResult = {

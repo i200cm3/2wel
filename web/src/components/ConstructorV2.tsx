@@ -32,7 +32,10 @@ import {
   PaginationItem,
   PaginationLink,
 } from '@/components/ui/pagination'
+import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
+import { HelloFromDialogSetting } from '@/cabinet/HelloFromDialogSetting'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { downloadPropertyJson, isPropertyConfig, readPropertyJsonFile } from '@/hooks/usePropertyConfig'
 import {
@@ -48,6 +51,7 @@ import { AiGenerationParamsPanel } from './editor/AiGenerationParamsPanel'
 import { MenuInspector } from './editor/MenuInspector'
 import { Presentation } from './Presentation'
 import { TimelineEditor } from './TimelineEditor'
+import { sliderNumber } from './editor/timelineMath'
 import { BlockLogicGroupCombobox } from './BlockLogicGroupCombobox'
 import { SingleTagCombobox, TagsCombobox } from './TagsCombobox'
 import {
@@ -115,6 +119,8 @@ type Props = {
   onSave?: () => void
   onPublish?: () => void
   onRetryDraft?: () => void
+  helloFromDialog?: boolean
+  onHelloFromDialogUpdated?: (enabled: boolean) => void
 }
 
 type Placement = 'flow' | 'menu' | 'none'
@@ -227,6 +233,7 @@ function parseGuestSummaryImport(
       objections: csvFromUnknown(data.objections),
       confidence: String(data.confidence ?? '0.8'),
       fillRemaining: data.fillRemaining as GuestSummary['fillRemaining'],
+      hello: String(data.hello ?? ''),
     }),
   }
 }
@@ -242,6 +249,7 @@ function guestSummaryToImportJson(summary: GuestSummary): string {
       objections: summary.objections,
       confidence: summary.confidence,
       fillRemaining: summary.fillRemaining ?? 'off',
+      hello: summary.hello ?? '',
     },
     null,
     2,
@@ -437,6 +445,8 @@ export function ConstructorV2({
   onSave,
   onPublish,
   onRetryDraft,
+  helloFromDialog = false,
+  onHelloFromDialogUpdated,
 }: Props) {
   const needsPublish = hasDraft || !published
   const setConfig = useCallback(
@@ -974,9 +984,63 @@ export function ConstructorV2({
           <DialogHeader>
             <DialogTitle>Настройки</DialogTitle>
             <DialogDescription>
-              JSON — только конфиг шаблона. Проект (ZIP) — конфиг вместе с медиа и TTS.
+              Громкость, кнопка «Далее», импорт и экспорт. JSON — только конфиг, ZIP — вместе с медиа и TTS.
             </DialogDescription>
           </DialogHeader>
+          <HelloFromDialogSetting
+            compact
+            projectCode={projectCode}
+            enabled={helloFromDialog}
+            onUpdated={onHelloFromDialogUpdated}
+          />
+          <FieldGroup className="gap-3">
+            <Field>
+              <FieldLabel className="justify-between">
+                Музыка
+                <span className="text-muted-foreground font-normal">
+                  {Math.round(theme.musicVolume * 100)}%
+                </span>
+              </FieldLabel>
+              <Slider
+                min={0}
+                max={1}
+                step={0.01}
+                value={[theme.musicVolume]}
+                onValueChange={(v) =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    theme: {
+                      ...normalizeTheme(prev.theme),
+                      musicVolume: sliderNumber(v),
+                    },
+                  }))
+                }
+              />
+            </Field>
+            <Field>
+              <FieldLabel className="justify-between">
+                TTS
+                <span className="text-muted-foreground font-normal">
+                  {Math.round(theme.ttsVolume * 100)}%
+                </span>
+              </FieldLabel>
+              <Slider
+                min={0}
+                max={1}
+                step={0.01}
+                value={[theme.ttsVolume]}
+                onValueChange={(v) =>
+                  setConfig((prev) => ({
+                    ...prev,
+                    theme: {
+                      ...normalizeTheme(prev.theme),
+                      ttsVolume: sliderNumber(v),
+                    },
+                  }))
+                }
+              />
+            </Field>
+          </FieldGroup>
           <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
             <div className="min-w-0">
               <p className="font-medium text-sm">Кнопка «Далее»</p>

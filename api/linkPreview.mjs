@@ -6,7 +6,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import sharp from 'sharp'
 import { publicDir } from './env.js'
-import { formatGuestName } from './guestLink.mjs'
+import { fillGuestNameTemplate } from './guestLink.mjs'
 import { rewriteConfigMedia } from './projectMedia.mjs'
 
 const execFileAsync = promisify(execFile)
@@ -42,9 +42,8 @@ export function parsePreviewPath(url) {
 }
 
 export function fillPreviewTitle(template, guestName) {
-  const name = formatGuestName(guestName) || 'гость'
   const raw = String(template ?? '').trim() || 'Здравствуйте, {name}!'
-  return raw.replaceAll('{name}', name).replaceAll('[name]', name)
+  return fillGuestNameTemplate(raw, guestName)
 }
 
 function clipSrc(clip) {

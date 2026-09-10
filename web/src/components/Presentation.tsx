@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { ChevronRight, LayoutGrid, Play, Volume2, VolumeX } from 'lucide-react'
-import { fillName, fillNameOptional, openMenuHref, resolveMenuLinkHref, whatsAppHref } from '../content'
+import { DEFAULT_HELLO_TEMPLATE, fillGuestText, fillName, openMenuHref, resolveMenuLinkHref, whatsAppHref } from '../content'
 import { useGuestName } from '../hooks/useGuestName'
 import { enterPresentationFullscreen, syncVisualViewportVars } from '../lib/fullscreen'
 import { trackPublicEvent } from '../lib/api'
@@ -449,14 +449,15 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
     [armSound, guestName, property, track],
   )
 
-  const filledTitle = fillNameOptional(activeSeq?.title, guestName)
+  const helloPreview = embedded ? DEFAULT_HELLO_TEMPLATE : ''
+  const filledTitle = activeSeq?.title ? fillGuestText(activeSeq.title, guestName, helloPreview) : undefined
   const filledCues = useMemo(() => {
     const list = activeSeq?.cues ?? []
     return list.map((c) => ({
       ...c,
-      text: c.text ? fillName(c.text, guestName) : c.text,
+      text: c.text ? fillGuestText(c.text, guestName, helloPreview) : c.text,
     }))
-  }, [activeSeq?.cues, guestName])
+  }, [activeSeq?.cues, guestName, helloPreview])
 
   const onSequenceEnded = useCallback(() => {
     const defaultMenu = getDefaultMenuId(property)

@@ -7,7 +7,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-    --font-heading: "Cormorant Garamond", Georgia, serif;
+    --font-heading: "Geist Variable", "Manrope", "Segoe UI", sans-serif;
     --font-sans: "Geist Variable", "Manrope", "Segoe UI", sans-serif;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
@@ -351,7 +351,11 @@ html.cabinet-open.cabinet-editor #root {
   overflow: hidden;
 }
 
-html.cabinet-open.cabinet-editor [data-slot="card-title"] {
+html.cabinet-open [data-slot="card-title"],
+html.cabinet-open [data-slot="dialog-title"],
+html.cabinet-open [data-slot="sheet-title"],
+html.cabinet-open [data-slot="drawer-title"],
+html.cabinet-open [data-slot="alert-dialog-title"] {
   font-family: var(--font-sans);
 }
 

@@ -36,6 +36,10 @@ describe('fillPreviewTitle', () => {
     assert.equal(fillPreviewTitle('Здравствуйте, {name}!', 'виталий'), 'Здравствуйте, Виталий!')
     assert.equal(fillPreviewTitle('', 'анна'), 'Здравствуйте, Анна!')
   })
+
+  it('не пишет телефон в превью', () => {
+    assert.equal(fillPreviewTitle('Здравствуйте, {name}!', '89282648515'), 'Здравствуйте!')
+  })
 })
 
 describe('pickPreviewClip', () => {

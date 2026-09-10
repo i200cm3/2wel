@@ -1,4 +1,4 @@
-import { applyDerivedFlowToConfig, computeLinkAssembly } from './assembly.mjs'
+import { applyDerivedFlowToConfig, computeLinkAssembly, normalizeGuestSummary } from './assembly.mjs'
 import { amoRedirectUri, clearAmoLeadPresentationUrl } from './amoAuth.mjs'
 import { syncAmoCallsToLink, probeRecordingUrlsDetailed, recordingProbeAvailability } from './amoCalls.mjs'
 import { getAmoConnection } from './amoConnections.mjs'
@@ -10,6 +10,7 @@ import {
   buildRawTextFromSources,
   extractGuestSummaryFromRawText,
 } from './guestSummaryExtract.mjs'
+import { resolveSummaryHello } from './helloGenerate.mjs'
 import { guestLinkUrl } from './publicUrl.mjs'
 import { projectJoinUrl } from './access.mjs'
 import { sendTeamInviteMail } from './mail.mjs'
@@ -27,6 +28,7 @@ import {
   insertLink,
   mergeLinkRawSourceMeta,
   insertLinkRawSources,
+  listLinkRawSources,
   normalizeRawKind,
   updateLinkRawSource,
   updateLinkTemplate,
@@ -69,7 +71,7 @@ import {
 
 const CODE_RE = /^[a-z0-9]([a-z0-9-]{0,62}[a-z0-9])?$/
 
-const PROJECT_SELECT = `id, code, name, user_id, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, fill_missing_tts, ${planColumns()}`
+const PROJECT_SELECT = `id, code, name, user_id, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, fill_missing_tts, hello_from_dialog, ${planColumns()}`
 
 export async function projectForUser(userId, code) {
   if (!code || !CODE_RE.test(code)) return null
@@ -108,6 +110,7 @@ function mapProject(row, stats, periodLinks) {
     skipTtsOnLinkIssue: Boolean(row.skip_tts_on_link_issue),
     captionsFromTts: Boolean(row.captions_from_tts),
     fillMissingTts: row.fill_missing_tts == null ? true : Boolean(row.fill_missing_tts),
+    helloFromDialog: Boolean(row.hello_from_dialog),
     role,
     stats: {
       templates: Number(stats?.templates ?? 0),
@@ -143,6 +146,23 @@ async function projectFillsMissingTts(project) {
   return rows[0]?.fill_missing_tts == null ? true : Boolean(rows[0].fill_missing_tts)
 }
 
+async function projectHelloFromDialog(project) {
+  if (!project?.id) return false
+  if (Object.prototype.hasOwnProperty.call(project, 'hello_from_dialog')) {
+    return Boolean(project.hello_from_dialog)
+  }
+  if (Object.prototype.hasOwnProperty.call(project, 'helloFromDialog')) {
+    return Boolean(project.helloFromDialog)
+  }
+  const { rows } = await query(`SELECT hello_from_dialog FROM projects WHERE id = $1`, [project.id])
+  return Boolean(rows[0]?.hello_from_dialog)
+}
+
+async function attachHelloToSummary(project, summary, { rawText = '', brandName = '', reuseExisting = false } = {}) {
+  const enabled = await projectHelloFromDialog(project)
+  return resolveSummaryHello(summary, { enabled, rawText, brandName, reuseExisting })
+}
+
 async function projectPayload(row, stats) {
   const period = currentPeriod(row.plan_period_start ?? row.created_at)
   return mapProject(row, stats, await periodLinkCount(row.id, period))
@@ -152,7 +172,7 @@ export async function listProjects(userId) {
   await applyDuePlanChanges()
   const { rows } = await query(
     `SELECT
-       p.id, p.code, p.name, p.type, p.status, p.created_at, p.updated_at, p.skip_tts_on_link_issue, p.captions_from_tts, p.fill_missing_tts, ${planColumns('p')},
+       p.id, p.code, p.name, p.type, p.status, p.created_at, p.updated_at, p.skip_tts_on_link_issue, p.captions_from_tts, p.fill_missing_tts, p.hello_from_dialog, ${planColumns('p')},
        (SELECT count(*) FROM templates t WHERE t.project_id = p.id)::int AS templates,
        (SELECT count(*) FROM links l WHERE l.project_id = p.id)::int AS links,
        (SELECT coalesce(sum(l.open_count), 0) FROM links l WHERE l.project_id = p.id)::int AS opens,
@@ -469,6 +489,13 @@ export async function updateProjectForUser(project, body) {
         ? body.fill_missing_tts
         : null
 
+  const helloFromDialog =
+    typeof body?.helloFromDialog === 'boolean'
+      ? body.helloFromDialog
+      : typeof body?.hello_from_dialog === 'boolean'
+        ? body.hello_from_dialog
+        : null
+
   let nextCode = project.code
   if (typeof body?.code === 'string') {
     const parsed = parseProjectCode(body.code)
@@ -496,10 +523,11 @@ export async function updateProjectForUser(project, body) {
            skip_tts_on_link_issue = COALESCE($4, skip_tts_on_link_issue),
            captions_from_tts = COALESCE($5, captions_from_tts),
            fill_missing_tts = COALESCE($6, fill_missing_tts),
+           hello_from_dialog = COALESCE($7, hello_from_dialog),
            updated_at = now()
        WHERE id = $1
-       RETURNING id, code, name, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, fill_missing_tts, ${planColumns()}`,
-      [project.id, name, nextCode, skipTtsOnLinkIssue, captionsFromTts, fillMissingTts],
+       RETURNING id, code, name, type, status, created_at, updated_at, skip_tts_on_link_issue, captions_from_tts, fill_missing_tts, hello_from_dialog, ${planColumns()}`,
+      [project.id, name, nextCode, skipTtsOnLinkIssue, captionsFromTts, fillMissingTts, helloFromDialog],
     )
     row = updated.rows[0]
   } catch (err) {
@@ -1001,6 +1029,7 @@ async function prepareTemplateForGuest(project, templateRow, guestName, assembly
     const prep = await personalizeConfigTts(project, configForGuest, guestName, {
       required: true,
       fillMissingStatic: false,
+      hello: assembly?.guestSummary?.hello ?? '',
     })
     if (!prep.ok) {
       return {
@@ -1037,12 +1066,25 @@ export async function extractProjectLinkSummary(project, publicId) {
     }
   }
 
+  const brandName = String(linkRow.config?.brand?.name ?? linkRow.config?.brand?.fullName ?? '').trim()
+  const helloAttached = await attachHelloToSummary(
+    project,
+    { ...extracted.summary, guestName: String(linkRow.guest_name ?? '').trim() || extracted.summary.guestName },
+    { rawText: packed.rawText, brandName },
+  )
+  const summary = helloAttached.summary
+
   return {
     status: 200,
-    summary: extracted.summary,
-    summaryJson: extracted.summaryJson,
+    summary,
+    summaryJson: {
+      ...extracted.summaryJson,
+      guestName: summary.guestName,
+      hello: summary.hello,
+    },
     explanation: extracted.explanation,
     model: extracted.model,
+    helloMode: helloAttached.helloMode,
     sourceCount: packed.items.length,
   }
 }
@@ -1082,7 +1124,19 @@ export async function reassembleProjectLink(project, publicId, body = {}) {
         : {}
   const guestName =
     String(body?.name ?? body?.guestName ?? linkRow.guest_name ?? '').trim() || linkRow.guest_name
-  const assembly = computeLinkAssembly(published, guestName, summaryInput)
+  const rawSources = await listLinkRawSources(linkRow.id)
+  const packed = buildRawTextFromSources(rawSources)
+  const brandName = String(published.brand?.name ?? published.brand?.fullName ?? '').trim()
+  const helloAttached = await attachHelloToSummary(
+    project,
+    normalizeGuestSummary({ guestName, ...summaryInput }),
+    {
+      rawText: packed.ok ? packed.rawText : '',
+      brandName,
+      reuseExisting: Boolean(String(summaryInput.hello ?? '').trim()),
+    },
+  )
+  const assembly = computeLinkAssembly(published, guestName, helloAttached.summary)
   const prepared = await prepareTemplateForGuest(project, templateRow, guestName, assembly, {
     refreshStaleTts: true,
   })
@@ -1103,6 +1157,7 @@ export async function reassembleProjectLink(project, publicId, body = {}) {
     summaryMeta: {
       ...summaryMeta,
       reassembledAt: new Date().toISOString(),
+      helloMode: helloAttached.helloMode,
       ...(publishedDraft ? { publishedDraft: true } : {}),
     },
     guestName,

@@ -28,6 +28,7 @@ import {
   shouldSyncCallsFromNoteEvents,
   summarizeAmoWebhookBody,
 } from './amoWebhook.mjs'
+import { handleAmoWidgetApi, isAmoWidgetPath } from './amoWidget.mjs'
 import { issueGuestLink } from './cabinet.mjs'
 import { createApiKey, findApiKey, touchApiKeyUsed } from './keys.mjs'
 import { findLinksForAmoCall, recordLinkCrmStatus } from './links.mjs'
@@ -615,6 +616,9 @@ export async function handleV1Api(req, res, url, json, extras = {}) {
   }
   if (amoTokenFrom(url, req).hit) {
     return handleAmoWebhook(req, res, url, json, extras)
+  }
+  if (isAmoWidgetPath(url)) {
+    return handleAmoWidgetApi(req, res, url, json, extras)
   }
 
   const match = url.match(/^\/api\/v1\/projects\/([^/]+)\/links\/?$/)

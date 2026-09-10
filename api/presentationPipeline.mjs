@@ -28,6 +28,18 @@ import { reassembleProjectLink } from './cabinet.mjs'
 const runningPublicIds = new Set()
 /** leadId → Set(publicId) — несколько объектов по одной сделке не должны рано писать URL. */
 const runningByLead = new Map()
+
+export function isPublicIdPipelineRunning(publicId) {
+  const pid = String(publicId ?? '').trim()
+  return Boolean(pid && runningPublicIds.has(pid))
+}
+
+export function isLeadPipelineRunning(leadId) {
+  const id = String(leadId ?? '').trim()
+  if (!id) return false
+  const set = runningByLead.get(id)
+  return Boolean(set && set.size > 0)
+}
 /** leadId → лучший кандидат на запись в amo, пока по сделке ещё есть другие пайплайны. */
 const pendingAmoWriteByLead = new Map()
 /** leadId → timer — пишем URL только после паузы, когда все пайплайны сделки затихли. */
@@ -163,6 +175,22 @@ async function flushPendingAmoWrite(leadId, ctx = {}) {
     )
     pendingAmoWriteByLead.delete(id)
     pipeLog('write_amo.flush_ok', { ...ctx, leadId: id, url: pending.url, publicId: pending.publicId })
+    if (pending.publicId && pending.projectId) {
+      try {
+        const row = await getProjectLinkRow(pending.projectId, pending.publicId)
+        if (row?.id) {
+          await markPipeline(row.id, {
+            pipeline: 'ready',
+            pipelineStep: 'done',
+            writtenToAmo: true,
+            presentationUrl: pending.url,
+            pipelineError: null,
+          })
+        }
+      } catch (err) {
+        console.error('pipeline mark after write_amo', pending.publicId, err)
+      }
+    }
   } catch (err) {
     amoError('pipeline.write_amo.flush', err, { leadId: id, publicId: pending.publicId })
     pipeLog('write_amo.flush_fail', {
@@ -617,6 +645,7 @@ export async function runPresentationPipeline(args) {
       rememberPendingAmoWrite(externalId, {
         url,
         publicId,
+        projectId: project.id,
         extractOk,
         transcribed: stt.transcribed.length,
         eligibleCalls: eligible.length,

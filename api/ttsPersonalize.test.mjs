@@ -9,6 +9,7 @@ import {
   extendCueDuration,
   fillTtsSpeakText,
   ttsTextNeedsGuestName,
+  ttsTextNeedsPersonalization,
 } from './ttsPersonalize.mjs'
 
 describe('ttsTextNeedsGuestName', () => {
@@ -21,12 +22,23 @@ describe('ttsTextNeedsGuestName', () => {
     assert.equal(ttsTextNeedsGuestName(''), false)
     assert.equal(ttsTextNeedsGuestName(undefined), false)
   })
+
+  it('персонализация включает {hello}', () => {
+    assert.equal(ttsTextNeedsPersonalization('{hello}'), true)
+    assert.equal(ttsTextNeedsPersonalization('Здравствуйте, {name}!'), true)
+    assert.equal(ttsTextNeedsPersonalization('обычный текст'), false)
+  })
 })
 
 describe('fillTtsSpeakText', () => {
   it('подставляет имя с заглавной буквы', () => {
     assert.equal(fillTtsSpeakText('Здравствуйте, {name}!', 'виталий'), 'Здравствуйте, Виталий!')
     assert.equal(fillTtsSpeakText('Hi, [name]', 'анна'), 'Hi, Анна')
+  })
+
+  it('не произносит телефон вместо имени', () => {
+    assert.equal(fillTtsSpeakText('Здравствуйте, {name}!', '89282648515'), 'Здравствуйте!')
+    assert.equal(fillTtsSpeakText('Здравствуйте, {name}. Рады пригласить вас.', '89282648515'), 'Здравствуйте. Рады пригласить вас.')
   })
 })
 
@@ -49,6 +61,31 @@ describe('collectPersonalizedTtsJobs', () => {
     assert.equal(jobs.length, 1)
     assert.equal(jobs[0].cueId, 'c1')
     assert.equal(jobs[0].speak, 'Здравствуйте, Иван!')
+  })
+
+  it('собирает cue с {hello} и подставляет фразу', () => {
+    const jobs = collectPersonalizedTtsJobs(
+      {
+        sequences: {
+          intro: {
+            cues: [{ id: 'h1', ttsText: '{hello}' }],
+          },
+        },
+      },
+      'сергей',
+      'Сергей, здравствуйте. Ещё раз коротко расскажем о санатории.',
+    )
+    assert.equal(jobs.length, 1)
+    assert.equal(jobs[0].speak, 'Сергей, здравствуйте. Ещё раз коротко расскажем о санатории.')
+  })
+
+  it('при пустом {hello} speak пустой', () => {
+    const jobs = collectPersonalizedTtsJobs(
+      { sequences: { intro: { cues: [{ id: 'h1', ttsText: '{hello}' }] } } },
+      'сергей',
+      '',
+    )
+    assert.equal(jobs[0].speak, '')
   })
 })
 

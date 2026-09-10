@@ -253,8 +253,8 @@ export function MenuInspector({
                   />
                   {ttsPersonalized ? (
                     <p className="editor-hint">
-                      Есть {'{name}'} — при выдаче ссылки озвучка соберётся заново с именем гостя и
-                      текущим голосом проекта.
+                      Есть {'{name}'} или {'{hello}'} — при выдаче ссылки озвучка соберётся заново с данными
+                      гостя и текущим голосом проекта.
                     </p>
                   ) : null}
                   <div className="editor-tts-actions">

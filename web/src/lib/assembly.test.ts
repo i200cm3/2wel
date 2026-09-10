@@ -541,6 +541,28 @@ describe('requiresFields · guest parameters', () => {
     assert.equal(withName[withName.length - 1], 'cta_whatsapp')
   })
 
+  it('keeps intro when confidence is low and guestName is a phone', () => {
+    const config = adaptiveConfig()
+    config.constructorV2!.sequenceMetaById.intro = meta({
+      group: 'intro',
+      priority: 6,
+      requiresFields: ['name'],
+    })
+    const flow = deriveFlowIds(config, {
+      guestName: '89282648515',
+      dates: '',
+      partyType: '',
+      topics: '',
+      objections: '',
+      confidence: '0.4',
+      room: '',
+      fillRemaining: 'aggressive',
+    })
+    assert.equal(flow[0], 'intro')
+    assert.equal(flow.includes('cta_whatsapp'), false)
+    assert.equal(flow[flow.length - 1], 'cta_whatsapp_generic')
+  })
+
   it('never keeps two alwaysEnd CTAs even if group meta is empty', () => {
     const config = adaptiveConfig()
     config.constructorV2!.sequenceMetaById.cta_whatsapp = meta({

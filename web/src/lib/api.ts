@@ -130,6 +130,8 @@ export type Project = {
   captionsFromTts?: boolean
   /** Догенерировать отсутствующие ttsSrc по ttsText при выдаче / открытии. */
   fillMissingTts?: boolean
+  /** Собирать {hello} отдельным промптом по диалогу. Выкл — {hello} пустой. */
+  helloFromDialog?: boolean
   /** owner — владелец, member — сотрудник, admin — системный администратор. */
   role?: 'owner' | 'member' | 'admin'
   stats: {
@@ -288,6 +290,7 @@ export type ProjectLinkDetail = ProjectLink & {
     confidence?: string
     room?: string
     fillRemaining?: string
+    hello?: string
   } | null
   derivedFlow: string[] | null
   assemblyTrace: AssemblyTraceEntry[] | null
@@ -395,6 +398,7 @@ export function patchProject(
     skipTtsOnLinkIssue?: boolean
     captionsFromTts?: boolean
     fillMissingTts?: boolean
+    helloFromDialog?: boolean
   },
 ) {
   return apiSend<{
@@ -630,6 +634,7 @@ export type ExtractedGuestSummary = {
   objections: string
   confidence: string
   fillRemaining: string
+  hello?: string
 }
 
 export function extractProjectLinkSummary(projectCode: string, publicId: string) {

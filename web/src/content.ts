@@ -1,4 +1,5 @@
 import { DJINAL_PROPERTY } from './data/djinalProperty'
+import { looksLikePersonName } from './lib/guestSummaryFields'
 import {
   DEFAULT_MENU_HINT,
   DEFAULT_MENU_TITLE,
@@ -35,10 +36,41 @@ export {
 export const BRAND = DJINAL_PROPERTY.brand
 export const DEFAULT_GUEST_NAME = DJINAL_PROPERTY.defaultGuestName
 
-/** Первая буква заглавная в ролике: «виталий» → «Виталий». */
+const NAME_TOKEN = '\u0000'
+
+function capitalizeFirstLetter(text: string) {
+  const chars = [...text]
+  for (let i = 0; i < chars.length; i += 1) {
+    const ch = chars[i]
+    if (!ch || /\s/.test(ch)) continue
+    chars[i] = ch.toLocaleUpperCase('ru-RU')
+    break
+  }
+  return chars.join('')
+}
+
+/** Убрать {name} из фразы, не оставляя «Здравствуйте, !». */
+export function omitNamePlaceholder(template: string) {
+  let s = String(template ?? '')
+    .replace(/\{\s*name\s*\}/gi, NAME_TOKEN)
+    .replace(/\[\s*name\s*\]/gi, NAME_TOKEN)
+  const hadLeading = new RegExp(`^\\s*${NAME_TOKEN}`).test(s)
+  s = s.replace(/меня зовут\s*\u0000[.!?…]*/gi, '')
+  s = s.replace(new RegExp(`^${NAME_TOKEN}[,:;]?\\s*`), '')
+  s = s.replace(new RegExp(`,\\s*${NAME_TOKEN}(?=[\\s.!?…,:;]|$)`, 'g'), '')
+  s = s.replace(new RegExp(`\\s*${NAME_TOKEN}`, 'g'), '')
+  s = s.replaceAll(NAME_TOKEN, '')
+  s = s.replace(/[ \t]{2,}/g, ' ')
+  s = s.replace(/[ \t]+([.!?,:;])/g, '$1')
+  s = s.replace(/^[ \t]+/gm, '')
+  if (hadLeading) s = capitalizeFirstLetter(s)
+  return s.replace(/[ \t]+$/gm, '').replace(/[ \t]{2,}/g, ' ')
+}
+
+/** Первая буква заглавная в ролике: «виталий» → «Виталий». Телефон и прочий мусор — пусто. */
 export function displayGuestName(name: string) {
   const text = String(name ?? '').trim()
-  if (!text) return ''
+  if (!looksLikePersonName(text)) return ''
   const chars = [...text]
   chars[0] = chars[0].toLocaleUpperCase('ru-RU')
   return chars.join('')
@@ -46,7 +78,21 @@ export function displayGuestName(name: string) {
 
 export function fillName(template: string, name: string) {
   const filled = displayGuestName(name)
-  return template.replaceAll('{name}', filled).replaceAll('[name]', filled)
+  if (!filled) return omitNamePlaceholder(template)
+  return template.replace(/\{\s*name\s*\}/gi, filled).replace(/\[\s*name\s*\]/gi, filled)
+}
+
+const HELLO_TOKEN = /\{\s*hello\s*\}/gi
+
+export const DEFAULT_HELLO_TEMPLATE = 'Здравствуйте, {name}!'
+
+export function fillHello(template: string, hello: string) {
+  return String(template ?? '').replace(HELLO_TOKEN, String(hello ?? ''))
+}
+
+/** Сначала {hello}, затем {name}. */
+export function fillGuestText(template: string, name: string, hello = '') {
+  return fillName(fillHello(template, hello), name)
 }
 
 export function fillNameOptional(template: string | undefined, name: string) {
@@ -159,18 +205,20 @@ export function resolveMenuLinkHref(
   guestName: string,
   property: PropertyConfig,
 ) {
+  const displayName = displayGuestName(guestName)
+  const hrefForFill = displayName ? href : omitNamePlaceholder(href)
   const vars = {
-    name: guestName,
+    name: displayName,
     brand: property.brand.fullName,
     phone: brandPhoneDigits(property.brand),
     telegram: brandTelegram(property.brand),
     max: brandMax(property.brand),
     tel: brandTel(property.brand),
   }
-  const parts = parseMenuLinkHref(href)
+  const parts = parseMenuLinkHref(hrefForFill)
   const filled =
     parts.kind === 'other'
-      ? fillMenuLinkHref(href, vars)
+      ? fillMenuLinkHref(hrefForFill, vars)
       : buildMenuLinkHref(
           {
             kind: parts.kind,

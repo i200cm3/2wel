@@ -216,6 +216,21 @@ describe('deriveFlowIds', () => {
     assert.equal(withoutDates[0], 'intro')
     assert.equal(withoutDates.includes('intro_by_dates'), false)
   })
+
+  it('keeps intro when confidence is low and guestName is a phone', () => {
+    const config = structuredClone(adaptiveConfig)
+    config.constructorV2.sequenceMetaById.intro.requiresFields = ['name']
+    const flow = deriveFlowIds(config, {
+      guestName: '89282648515',
+      dates: '',
+      partyType: '',
+      topics: '',
+      objections: '',
+      confidence: '0.4',
+      fillRemaining: 'aggressive',
+    })
+    assert.equal(flow[0], 'intro')
+  })
 })
 
 describe('applyDerivedFlowToConfig', () => {

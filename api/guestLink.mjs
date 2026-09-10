@@ -8,6 +8,49 @@ function asLinkField(value) {
   return ''
 }
 
+/** Имя человека, а не телефон / email / id из amo. */
+export function looksLikePersonName(value) {
+  const text = asLinkField(value)
+  if (text.length < 2 || text.length > 40) return false
+  if (/@/.test(text) || /https?:\/\//i.test(text)) return false
+  const compact = text.replace(/[\s\-()+.]/g, '')
+  if (/^\+?\d{5,}$/.test(compact)) return false
+  const letters = (text.match(/[A-Za-zА-Яа-яЁё]/g) || []).length
+  const digits = (text.match(/\d/g) || []).length
+  return letters >= 2 && digits < 5
+}
+
+const NAME_TOKEN = '\u0000'
+
+function capitalizeFirstLetter(text) {
+  const chars = [...text]
+  for (let i = 0; i < chars.length; i += 1) {
+    const ch = chars[i]
+    if (!ch || /\s/.test(ch)) continue
+    chars[i] = ch.toLocaleUpperCase('ru-RU')
+    break
+  }
+  return chars.join('')
+}
+
+/** Убрать {name} из фразы, не оставляя «Здравствуйте, !». */
+export function omitNamePlaceholder(template) {
+  let s = String(template ?? '')
+    .replace(/\{\s*name\s*\}/gi, NAME_TOKEN)
+    .replace(/\[\s*name\s*\]/gi, NAME_TOKEN)
+  const hadLeading = new RegExp(`^\\s*${NAME_TOKEN}`).test(s)
+  s = s.replace(/меня зовут\s*\u0000[.!?…]*/gi, '')
+  s = s.replace(new RegExp(`^${NAME_TOKEN}[,:;]?\\s*`), '')
+  s = s.replace(new RegExp(`,\\s*${NAME_TOKEN}(?=[\\s.!?…,:;]|$)`, 'g'), '')
+  s = s.replace(new RegExp(`\\s*${NAME_TOKEN}`, 'g'), '')
+  s = s.replaceAll(NAME_TOKEN, '')
+  s = s.replace(/[ \t]{2,}/g, ' ')
+  s = s.replace(/[ \t]+([.!?,:;])/g, '$1')
+  s = s.replace(/^[ \t]+/gm, '')
+  if (hadLeading) s = capitalizeFirstLetter(s)
+  return s.replace(/[ \t]+$/gm, '').replace(/[ \t]{2,}/g, ' ')
+}
+
 /** Первая буква заглавная: «виталий» → «Виталий». */
 export function formatGuestName(value) {
   const text = asLinkField(value)
@@ -15,6 +58,21 @@ export function formatGuestName(value) {
   const chars = [...text]
   chars[0] = chars[0].toLocaleUpperCase('ru-RU')
   return chars.join('').slice(0, 80)
+}
+
+/** Имя для титров/TTS: пусто, если это не похоже на человека. */
+export function displayPersonName(value) {
+  const text = asLinkField(value)
+  if (!looksLikePersonName(text)) return ''
+  return formatGuestName(text)
+}
+
+export function fillGuestNameTemplate(template, guestName) {
+  const name = displayPersonName(guestName)
+  if (!name) return omitNamePlaceholder(String(template ?? ''))
+  return String(template ?? '')
+    .replace(/\{\s*name\s*\}/gi, name)
+    .replace(/\[\s*name\s*\]/gi, name)
 }
 
 export function parseGuestLinkBody(body) {
@@ -32,6 +90,7 @@ export function parseGuestLinkBody(body) {
     confidence: asLinkField(summarySource?.confidence) || '0.8',
     room: asLinkField(summarySource?.room),
     fillRemaining: asLinkField(summarySource?.fillRemaining ?? summarySource?.fill_remaining) || 'off',
+    hello: asLinkField(summarySource?.hello),
   }
   const amoSnapshot =
     body?.amoSnapshot && typeof body.amoSnapshot === 'object'

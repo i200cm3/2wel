@@ -5,6 +5,7 @@ import type { CabinetOutlet } from '@/cabinet/CabinetLayout'
 import { SkipTtsOnLinkIssueSetting } from '@/cabinet/SkipTtsOnLinkIssueSetting'
 import { CaptionsFromTtsSetting } from '@/cabinet/CaptionsFromTtsSetting'
 import { FillMissingTtsSetting } from '@/cabinet/FillMissingTtsSetting'
+import { HelloFromDialogSetting } from '@/cabinet/HelloFromDialogSetting'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -208,6 +209,11 @@ export function VoicePage() {
           <FillMissingTtsSetting
             projectCode={projectCode}
             enabled={project?.fillMissingTts !== false}
+            onUpdated={() => void reloadProjects()}
+          />
+          <HelloFromDialogSetting
+            projectCode={projectCode}
+            enabled={Boolean(project?.helloFromDialog)}
             onUpdated={() => void reloadProjects()}
           />
           <CaptionsFromTtsSetting

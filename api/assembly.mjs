@@ -1,3 +1,5 @@
+import { looksLikePersonName } from './guestLink.mjs'
+
 function normalizeFieldKey(field) {
   const key = String(field ?? '')
     .trim()
@@ -9,7 +11,10 @@ function normalizeFieldKey(field) {
 
 function guestFieldValue(summary, field) {
   const key = normalizeFieldKey(field)
-  if (key === 'name') return String(summary.guestName ?? '').trim()
+  if (key === 'name') {
+    const raw = String(summary.guestName ?? '').trim()
+    return looksLikePersonName(raw) ? raw : ''
+  }
   if (key === 'dates') return String(summary.dates ?? '').trim()
   if (key === 'partyType') return String(summary.partyType ?? '').trim()
   if (key === 'topics') return String(summary.topics ?? '').trim()
@@ -135,6 +140,7 @@ export function normalizeGuestSummary(input = {}) {
     confidence: String(input.confidence ?? '0.8').trim() || '0.8',
     room: String(input.room ?? '').trim(),
     fillRemaining,
+    hello: String(input.hello ?? '').trim(),
   }
 }
 
@@ -225,11 +231,25 @@ function alwaysStartFamilyKey(entry) {
   return id
 }
 
-/** alwaysStart: score>0; для intro — не больше одного opening (с датами / без). */
+/** alwaysStart: intro всегда (имя можно опустить); dated-intro без дат — нет. */
+function alwaysStartEligible(entry) {
+  if (!entry || entry.hardBlocked) return false
+  const missingOther = (entry.missingFields ?? []).filter((field) => field !== 'name')
+  if (alwaysStartFamilyKey(entry) === 'intro-opening') return missingOther.length === 0
+  return entry.score > 0
+}
+
+/** alwaysEnd: score>-50, чтобы −8 за низкую уверенность не снимал CTA. */
+function alwaysEndEligible(entry) {
+  if (!entry || entry.hardBlocked) return false
+  if ((entry.missingFields ?? []).length) return false
+  return entry.score > -50
+}
+
 function pickAlwaysStartIds(alwaysStartIds, findEntry) {
   const eligible = alwaysStartIds
     .map((id) => findEntry(id))
-    .filter((entry) => entry && entry.score > 0)
+    .filter(alwaysStartEligible)
     .sort(compareAssemblyEntries)
   const bestByFamily = new Map()
   for (const entry of eligible) {
@@ -243,7 +263,7 @@ function pickAlwaysStartIds(alwaysStartIds, findEntry) {
 function pickAlwaysEndIds(alwaysEndIds, findEntry) {
   const eligible = alwaysEndIds
     .map((id) => findEntry(id))
-    .filter((entry) => entry && entry.score > 0)
+    .filter(alwaysEndEligible)
     .sort(compareAssemblyEntries)
   const bestByFamily = new Map()
   for (const entry of eligible) {
@@ -414,7 +434,7 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
 
   alwaysStart.forEach((id) => {
     const entry = findEntry(id)
-    if (entry && entry.score > 0) pushIfFits(id)
+    if (entry) pushIfFits(id)
   })
 
   const isColdStart = !hasTopicInput && !hasAudienceInput && !hasObjectionInput
@@ -616,6 +636,7 @@ function scoreSequenceEntries(config, summary) {
       score -= 8
       reasons.push('в меню при низкой уверенности')
     }
+    const hardBlocked = meta.menuOnly || meta.enabled === false || !meta.autoplayEligible
     return {
       id: sequence.id,
       label: String(sequence.label ?? sequence.id),
@@ -630,6 +651,8 @@ function scoreSequenceEntries(config, summary) {
       priority: meta.priority,
       reason: reasons.join(' · '),
       placement: placementForId(config, sequence.id),
+      missingFields: missing,
+      hardBlocked,
     }
   })
 }

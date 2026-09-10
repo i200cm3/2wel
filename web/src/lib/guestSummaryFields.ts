@@ -3,16 +3,16 @@ import type { GuestSummary } from './assembly.ts'
 import type { TagOption } from './blockMetaTags.ts'
 
 /** Плейсхолдеры в title / титрах / TTS, которые приходят из amo. */
-export const GUEST_SUBSTITUTION_PLACEHOLDERS = ['{name}', '{room}', '{dates}'] as const
+export const GUEST_SUBSTITUTION_PLACEHOLDERS = ['{name}', '{hello}', '{room}', '{dates}'] as const
 
 /** Плейсхолдеры из карточки объекта — не требуют amo. */
 export const BRAND_SUBSTITUTION_PLACEHOLDERS = ['{brand}', '{phone}', '{tel}', '{telegram}', '{max}'] as const
 
 export const GUEST_SUBSTITUTION_HINT =
-  'Подстановки из amo: {name}, {room}, {dates}. Из карточки объекта: {brand}, {phone}, {tel}, {telegram}, {max}.'
+  'Подстановки: {name}, {hello}, {room}, {dates}. Из карточки объекта: {brand}, {phone}, {tel}, {telegram}, {max}. {hello} — первая фраза из звонка, если включена в настройках.'
 
 export const GUEST_ASSEMBLY_FIELDS_HINT =
-  'Для сборки передайте: name, room, dates, partyType, topics, objections; опционально fillRemaining (off|soft|aggressive). В тексте блока: {name}, {room}, {dates}.'
+  'Для сборки передайте: name, room, dates, partyType, topics, objections; опционально fillRemaining (off|soft|aggressive) и hello. В тексте блока: {name}, {hello}, {room}, {dates}.'
 
 /** Поля summary гостя, которые могут прийти из amo и участвуют в сборке. */
 export const GUEST_SUMMARY_FIELD_OPTIONS: TagOption[] = [
@@ -42,11 +42,23 @@ export function guestSummaryFieldLabel(field: string): string {
   return GUEST_SUMMARY_FIELD_OPTIONS.find((item) => item.value === key)?.label ?? key
 }
 
+/** Имя человека, а не телефон / email / id из amo. */
+export function looksLikePersonName(value: string): boolean {
+  const text = String(value ?? '').trim()
+  if (text.length < 2 || text.length > 40) return false
+  if (/@/.test(text) || /https?:\/\//i.test(text)) return false
+  const compact = text.replace(/[\s\-()+.]/g, '')
+  if (/^\+?\d{5,}$/.test(compact)) return false
+  const letters = (text.match(/[A-Za-zА-Яа-яЁё]/g) || []).length
+  const digits = (text.match(/\d/g) || []).length
+  return letters >= 2 && digits < 5
+}
+
 export function getGuestSummaryFieldValue(summary: GuestSummary, field: string): string {
   const key = normalizeGuestSummaryFieldKey(field)
   switch (key) {
     case 'name':
-      return summary.guestName
+      return looksLikePersonName(summary.guestName) ? summary.guestName : ''
     case 'dates':
       return summary.dates
     case 'partyType':

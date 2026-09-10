@@ -10,6 +10,7 @@
     "user": "tsx create-user.mjs",
     "test": "node --import tsx --test",
     "typecheck": "tsc --noEmit",
+    "zip-amo-widget": "cd ../amo-widget && COPYFILE_DISABLE=1 zip -X -r ../widget.zip manifest.json script.js style.css i18n/ru.json images/logo.png images/logo_main.png images/logo_medium.png images/logo_min.png images/logo_small.png images/tour_1_ru.jpg images/tour_2_ru.jpg images/tour_3_ru.jpg && cp ../widget.zip ../amo-widget.zip",
     "generate-elevenlabs-demos": "tsx ../scripts/generate-elevenlabs-demos.mjs",
     "optimize-library": "tsx optimize-library.mjs"
   },

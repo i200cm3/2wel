@@ -22,6 +22,8 @@ export type GuestSummary = {
   room: string
   /** Дожим непокрытых тем в оставшийся бюджет autoplay (параметр выдачи / mock). */
   fillRemaining?: AssemblyFillRemaining
+  /** Первая фраза {hello}: пусто если настройка выключена. */
+  hello?: string
   customFields?: Record<string, string>
 }
 
@@ -46,6 +48,8 @@ type ScoredAssemblyEntry = AssemblyEntry & {
   /** Блок размечен под конкретную аудиторию (family/couple/…) — не для cold-start. */
   hasAudienceTags: boolean
   priority: number
+  missingFields: string[]
+  hardBlocked: boolean
 }
 
 type AssemblySlot = {
@@ -91,6 +95,7 @@ export function normalizeGuestSummary(input: Partial<GuestSummary> & { guestName
     confidence: String(input.confidence ?? '0.8').trim() || '0.8',
     room: String(input.room ?? '').trim(),
     fillRemaining,
+    hello: String(input.hello ?? '').trim(),
     ...(customFields && Object.keys(customFields).length ? { customFields } : {}),
   }
 }
@@ -162,6 +167,7 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
       score -= 8
       reasons.push('в меню при низкой уверенности')
     }
+    const hardBlocked = meta.menuOnly || meta.enabled === false || !meta.autoplayEligible
     return {
       id: sequence.id,
       label: sequence.label,
@@ -177,6 +183,8 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
       audienceHit: Boolean(audienceHit),
       hasAudienceTags: meta.audienceTags.length > 0,
       priority: meta.priority,
+      missingFields,
+      hardBlocked,
     }
   })
 
@@ -245,14 +253,28 @@ function alwaysStartFamilyKey(entry: ScoredAssemblyEntry): string {
   return id
 }
 
-/** alwaysStart: score>0; для intro — не больше одного opening (с датами / без). */
+/** alwaysStart: intro всегда (имя можно опустить); dated-intro без дат — нет. */
+function alwaysStartEligible(entry: ScoredAssemblyEntry | undefined): entry is ScoredAssemblyEntry {
+  if (!entry || entry.hardBlocked) return false
+  const missingOther = entry.missingFields.filter((field) => field !== 'name')
+  if (alwaysStartFamilyKey(entry) === 'intro-opening') return missingOther.length === 0
+  return entry.score > 0
+}
+
+/** alwaysEnd: score>-50, чтобы −8 за низкую уверенность не снимал CTA. */
+function alwaysEndEligible(entry: ScoredAssemblyEntry | undefined): entry is ScoredAssemblyEntry {
+  if (!entry || entry.hardBlocked) return false
+  if (entry.missingFields.length) return false
+  return entry.score > -50
+}
+
 function pickAlwaysStartIds(
   alwaysStartIds: string[],
   findEntry: (id: string) => ScoredAssemblyEntry | undefined,
 ): string[] {
   const eligible = alwaysStartIds
     .map((id) => findEntry(id))
-    .filter((entry): entry is ScoredAssemblyEntry => Boolean(entry && entry.score > 0))
+    .filter(alwaysStartEligible)
     .sort(compareAssemblyEntries)
   const bestByFamily = new Map<string, string>()
   for (const entry of eligible) {
@@ -263,14 +285,14 @@ function pickAlwaysStartIds(
   return alwaysStartIds.filter((id) => chosen.has(id))
 }
 
-/** alwaysEnd: score>0 и не больше одного блока на «семью» (cta с именем / без имени). */
+/** alwaysEnd: не больше одного блока на «семью» (cta с именем / без имени). */
 function pickAlwaysEndIds(
   alwaysEndIds: string[],
   findEntry: (id: string) => ScoredAssemblyEntry | undefined,
 ): string[] {
   const eligible = alwaysEndIds
     .map((id) => findEntry(id))
-    .filter((entry): entry is ScoredAssemblyEntry => Boolean(entry && entry.score > 0))
+    .filter(alwaysEndEligible)
     .sort(compareAssemblyEntries)
   const bestByFamily = new Map<string, string>()
   for (const entry of eligible) {
@@ -357,7 +379,7 @@ function deriveAdaptiveFlowIds(
 
   alwaysStart.forEach((id) => {
     const entry = findEntry(id)
-    if (entry && entry.score > 0) pushIfFits(id)
+    if (entry) pushIfFits(id)
   })
 
   const isColdStart = !hasTopicInput && !hasAudienceInput && !hasObjectionInput

@@ -1,0 +1,50 @@
+{
+  "widget": {
+    "name": "widget.name",
+    "description": "widget.description",
+    "short_description": "widget.short_description",
+    "version": "1.0.12",
+    "interface_version": 2,
+    "init_once": false,
+    "locale": [
+      "ru"
+    ],
+    "installation": true,
+    "support": {
+      "link": "https://2wel.ru",
+      "email": "support@2wel.ru"
+    }
+  },
+  "locations": [
+    "lcard-1",
+    "settings"
+  ],
+  "tour": {
+    "is_tour": true,
+    "tour_images": {
+      "ru": [
+        "/images/tour_1_ru.jpg",
+        "/images/tour_2_ru.jpg",
+        "/images/tour_3_ru.jpg"
+      ]
+    },
+    "tour_description": "widget.tour_description"
+  },
+  "settings": {
+    "api_base": {
+      "name": "settings.api_base",
+      "type": "text",
+      "required": true
+    },
+    "project_code": {
+      "name": "settings.project_code",
+      "type": "text",
+      "required": true
+    },
+    "api_key": {
+      "name": "settings.api_key",
+      "type": "text",
+      "required": true
+    }
+  }
+}

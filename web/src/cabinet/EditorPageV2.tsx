@@ -9,7 +9,7 @@ import { useTemplateEditor } from '@/hooks/useTemplateEditor'
 import { constructorForPlan, editorPathForPlan } from '@/lib/plans'
 
 export function EditorPageV2() {
-  const { user, project } = useOutletContext<CabinetOutlet>()
+  const { user, project, reloadProjects } = useOutletContext<CabinetOutlet>()
   const { code, templateCode } = useParams()
   const projectCode = code?.trim() ?? ''
   const tplCode = templateCode?.trim() ?? ''
@@ -102,6 +102,8 @@ export function EditorPageV2() {
       }}
       onPublish={() => void publish()}
       onRetryDraft={() => retryDraft()}
+      helloFromDialog={Boolean(project?.helloFromDialog)}
+      onHelloFromDialogUpdated={() => void reloadProjects()}
     />
   )
 }

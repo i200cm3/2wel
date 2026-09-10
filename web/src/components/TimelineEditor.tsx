@@ -20,7 +20,7 @@ import {
   Undo2,
   X,
 } from 'lucide-react'
-import { fillName, fillNameOptional } from '../content'
+import { DEFAULT_HELLO_TEMPLATE, fillGuestText } from '../content'
 import { useClipResize } from '../hooks/useClipResize'
 import { useCueDrag } from '../hooks/useCueDrag'
 import { useEditorHistory } from '../hooks/useEditorHistory'
@@ -2252,13 +2252,15 @@ export function TimelineEditor({
   const total = sequence ? sequenceDuration(sequence) : 0
   const selectedIndex =
     selected && sequence ? sequence.clips.findIndex((c) => c.id === selected.id) : -1
-  const displayTitle = fillNameOptional(sequence?.title, config.defaultGuestName)
+  const displayTitle = sequence?.title
+    ? fillGuestText(sequence.title, config.defaultGuestName, DEFAULT_HELLO_TEMPLATE)
+    : undefined
   const cuePreviewClip = selectedCue ? clipAtTime(sequence.clips, selectedCue.startSec) : null
   const filledSequenceCues = useMemo(
     () =>
       cues.map((cue) => ({
         ...cue,
-        text: cue.text ? fillName(cue.text, config.defaultGuestName) : cue.text,
+        text: cue.text ? fillGuestText(cue.text, config.defaultGuestName, DEFAULT_HELLO_TEMPLATE) : cue.text,
       })),
     [config.defaultGuestName, cues],
   )
@@ -2326,7 +2328,7 @@ export function TimelineEditor({
     () =>
       (blockPreviewSeq?.cues ?? []).map((cue) => ({
         ...cue,
-        text: cue.text ? fillName(cue.text, config.defaultGuestName) : cue.text,
+        text: cue.text ? fillGuestText(cue.text, config.defaultGuestName, DEFAULT_HELLO_TEMPLATE) : cue.text,
       })),
     [blockPreviewSeq?.cues, config.defaultGuestName],
   )
@@ -3440,7 +3442,11 @@ export function TimelineEditor({
                 key={`block-${blockPreviewId}-${blockPreviewKey}-${theme.orientation}`}
                 clips={blockPreviewSeq.clips}
                 cues={filledBlockPreviewCues}
-                title={fillNameOptional(blockPreviewSeq.title, config.defaultGuestName)}
+                title={
+                  blockPreviewSeq.title
+                    ? fillGuestText(blockPreviewSeq.title, config.defaultGuestName, DEFAULT_HELLO_TEMPLATE)
+                    : undefined
+                }
                 captionBarStyle={captionBarStyle(config.theme)}
                 onEnded={() => setBlockPreviewId(null)}
               />

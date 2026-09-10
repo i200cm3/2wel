@@ -42,6 +42,7 @@ import {
 } from './users.mjs'
 import { handleV1Api } from './v1.mjs'
 import { amoRedirectUri, ensureAllAmoWebhooks } from './amoAuth.mjs'
+import { applyAmoWidgetCors, isAmoWidgetPath } from './amoWidget.mjs'
 import { parseV1Body } from './amoWebhook.mjs'
 import {
   consumeInvite,
@@ -297,6 +298,18 @@ const server = http.createServer(async (req, res) => {
         rewriteConfigMedia(row.config, row.project_code),
         row.derived_flow,
       )
+      const hello = String(row.guest_summary?.hello ?? '')
+      const personalized = await personalizeConfigTts(
+        { id: row.project_id, code: row.project_code },
+        playbackConfig,
+        row.guest_name,
+        {
+          required: false,
+          fillMissingStatic: false,
+          hello,
+        },
+      )
+      playbackConfig = personalized.config
       if (row.captions_from_tts) {
         playbackConfig = applyCaptionsFromTts(playbackConfig)
       }
@@ -304,27 +317,19 @@ const server = http.createServer(async (req, res) => {
         ok: true,
         id: row.public_id,
         guestName: row.guest_name,
-        property: signConfigTts(
-          (
-            await personalizeConfigTts(
-              { id: row.project_id, code: row.project_code },
-              playbackConfig,
-              row.guest_name,
-              {
-                required: false,
-                // Массовую статику не генерируем на открытии — иначе таймаут гостевой ссылки.
-                // Статика дожимается при сборке (fill_missing_tts).
-                fillMissingStatic: false,
-              },
-            )
-          ).config,
-          row.project_code,
-        ),
+        property: signConfigTts(playbackConfig, row.project_code),
       })
       return
     }
 
     if (url.startsWith('/api/v1/')) {
+      // Preflight CORS для JS-виджета amo (браузер менеджера на *.amocrm.ru).
+      if (req.method === 'OPTIONS' && isAmoWidgetPath(url)) {
+        applyAmoWidgetCors(req, res)
+        res.statusCode = 204
+        res.end()
+        return
+      }
       let body
       if (req.method === 'POST' || req.method === 'PUT') {
         const raw = await readBuffer(req, MAX_JSON_BYTES)

@@ -48,6 +48,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
@@ -237,6 +238,7 @@ type SummaryDraft = {
   objections: string
   confidence: string
   fillRemaining: 'off' | 'soft' | 'aggressive'
+  hello: string
 }
 
 function emptySummaryDraft(): SummaryDraft {
@@ -249,6 +251,7 @@ function emptySummaryDraft(): SummaryDraft {
     objections: '',
     confidence: '0.8',
     fillRemaining: 'off',
+    hello: '',
   }
 }
 
@@ -471,6 +474,7 @@ export function LinksPage() {
           objections: String(s?.objections ?? ''),
           confidence: String(s?.confidence ?? '0.8'),
           fillRemaining: fillRaw === 'soft' || fillRaw === 'aggressive' ? fillRaw : 'off',
+          hello: String(s?.hello ?? ''),
         })
       })
       .catch((err) => {
@@ -733,6 +737,7 @@ export function LinksPage() {
         objections: summaryDraft.objections,
         confidence: summaryDraft.confidence,
         fillRemaining: summaryDraft.fillRemaining,
+        hello: summaryDraft.hello,
       },
       summaryMeta: {
         source: extractModel ? 'llm' : 'manual',
@@ -778,6 +783,7 @@ export function LinksPage() {
           objections: String(data.summary.objections ?? ''),
           confidence: String(data.summary.confidence ?? '0.8'),
           fillRemaining: fillRaw === 'soft' || fillRaw === 'aggressive' ? fillRaw : 'off',
+          hello: String(data.summary.hello ?? ''),
         })
         setExtractModel(data.model || null)
         toast.success(
@@ -1462,6 +1468,12 @@ export function LinksPage() {
                             </p>
                           </div>
                           <div className="rounded-lg border px-3 py-2.5 sm:col-span-2 lg:col-span-3">
+                            <p className="text-muted-foreground text-xs">{'{hello}'}</p>
+                            <p className="mt-0.5 text-sm font-medium whitespace-pre-wrap">
+                              {detail.guestSummary.hello?.trim() || '—'}
+                            </p>
+                          </div>
+                          <div className="rounded-lg border px-3 py-2.5 sm:col-span-2 lg:col-span-3">
                             <p className="text-muted-foreground text-xs">Возражения</p>
                             <p className="mt-0.5 text-sm font-medium">
                               {detail.guestSummary.objections
@@ -1753,6 +1765,18 @@ export function LinksPage() {
                             setSummaryDraft((prev) => ({ ...prev, guestName: e.target.value }))
                           }
                           placeholder="Пусто — как будто amo не передала имя"
+                        />
+                      </label>
+
+                      <label className="grid gap-1 text-sm">
+                        <span className="text-muted-foreground">{'{hello}'} — первая фраза</span>
+                        <Textarea
+                          rows={3}
+                          value={summaryDraft.hello}
+                          onChange={(e) =>
+                            setSummaryDraft((prev) => ({ ...prev, hello: e.target.value }))
+                          }
+                          placeholder="Пусто, если настройка выключена или зацепки нет"
                         />
                       </label>
 
