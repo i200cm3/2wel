@@ -356,11 +356,15 @@ async function synthesizeElevenDirect(text, voice, settings) {
     }
   }
   if (!res.ok) {
+    const raw = (await res.text().catch(() => '')).slice(0, 800)
+    const cloudflare = /just a moment|cf-ray|cloudflare/i.test(raw)
     return {
       ok: false,
       status: 502,
-      error: `ElevenLabs HTTP ${res.status}`,
-      detail: (await res.text().catch(() => '')).slice(0, 800),
+      error: cloudflare
+        ? 'ElevenLabs заблокировал прямой доступ (Cloudflare). Нужен ELEVENLABS_PROXY_URL'
+        : `ElevenLabs HTTP ${res.status}`,
+      detail: cloudflare ? 'Прямой api.elevenlabs.io недоступен с этого IP' : raw,
     }
   }
   return { ok: true, buffer: Buffer.from(await res.arrayBuffer()), ext: 'mp3' }
@@ -368,9 +372,8 @@ async function synthesizeElevenDirect(text, voice, settings) {
 
 export async function synthesizeEleven(text, voice, settings) {
   if (!voice) return { ok: false, status: 500, error: 'Не задан голос ElevenLabs' }
-  const { getPlatformSetting, SETTING_KEYS } = await import('./platformIntegrations.mjs')
-  const dbKey = await getPlatformSetting(SETTING_KEYS.elevenlabsApiKey)
-  if (dbKey) return synthesizeElevenDirect(text, voice, settings)
+  // Прокси (VDS) важнее ключа в БД: прямой api.elevenlabs.io с продового IP часто
+  // ловит Cloudflare 403 («Just a moment…»), а ключ живёт на прокси.
   const proxyUrl = envPick(process.env, 'ELEVENLABS_PROXY_URL')
   if (proxyUrl) return synthesizeElevenViaProxy(proxyUrl, text, voice, settings)
   return synthesizeElevenDirect(text, voice, settings)
