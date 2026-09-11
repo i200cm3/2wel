@@ -93,10 +93,10 @@ describe('isShortNonTargetCall / isAmoCallHiddenFromMainList', () => {
 
 describe('estimateTranscribeSec', () => {
   it('оценивает время по длительности записи', () => {
-    assert.equal(estimateTranscribeSec(125), 160)
-    assert.equal(estimateTranscribeSec(40), 58)
+    assert.equal(estimateTranscribeSec(125), 18)
+    assert.equal(estimateTranscribeSec(40), 12)
     assert.equal(estimateTranscribeSec(null), null)
-    assert.equal(estimateTranscribeLabel(125), '≈ 2 мин 40 сек')
+    assert.equal(estimateTranscribeLabel(125), '≈ 18 сек')
   })
 })
 

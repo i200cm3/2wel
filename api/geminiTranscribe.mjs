@@ -10,7 +10,6 @@ import {
   isGeminiTextConfigured,
   isTranscribeConfigured,
   resolveGeminiApiKey,
-  resolveTranscribeProvider,
   resolveYandexApiKey,
   SETTING_KEYS,
 } from './platformIntegrations.mjs'
@@ -178,6 +177,92 @@ async function transcribeViaProxy(proxyBase, audioUrl, options = {}) {
       ok: false,
       status: timeout ? 504 : 502,
       error: timeout ? 'Прокси транскрибации не ответил' : 'Прокси транскрибации недоступен',
+      detail: message,
+    }
+  }
+}
+
+async function transcribeViaGigaam(audioUrl, options = {}) {
+  const proxyBase = env('GIGAAM_TRANSCRIBE_URL')
+  if (!proxyBase) {
+    return { ok: false, status: 503, error: 'Не задан GIGAAM_TRANSCRIBE_URL' }
+  }
+
+  const downloadTimeoutMs =
+    options.downloadTimeoutMs ??
+    Number(env('DOWNLOAD_TIMEOUT_MS', String(DEFAULT_DOWNLOAD_TIMEOUT_MS)))
+  const gigaamTimeoutMs =
+    options.gigaamTimeoutMs ?? Number(env('GIGAAM_TIMEOUT_MS', String(DEFAULT_GEMINI_TIMEOUT_MS)))
+  const timeoutMs = downloadTimeoutMs + gigaamTimeoutMs
+  const secret = env('GIGAAM_TRANSCRIBE_SECRET')
+  const headers = { 'Content-Type': 'application/json' }
+  if (secret) headers.Authorization = `Bearer ${secret}`
+
+  const started = Date.now()
+  try {
+    const res = await fetchWithTimeout(
+      `${proxyBase.replace(/\/$/, '')}/v1/transcribe`,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ url: audioUrl }),
+      },
+      timeoutMs,
+    )
+
+    const raw = await res.text()
+    let payload = {}
+    try {
+      payload = raw ? JSON.parse(raw) : {}
+    } catch {
+      payload = { detail: raw.slice(0, 800) }
+    }
+
+    if (!res.ok) {
+      return {
+        ok: false,
+        status: res.status >= 500 ? 502 : res.status,
+        error: proxyErrorMessage(payload, res.status),
+        detail: String(payload?.detail ?? '').trim() || undefined,
+      }
+    }
+
+    const text = String(payload?.text ?? '').trim()
+    if (!text) {
+      return {
+        ok: false,
+        status: 502,
+        error: 'GigaAM не вернул текст транскрибации',
+        detail: raw.slice(0, 800),
+      }
+    }
+
+    console.info(
+      'transcribe gigaam',
+      JSON.stringify({
+        ms: Date.now() - started,
+        model: String(payload?.model ?? '').trim() || null,
+        bytes: Number(payload?.bytes) || null,
+        stereo: payload?.stereo ?? null,
+        textLen: text.length,
+      }),
+    )
+
+    return {
+      ok: true,
+      text,
+      model: String(payload?.model ?? '').trim() || 'v3_e2e_rnnt',
+      mimeType: String(payload?.mimeType ?? '').trim() || undefined,
+      bytes: Number(payload?.bytes) || undefined,
+      provider: 'gigaam',
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    const timeout = err?.name === 'TimeoutError' || err?.name === 'AbortError'
+    return {
+      ok: false,
+      status: timeout ? 504 : 502,
+      error: timeout ? 'GigaAM не ответил' : 'GigaAM недоступен',
       detail: message,
     }
   }
@@ -1293,7 +1378,5 @@ export async function transcribeAudioFromUrl(url, options = {}) {
     return { ok: false, status: 400, error: 'Некорректный URL аудио' }
   }
 
-  const provider = options.provider || (await resolveTranscribeProvider())
-  if (provider === 'yandex') return transcribeWithYandexFromUrl(audioUrl, options)
-  return transcribeWithGeminiFromUrl(audioUrl, options)
+  return transcribeViaGigaam(audioUrl, options)
 }

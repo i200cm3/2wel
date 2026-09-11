@@ -1030,6 +1030,8 @@ async function prepareTemplateForGuest(project, templateRow, guestName, assembly
       required: true,
       fillMissingStatic: false,
       hello: assembly?.guestSummary?.hello ?? '',
+      dates: assembly?.guestSummary?.dates ?? '',
+      room: assembly?.guestSummary?.room ?? '',
     })
     if (!prep.ok) {
       return {
@@ -1285,7 +1287,7 @@ export async function addLinkRawSource(project, publicId, body = {}) {
     if (kind === 'call_transcript') {
       text = audioUrl
     } else if (!(await geminiTranscribeConfigured())) {
-      return { status: 503, error: 'Транскрибация не настроена (GEMINI_TRANSCRIBE_URL или GEMINI_API_KEY)' }
+      return { status: 503, error: 'Транскрибация не настроена (GIGAAM_TRANSCRIBE_URL)' }
     } else {
       const transcribed = await transcribeAudioFromUrl(audioUrl)
       if (!transcribed.ok) {
@@ -1368,7 +1370,7 @@ export async function transcribeLinkRawSourceEntry(project, publicId, sourceId, 
   const audioUrl = String(body?.audioUrl ?? body?.url ?? '').trim()
   if (!audioUrl) return { status: 400, error: 'Укажите URL записи звонка' }
   if (!(await geminiTranscribeConfigured())) {
-    return { status: 503, error: 'Транскрибация не настроена (GEMINI_TRANSCRIBE_URL или GEMINI_API_KEY)' }
+    return { status: 503, error: 'Транскрибация не настроена (GIGAAM_TRANSCRIBE_URL)' }
   }
 
   const started = Date.now()

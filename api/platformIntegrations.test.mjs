@@ -22,14 +22,10 @@ describe('maskApiKey', () => {
 })
 
 describe('normalizeTranscribeProvider', () => {
-  it('принимает gemini и yandex', () => {
-    assert.equal(normalizeTranscribeProvider('gemini'), 'gemini')
-    assert.equal(normalizeTranscribeProvider('Yandex'), 'yandex')
-  })
-
-  it('неизвестный → gemini', () => {
-    assert.equal(normalizeTranscribeProvider('whisper'), 'gemini')
-    assert.equal(normalizeTranscribeProvider(''), 'gemini')
+  it('всегда gigaam', () => {
+    assert.equal(normalizeTranscribeProvider('gemini'), 'gigaam')
+    assert.equal(normalizeTranscribeProvider('Yandex'), 'gigaam')
+    assert.equal(normalizeTranscribeProvider(''), 'gigaam')
   })
 })
 
@@ -43,11 +39,10 @@ describe('normalizeAssemblyProvider', () => {
 })
 
 describe('TRANSCRIBE_PROVIDERS', () => {
-  it('gemini и yandex доступны', () => {
-    const gemini = TRANSCRIBE_PROVIDERS.find((item) => item.id === 'gemini')
-    const yandex = TRANSCRIBE_PROVIDERS.find((item) => item.id === 'yandex')
-    assert.equal(gemini?.available, true)
-    assert.equal(yandex?.available, true)
+  it('единственный провайдер — GigaAM', () => {
+    assert.equal(TRANSCRIBE_PROVIDERS.length, 1)
+    assert.equal(TRANSCRIBE_PROVIDERS[0]?.id, 'gigaam')
+    assert.equal(TRANSCRIBE_PROVIDERS[0]?.available, true)
   })
 })
 

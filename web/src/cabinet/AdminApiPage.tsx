@@ -20,7 +20,6 @@ import {
   saveAdminIntegrations,
   type AdminAssemblyProvider,
   type AdminIntegrationProvider,
-  type AdminTranscribeProvider,
 } from '@/lib/api'
 
 function sourceLabel(source: AdminIntegrationProvider['source'] | undefined) {
@@ -149,8 +148,6 @@ export function AdminApiPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [pending, setPending] = useState(false)
-  const [transcribeProvider, setTranscribeProvider] = useState('gemini')
-  const [transcribeProviders, setTranscribeProviders] = useState<AdminTranscribeProvider[]>([])
   const [assemblyProvider, setAssemblyProvider] = useState('gemini')
   const [assemblyProviders, setAssemblyProviders] = useState<AdminAssemblyProvider[]>([])
   const [integrations, setIntegrations] = useState<AdminIntegrationProvider[]>([])
@@ -158,8 +155,6 @@ export function AdminApiPage() {
   const [folderDraft, setFolderDraft] = useState('')
 
   const applyOverview = (data: Awaited<ReturnType<typeof fetchAdminIntegrations>>) => {
-    setTranscribeProvider(data.transcribeProvider)
-    setTranscribeProviders(data.transcribeProviders)
     setAssemblyProvider(data.assemblyProvider || 'gemini')
     setAssemblyProviders(data.assemblyProviders || [])
     setIntegrations(data.integrations)
@@ -184,22 +179,6 @@ export function AdminApiPage() {
 
   if (!user.isAdmin) {
     return <Navigate to="/app" replace />
-  }
-
-  const saveTranscribeProvider = async (next: string) => {
-    const prev = transcribeProvider
-    setTranscribeProvider(next)
-    setPending(true)
-    try {
-      const data = await saveAdminIntegrations({ transcribeProvider: next })
-      applyOverview(data)
-      toast.success('Провайдер транскрибации сохранён')
-    } catch (err) {
-      setTranscribeProvider(prev)
-      toast.error(err instanceof Error ? err.message : 'Не удалось сохранить')
-    } finally {
-      setPending(false)
-    }
   }
 
   const saveAssemblyProvider = async (next: string) => {
@@ -269,7 +248,8 @@ export function AdminApiPage() {
       <div>
         <h1 className="font-sans text-xl font-semibold tracking-tight">API</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Внешние сервисы платформы: ключи и выбор провайдера. Ключи из админки перекрывают .env.
+          Ключи для сводки и TTS. Транскрибация звонков идёт через локальный GigaAM — здесь не
+          настраивается.
         </p>
       </div>
 
@@ -278,46 +258,6 @@ export function AdminApiPage() {
 
       {!loading ? (
         <>
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Транскрибация</CardTitle>
-              <CardDescription>Какой сервис использовать для расшифровки звонков.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FieldSet>
-                <FieldLegend className="sr-only">Провайдер транскрибации</FieldLegend>
-                <RadioGroup
-                  value={transcribeProvider}
-                  disabled={pending}
-                  onValueChange={(value) => {
-                    void saveTranscribeProvider(String(value ?? ''))
-                  }}
-                  className="gap-3"
-                >
-                  {transcribeProviders.map((item) => (
-                    <Field key={item.id} orientation="horizontal">
-                      <RadioGroupItem
-                        value={item.id}
-                        id={`transcribe-${item.id}`}
-                        disabled={!item.available || pending}
-                      />
-                      <FieldContent>
-                        <FieldLabel htmlFor={`transcribe-${item.id}`} className="font-normal">
-                          {item.label}
-                          {!item.available ? (
-                            <Badge variant="secondary" className="ml-2">
-                              скоро
-                            </Badge>
-                          ) : null}
-                        </FieldLabel>
-                      </FieldContent>
-                    </Field>
-                  ))}
-                </RadioGroup>
-              </FieldSet>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Сборка (сводка)</CardTitle>

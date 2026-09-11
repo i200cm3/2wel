@@ -10,10 +10,7 @@ export const SETTING_KEYS = {
   assemblyProvider: 'capabilities.assembly.provider',
 }
 
-export const TRANSCRIBE_PROVIDERS = [
-  { id: 'gemini', label: 'Gemini', available: true },
-  { id: 'yandex', label: 'Яндекс SpeechKit', available: true },
-]
+export const TRANSCRIBE_PROVIDERS = [{ id: 'gigaam', label: 'GigaAM', available: true }]
 
 export const ASSEMBLY_PROVIDERS = [
   { id: 'gemini', label: 'Gemini', available: true },
@@ -75,10 +72,8 @@ export function maskApiKey(value) {
   return `${s.slice(0, 4)}…${s.slice(-4)}`
 }
 
-export function normalizeTranscribeProvider(value) {
-  const id = String(value ?? '').trim().toLowerCase()
-  if (id === 'yandex') return 'yandex'
-  return 'gemini'
+export function normalizeTranscribeProvider(_value) {
+  return 'gigaam'
 }
 
 export function normalizeAssemblyProvider(value) {
@@ -148,8 +143,7 @@ export async function resolveYandexFolderId() {
 }
 
 export async function resolveTranscribeProvider() {
-  const raw = await getPlatformSetting(SETTING_KEYS.transcribeProvider)
-  return normalizeTranscribeProvider(raw || 'gemini')
+  return 'gigaam'
 }
 
 export async function resolveAssemblyProvider() {
@@ -157,14 +151,9 @@ export async function resolveAssemblyProvider() {
   return normalizeAssemblyProvider(raw || 'gemini')
 }
 
-/** Есть ли рабочий способ транскрибации для текущего провайдера. */
+/** Транскрибация звонков — только локальный GigaAM. */
 export async function isTranscribeConfigured() {
-  const provider = await resolveTranscribeProvider()
-  if (provider === 'yandex') {
-    return Boolean(await resolveYandexApiKey())
-  }
-  if (env('GEMINI_TRANSCRIBE_URL')) return true
-  return Boolean(await resolveGeminiApiKey())
+  return Boolean(env('GIGAAM_TRANSCRIBE_URL'))
 }
 
 export async function isGeminiTextConfigured() {
@@ -224,12 +213,9 @@ function integrationPublicView(def, map) {
 
 export async function getAdminIntegrationsOverview() {
   const map = await loadSettingsMap({ force: true })
-  const transcribeProvider = normalizeTranscribeProvider(
-    map[SETTING_KEYS.transcribeProvider] || 'gemini',
-  )
   const assemblyProvider = normalizeAssemblyProvider(map[SETTING_KEYS.assemblyProvider] || 'gemini')
   return {
-    transcribeProvider,
+    transcribeProvider: 'gigaam',
     transcribeProviders: TRANSCRIBE_PROVIDERS.map((item) => ({ ...item })),
     assemblyProvider,
     assemblyProviders: ASSEMBLY_PROVIDERS.map((item) => ({ ...item })),
@@ -248,19 +234,6 @@ export async function getAdminIntegrationsOverview() {
 export async function updateAdminIntegrations(payload = {}) {
   const secrets = payload?.secrets && typeof payload.secrets === 'object' ? payload.secrets : {}
   const configs = payload?.configs && typeof payload.configs === 'object' ? payload.configs : {}
-
-  if (payload.transcribeProvider !== undefined) {
-    const next = normalizeTranscribeProvider(payload.transcribeProvider)
-    const meta = TRANSCRIBE_PROVIDERS.find((item) => item.id === next)
-    if (meta && !meta.available) {
-      return {
-        ok: false,
-        status: 400,
-        error: `${meta.label} пока не подключён — выберите другой сервис`,
-      }
-    }
-    await upsertPlatformSetting(SETTING_KEYS.transcribeProvider, next)
-  }
 
   if (payload.assemblyProvider !== undefined) {
     const next = normalizeAssemblyProvider(payload.assemblyProvider)

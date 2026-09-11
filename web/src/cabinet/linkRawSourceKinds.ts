@@ -74,10 +74,10 @@ export function isNonTargetCall(source: { title: string; meta?: LinkRawSourceMet
   return isManualNonTargetSource(source) || isShortNonTargetCall(source)
 }
 
-/** Грубая оценка: скачивание Sipuni + Gemini (~10 с + 120% длительности записи). */
+/** Грубая оценка: скачивание записи + GigaAM CPU (~8 с + 8% длительности). */
 export function estimateTranscribeSec(audioDurationSec: number | null): number | null {
   if (audioDurationSec == null || audioDurationSec <= 0) return null
-  return Math.max(18, Math.ceil(10 + audioDurationSec * 1.2))
+  return Math.max(12, Math.ceil(8 + audioDurationSec * 0.08))
 }
 
 export function formatApproxDuration(sec: number): string {
