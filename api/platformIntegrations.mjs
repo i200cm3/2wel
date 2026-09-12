@@ -8,6 +8,7 @@ export const SETTING_KEYS = {
   yandexFolderId: 'integrations.yandex.folder_id',
   transcribeProvider: 'capabilities.transcribe.provider',
   assemblyProvider: 'capabilities.assembly.provider',
+  extractModel: 'capabilities.extract.model',
 }
 
 export const TRANSCRIBE_PROVIDERS = [{ id: 'gigaam', label: 'GigaAM', available: true }]
@@ -15,6 +16,7 @@ export const TRANSCRIBE_PROVIDERS = [{ id: 'gigaam', label: 'GigaAM', available:
 export const ASSEMBLY_PROVIDERS = [
   { id: 'gemini', label: 'Gemini', available: true },
   { id: 'yandex', label: 'YandexGPT', available: true },
+  { id: 'local', label: 'Локальный (2.11)', available: true },
 ]
 
 const INTEGRATION_DEFS = [
@@ -79,6 +81,7 @@ export function normalizeTranscribeProvider(_value) {
 export function normalizeAssemblyProvider(value) {
   const id = String(value ?? '').trim().toLowerCase()
   if (id === 'yandex') return 'yandex'
+  if (id === 'local' || id === 'ollama' || id === 'qwen') return 'local'
   return 'gemini'
 }
 
@@ -151,6 +154,30 @@ export async function resolveAssemblyProvider() {
   return normalizeAssemblyProvider(raw || 'gemini')
 }
 
+export async function resolveExtractModel() {
+  const { defaultLocalLlmModel, normalizeLocalModelId } = await import('./localLlm.mjs')
+  const fromDb = await getPlatformSetting(SETTING_KEYS.extractModel)
+  return normalizeLocalModelId(fromDb, defaultLocalLlmModel()) || defaultLocalLlmModel()
+}
+
+export function isLocalLlmUrlConfigured() {
+  return Boolean(env('LOCAL_LLM_URL'))
+}
+
+/** {hello} — облако. Локальный LLM только для extract. */
+export async function resolveHelloProvider() {
+  const extract = await resolveAssemblyProvider()
+  if (extract === 'yandex' || extract === 'gemini') return extract
+  if (await isGeminiTextConfigured()) return 'gemini'
+  if ((await resolveYandexApiKey()) && (await resolveYandexFolderId())) return 'yandex'
+  return 'gemini'
+}
+
+export async function isHelloTextConfigured() {
+  if (await isGeminiTextConfigured()) return true
+  return Boolean((await resolveYandexApiKey()) && (await resolveYandexFolderId()))
+}
+
 /** Транскрибация звонков — только локальный GigaAM. */
 export async function isTranscribeConfigured() {
   return Boolean(env('GIGAAM_TRANSCRIBE_URL'))
@@ -161,9 +188,10 @@ export async function isGeminiTextConfigured() {
   return Boolean(await resolveGeminiApiKey())
 }
 
-/** LLM для сводки/сборки (Gemini или YandexGPT). */
+/** LLM для extract-сводки (Gemini, YandexGPT или локальный Ollama). */
 export async function isAssemblyTextConfigured() {
   const provider = await resolveAssemblyProvider()
+  if (provider === 'local') return isLocalLlmUrlConfigured()
   if (provider === 'yandex') {
     return Boolean((await resolveYandexApiKey()) && (await resolveYandexFolderId()))
   }
@@ -173,6 +201,9 @@ export async function isAssemblyTextConfigured() {
 /** Почему extract нельзя запустить — для UI/логов. */
 export async function assemblyTextConfigError() {
   const provider = await resolveAssemblyProvider()
+  if (provider === 'local') {
+    return isLocalLlmUrlConfigured() ? null : 'Не задан LOCAL_LLM_URL (Ollama на 2.11)'
+  }
   if (provider === 'yandex') {
     if (!(await resolveYandexApiKey())) {
       return 'Не задан API key Яндекса (Админ → API)'
@@ -214,11 +245,23 @@ function integrationPublicView(def, map) {
 export async function getAdminIntegrationsOverview() {
   const map = await loadSettingsMap({ force: true })
   const assemblyProvider = normalizeAssemblyProvider(map[SETTING_KEYS.assemblyProvider] || 'gemini')
+  const { defaultLocalLlmModel, listLocalLlmModels, normalizeLocalModelId } = await import('./localLlm.mjs')
+  const listed = assemblyProvider === 'local' ? await listLocalLlmModels() : { ok: true, models: [], error: null }
+  const extractModel =
+    normalizeLocalModelId(map[SETTING_KEYS.extractModel], defaultLocalLlmModel()) || defaultLocalLlmModel()
+  const localAvailable = isLocalLlmUrlConfigured()
   return {
     transcribeProvider: 'gigaam',
     transcribeProviders: TRANSCRIBE_PROVIDERS.map((item) => ({ ...item })),
     assemblyProvider,
-    assemblyProviders: ASSEMBLY_PROVIDERS.map((item) => ({ ...item })),
+    assemblyProviders: ASSEMBLY_PROVIDERS.map((item) => ({
+      ...item,
+      available: item.id !== 'local' || localAvailable,
+    })),
+    extractModel,
+    extractModels: listed.models,
+    localLlmConfigured: localAvailable,
+    localLlmError: listed.error,
     integrations: INTEGRATION_DEFS.map((def) => integrationPublicView(def, map)),
   }
 }
@@ -227,6 +270,7 @@ export async function getAdminIntegrationsOverview() {
  * @param {{
  *   transcribeProvider?: string
  *   assemblyProvider?: string
+ *   extractModel?: string
  *   secrets?: Record<string, string | null | undefined>
  *   configs?: { yandexFolderId?: string | null }
  * }} payload
@@ -237,6 +281,13 @@ export async function updateAdminIntegrations(payload = {}) {
 
   if (payload.assemblyProvider !== undefined) {
     const next = normalizeAssemblyProvider(payload.assemblyProvider)
+    if (next === 'local' && !isLocalLlmUrlConfigured()) {
+      return {
+        ok: false,
+        status: 400,
+        error: 'Локальный экстракт не настроен (LOCAL_LLM_URL)',
+      }
+    }
     const meta = ASSEMBLY_PROVIDERS.find((item) => item.id === next)
     if (meta && !meta.available) {
       return {
@@ -246,6 +297,12 @@ export async function updateAdminIntegrations(payload = {}) {
       }
     }
     await upsertPlatformSetting(SETTING_KEYS.assemblyProvider, next)
+  }
+
+  if (payload.extractModel !== undefined) {
+    const { defaultLocalLlmModel, normalizeLocalModelId } = await import('./localLlm.mjs')
+    const next = normalizeLocalModelId(payload.extractModel, defaultLocalLlmModel()) || defaultLocalLlmModel()
+    await upsertPlatformSetting(SETTING_KEYS.extractModel, next)
   }
 
   if (Object.prototype.hasOwnProperty.call(configs, 'yandexFolderId')) {

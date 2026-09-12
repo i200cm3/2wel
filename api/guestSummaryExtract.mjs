@@ -186,7 +186,12 @@ export async function extractGuestSummaryFromRawText(rawText, options = {}) {
   }
 
   const prompt = buildExtractPrompt(text)
-  const generated = await generateAssemblyText(prompt, options)
+  const generated = await generateAssemblyText(prompt, {
+    temperature: 0,
+    maxTokens: 800,
+    format: 'json',
+    ...options,
+  })
   if (!generated.ok) return generated
 
   const parsed = parseGuestSummaryExtractResponse(generated.text)

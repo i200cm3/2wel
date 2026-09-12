@@ -1225,12 +1225,22 @@ export type AdminAssemblyProvider = {
   available: boolean
 }
 
+export type AdminExtractModel = {
+  id: string
+  label: string
+  sizeBytes?: number
+}
+
 export type AdminIntegrationsOverview = {
   ok: true
   transcribeProvider: string
   transcribeProviders: AdminTranscribeProvider[]
   assemblyProvider: string
   assemblyProviders: AdminAssemblyProvider[]
+  extractModel?: string
+  extractModels?: AdminExtractModel[]
+  localLlmConfigured?: boolean
+  localLlmError?: string | null
   integrations: AdminIntegrationProvider[]
 }
 
@@ -1241,6 +1251,7 @@ export function fetchAdminIntegrations() {
 export function saveAdminIntegrations(payload: {
   transcribeProvider?: string
   assemblyProvider?: string
+  extractModel?: string
   secrets?: Record<string, string>
   configs?: { yandexFolderId?: string }
 }) {

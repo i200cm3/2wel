@@ -30,11 +30,13 @@ describe('normalizeTranscribeProvider', () => {
 })
 
 describe('normalizeAssemblyProvider', () => {
-  it('принимает gemini и yandex', async () => {
+  it('принимает gemini, yandex и local', async () => {
     const { normalizeAssemblyProvider } = await import('./platformIntegrations.mjs')
     assert.equal(normalizeAssemblyProvider('yandex'), 'yandex')
     assert.equal(normalizeAssemblyProvider('Gemini'), 'gemini')
     assert.equal(normalizeAssemblyProvider(''), 'gemini')
+    assert.equal(normalizeAssemblyProvider('local'), 'local')
+    assert.equal(normalizeAssemblyProvider('ollama'), 'local')
   })
 })
 
@@ -47,9 +49,10 @@ describe('TRANSCRIBE_PROVIDERS', () => {
 })
 
 describe('ASSEMBLY_PROVIDERS', () => {
-  it('gemini и yandex доступны для сборки', async () => {
+  it('gemini, yandex и local доступны для экстракта', async () => {
     const { ASSEMBLY_PROVIDERS } = await import('./platformIntegrations.mjs')
     assert.equal(ASSEMBLY_PROVIDERS.find((item) => item.id === 'gemini')?.available, true)
     assert.equal(ASSEMBLY_PROVIDERS.find((item) => item.id === 'yandex')?.available, true)
+    assert.equal(ASSEMBLY_PROVIDERS.find((item) => item.id === 'local')?.available, true)
   })
 })

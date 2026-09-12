@@ -118,6 +118,12 @@ export async function generateTextWithYandex(prompt, options = {}) {
 /** Текст для сводки/сборки: по выбранному провайдеру в админке. */
 export async function generateAssemblyText(prompt, options = {}) {
   const provider = options.provider || (await resolveAssemblyProvider())
+  if (provider === 'local') {
+    const { generateTextWithLocal } = await import('./localLlm.mjs')
+    const { resolveExtractModel } = await import('./platformIntegrations.mjs')
+    const model = options.model || (await resolveExtractModel())
+    return generateTextWithLocal(prompt, { ...options, model })
+  }
   if (provider === 'yandex') return generateTextWithYandex(prompt, options)
 
   const { generateTextWithGemini } = await import('./geminiTranscribe.mjs')

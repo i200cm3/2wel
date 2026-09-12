@@ -16,9 +16,18 @@ import {
 import { Input } from '@/components/ui/input'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
   fetchAdminIntegrations,
   saveAdminIntegrations,
   type AdminAssemblyProvider,
+  type AdminExtractModel,
   type AdminIntegrationProvider,
 } from '@/lib/api'
 
@@ -115,7 +124,7 @@ function IntegrationCard({
                 onChange={(event) => onFolderDraft(event.target.value)}
               />
               <FieldDescription>
-                Обязателен для YandexGPT (сводка/сборка). Сейчас:{' '}
+                Обязателен для YandexGPT ({'{hello}'} / облачная сводка). Сейчас:{' '}
                 {item.hasFolderId ? (
                   <>
                     {sourceLabel(item.folderIdSource)}
@@ -150,6 +159,9 @@ export function AdminApiPage() {
   const [pending, setPending] = useState(false)
   const [assemblyProvider, setAssemblyProvider] = useState('gemini')
   const [assemblyProviders, setAssemblyProviders] = useState<AdminAssemblyProvider[]>([])
+  const [extractModel, setExtractModel] = useState('assembly')
+  const [extractModels, setExtractModels] = useState<AdminExtractModel[]>([])
+  const [localLlmError, setLocalLlmError] = useState<string | null>(null)
   const [integrations, setIntegrations] = useState<AdminIntegrationProvider[]>([])
   const [drafts, setDrafts] = useState<Record<string, string>>({})
   const [folderDraft, setFolderDraft] = useState('')
@@ -157,6 +169,9 @@ export function AdminApiPage() {
   const applyOverview = (data: Awaited<ReturnType<typeof fetchAdminIntegrations>>) => {
     setAssemblyProvider(data.assemblyProvider || 'gemini')
     setAssemblyProviders(data.assemblyProviders || [])
+    setExtractModel(data.extractModel || 'assembly')
+    setExtractModels(data.extractModels || [])
+    setLocalLlmError(data.localLlmError || null)
     setIntegrations(data.integrations)
   }
 
@@ -188,10 +203,26 @@ export function AdminApiPage() {
     try {
       const data = await saveAdminIntegrations({ assemblyProvider: next })
       applyOverview(data)
-      toast.success('Провайдер сборки сохранён')
+      toast.success('Провайдер экстракта сохранён')
     } catch (err) {
       setAssemblyProvider(prev)
       toast.error(err instanceof Error ? err.message : 'Не удалось сохранить')
+    } finally {
+      setPending(false)
+    }
+  }
+
+  const saveExtractModel = async (next: string) => {
+    const prev = extractModel
+    setExtractModel(next)
+    setPending(true)
+    try {
+      const data = await saveAdminIntegrations({ extractModel: next })
+      applyOverview(data)
+      toast.success('Модель экстракта сохранена')
+    } catch (err) {
+      setExtractModel(prev)
+      toast.error(err instanceof Error ? err.message : 'Не удалось сохранить модель')
     } finally {
       setPending(false)
     }
@@ -243,13 +274,18 @@ export function AdminApiPage() {
     }
   }
 
+  const localModelItems =
+    extractModels.some((item) => item.id === extractModel) || !extractModel
+      ? extractModels
+      : [{ id: extractModel, label: extractModel }, ...extractModels]
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 md:p-6">
       <div>
         <h1 className="font-sans text-xl font-semibold tracking-tight">API</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Ключи для сводки и TTS. Транскрибация звонков идёт через локальный GigaAM — здесь не
-          настраивается.
+          Ключи для облачной сводки и TTS. Транскрибация — локальный GigaAM. Экстракт параметров
+          можно переключить на модель на 2.11.
         </p>
       </div>
 
@@ -260,14 +296,15 @@ export function AdminApiPage() {
         <>
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Сборка (сводка)</CardTitle>
+              <CardTitle className="text-base">Экстракт данных</CardTitle>
               <CardDescription>
-                Кто извлекает параметры гостя из транскриптов для адаптивной сборки.
+                Кто достаёт JSON сводки из транскрипта. Фраза {'{hello}'} — отдельный эксперимент и
+                остаётся на Gemini/YandexGPT, если включена.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <FieldSet>
-                <FieldLegend className="sr-only">Провайдер сборки</FieldLegend>
+                <FieldLegend className="sr-only">Провайдер экстракта</FieldLegend>
                 <RadioGroup
                   value={assemblyProvider}
                   disabled={pending}
@@ -288,7 +325,7 @@ export function AdminApiPage() {
                           {item.label}
                           {!item.available ? (
                             <Badge variant="secondary" className="ml-2">
-                              скоро
+                              нет LOCAL_LLM_URL
                             </Badge>
                           ) : null}
                         </FieldLabel>
@@ -297,6 +334,50 @@ export function AdminApiPage() {
                   ))}
                 </RadioGroup>
               </FieldSet>
+
+              {assemblyProvider === 'local' ? (
+                <Field>
+                  <FieldLabel>Модель на 2.11</FieldLabel>
+                  <FieldContent>
+                    {localModelItems.length > 0 ? (
+                      <Select
+                        items={localModelItems.map((item) => ({
+                          value: item.id,
+                          label: item.label,
+                        }))}
+                        value={extractModel}
+                        disabled={pending}
+                        onValueChange={(value) => {
+                          const next = String(value ?? '').trim()
+                          if (!next || next === extractModel) return
+                          void saveExtractModel(next)
+                        }}
+                      >
+                        <SelectTrigger className="w-full min-w-0" disabled={pending}>
+                          <SelectValue placeholder="Выберите модель" />
+                        </SelectTrigger>
+                        <SelectContent align="start" alignItemWithTrigger={false}>
+                          <SelectGroup>
+                            {localModelItems.map((item) => (
+                              <SelectItem key={item.id} value={item.id}>
+                                {item.label}
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <p className="text-muted-foreground text-sm">
+                        {localLlmError || 'Список моделей пуст.'}
+                      </p>
+                    )}
+                    <FieldDescription>
+                      Сейчас: {extractModel}. Подтянуть новую — ollama pull на 2.11, затем обновить
+                      страницу.
+                    </FieldDescription>
+                  </FieldContent>
+                </Field>
+              ) : null}
             </CardContent>
           </Card>
 

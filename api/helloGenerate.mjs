@@ -2,7 +2,8 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { looksLikePersonName } from './guestLink.mjs'
-import { assemblyTextConfigured, generateAssemblyText } from './yandexGpt.mjs'
+import { generateAssemblyText } from './yandexGpt.mjs'
+import { isHelloTextConfigured, resolveHelloProvider } from './platformIntegrations.mjs'
 
 const API_DIR = path.dirname(fileURLToPath(import.meta.url))
 const PROMPT_NAME = 'hello-generate.md'
@@ -119,10 +120,14 @@ export async function generateHelloFromDialog({
   if (!looksLikePersonName(guestName) || !String(rawText ?? '').trim()) {
     return defaultHelloResult()
   }
-  if (!(await assemblyTextConfigured())) return defaultHelloResult()
+  if (!(await isHelloTextConfigured())) return defaultHelloResult()
 
   const prompt = buildHelloPrompt({ rawText, guestName, brandName })
-  const generated = await generateAssemblyText(prompt, { temperature: 0.35, maxTokens: 800 })
+  const generated = await generateAssemblyText(prompt, {
+    provider: await resolveHelloProvider(),
+    temperature: 0.35,
+    maxTokens: 800,
+  })
   if (!generated.ok) {
     console.warn('hello.generate.fail', generated.error || generated.status)
     return defaultHelloResult()
