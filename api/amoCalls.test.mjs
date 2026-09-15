@@ -28,11 +28,26 @@ describe('parseCallNoteFromAmo', () => {
       },
     })
     assert.ok(out)
-    assert.equal(out.externalRef, 'amo:note:501')
-    assert.equal(out.body, 'https://sipuni.com/api/crm/record?id=abc&hash=xyz')
+    assert.equal(out.kind, 'call_transcript')
     assert.match(out.title, /Входящий/)
-    assert.match(out.title, /2:05/)
-    assert.equal(out.capturedAt, new Date(1_700_000_000 * 1000).toISOString())
+    assert.equal(out.body, 'https://sipuni.com/api/crm/record?id=abc&hash=xyz')
+    assert.equal(out.externalRef, amoNoteRef(501))
+    assert.equal(out.meta?.durationSec, 125)
+  })
+
+  it('понимает числовой note_type 10 (call_in)', () => {
+    const out = parseCallNoteFromAmo({
+      id: 229719189,
+      note_type: '10',
+      created_at: 1_700_000_000,
+      params: {
+        duration: 90,
+        link: 'https://sipuni.com/api/crm/record?id=x',
+      },
+    })
+    assert.ok(out)
+    assert.match(out.title, /Входящий/)
+    assert.equal(out.meta?.durationSec, 90)
   })
 
   it('игнорирует примечание без записи', () => {

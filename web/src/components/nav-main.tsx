@@ -16,6 +16,7 @@ export function NavMain({
     title: string
     url: string
     icon?: React.ReactNode
+    exact?: boolean
   }[]
   label?: string
 }) {
@@ -31,7 +32,8 @@ export function NavMain({
                 tooltip={item.title}
                 isActive={
                   location.pathname === item.url ||
-                  (location.pathname.startsWith(`${item.url}/`) &&
+                  (!item.exact &&
+                    location.pathname.startsWith(`${item.url}/`) &&
                     !(items.length > 1 && item.url === items[0]?.url))
                 }
                 render={<Link to={item.url} />}

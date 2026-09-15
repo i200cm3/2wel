@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
+import { CallsPage } from '@/cabinet/CallsPage'
 import { IntegrationsPage } from '@/cabinet/IntegrationsPage'
 import { CabinetLayout, RequireAuth } from '@/cabinet/CabinetLayout'
 import { EditorPage } from '@/cabinet/EditorPage'
@@ -15,6 +16,8 @@ import { AccountPage } from '@/cabinet/AccountPage'
 import { AdminUsersPage } from '@/cabinet/AdminUsersPage'
 import { AdminTtsUsagePage } from '@/cabinet/AdminTtsUsagePage'
 import { AdminApiPage } from '@/cabinet/AdminApiPage'
+import { AdminAnalyticsPage } from '@/cabinet/AdminAnalyticsPage'
+import { AdminProjectsPage } from '@/cabinet/AdminProjectsPage'
 import { AppIndex, OverviewPage } from '@/cabinet/OverviewPage'
 import { PlanPage } from '@/cabinet/PlanPage'
 import { TeamPage } from '@/cabinet/TeamPage'
@@ -100,6 +103,8 @@ export default function App() {
         >
           <Route index element={<AppIndex />} />
           <Route path="account" element={<AccountPage />} />
+          <Route path="analytics" element={<AdminAnalyticsPage />} />
+          <Route path="projects" element={<AdminProjectsPage />} />
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="users/:userId" element={<AdminUsersPage />} />
           <Route path="tts-usage" element={<AdminTtsUsagePage />} />
@@ -109,6 +114,7 @@ export default function App() {
           <Route path="projects/:code/templates/:templateCode/edit" element={<EditorPage />} />
           <Route path="projects/:code/templates/:templateCode/edit-v2" element={<EditorPageV2 />} />
           <Route path="projects/:code/links" element={<LinksPage />} />
+          <Route path="projects/:code/calls" element={<CallsPage />} />
           <Route path="projects/:code/api" element={<ApiToIntegrations />} />
           <Route path="projects/:code/integrations" element={<IntegrationsPage />} />
           <Route path="projects/:code/voice" element={<VoicePage />} />

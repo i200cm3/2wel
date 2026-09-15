@@ -816,6 +816,67 @@ export function disconnectAmo(projectCode: string) {
   return apiSend<{ ok: true }>(`/api/projects/${encodeURIComponent(projectCode)}/amocrm`, 'DELETE')
 }
 
+export type ProjectCallStatus = 'pending' | 'running' | 'done' | 'skipped' | 'failed'
+
+export type ProjectCallListItem = {
+  id: string
+  projectId: string
+  leadId: string
+  callNoteId: string
+  recordingUrl: string | null
+  summaryOutcome: string | null
+  summaryNextStep: string | null
+  summaryNoteId: string | null
+  status: ProjectCallStatus
+  skipReason: string | null
+  error: string | null
+  pipelineId: string | null
+  statusId: string | null
+  durationSec: number | null
+  createdAt: string
+  updatedAt: string
+  hasTranscript: boolean
+  transcriptPreview: string | null
+}
+
+export type ProjectCallDetail = Omit<ProjectCallListItem, 'hasTranscript' | 'transcriptPreview'> & {
+  transcript: string | null
+}
+
+export function fetchProjectCalls(
+  projectCode: string,
+  opts: { limit?: number; offset?: number; status?: string } = {},
+) {
+  const params = new URLSearchParams()
+  if (opts.limit != null) params.set('limit', String(opts.limit))
+  if (opts.offset != null) params.set('offset', String(opts.offset))
+  if (opts.status) params.set('status', opts.status)
+  const qs = params.toString()
+  return apiGet<{
+    ok: true
+    total: number
+    calls: ProjectCallListItem[]
+    amoBaseDomain: string | null
+  }>(`/api/projects/${encodeURIComponent(projectCode)}/calls${qs ? `?${qs}` : ''}`)
+}
+
+export function fetchProjectCall(projectCode: string, callId: string) {
+  return apiGet<{
+    ok: true
+    call: ProjectCallDetail
+    amoBaseDomain: string | null
+  }>(
+    `/api/projects/${encodeURIComponent(projectCode)}/calls/${encodeURIComponent(callId)}`,
+  )
+}
+
+export function deleteProjectCall(projectCode: string, callId: string) {
+  return apiSend<{ ok: true }>(
+    `/api/projects/${encodeURIComponent(projectCode)}/calls/${encodeURIComponent(callId)}`,
+    'DELETE',
+  )
+}
+
 export type PublicPlayback = {
   ok: true
   id: string
@@ -1103,6 +1164,51 @@ export type AdminUserWorkspace = {
 export function searchAdminUsers(q = '') {
   const qs = q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ''
   return apiGet<{ ok: true; users: AdminUser[] }>(`/api/admin/users${qs}`)
+}
+
+export type AdminProjectOwner = {
+  id: string
+  login: string
+  name: string
+  email: string | null
+}
+
+export type AdminProject = {
+  id: string
+  code: string
+  name: string
+  type: string
+  status: string
+  createdAt: string
+  updatedAt: string
+  owner: AdminProjectOwner
+  stats: {
+    templates: number
+    links: number
+    opens: number
+  }
+  plan: PlanSummary
+}
+
+export type AdminServiceStats = ProjectStats & {
+  summary: {
+    projects: number
+    users: number
+    activeProjects: number
+  }
+}
+
+export function fetchAdminProjects(q = '') {
+  const qs = q.trim() ? `?q=${encodeURIComponent(q.trim())}` : ''
+  return apiGet<{ ok: true; projects: AdminProject[] }>(`/api/admin/projects${qs}`)
+}
+
+export function fetchAdminStats(range?: { from: string; to: string }) {
+  const q = new URLSearchParams()
+  if (range?.from) q.set('from', range.from)
+  if (range?.to) q.set('to', range.to)
+  const qs = q.toString()
+  return apiGet<{ ok: true; stats: AdminServiceStats }>(`/api/admin/stats${qs ? `?${qs}` : ''}`)
 }
 
 export function fetchAdminUser(userId: string) {

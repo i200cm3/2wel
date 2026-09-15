@@ -1,4 +1,6 @@
 #!/bin/bash
+# Монолитный compose (docker-compose.yml): локально или один хост.
+# Прод (split): ./deploy-to-server.sh  и  ./deploy-to-server.sh --edge
 
 set -e
 
@@ -6,7 +8,8 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$PROJECT_DIR"
 
 echo "=========================================="
-echo "Деплой проекта promo (HTTPS)"
+echo "Деплой promo (монолит docker-compose.yml)"
+echo "Прод split: deploy-to-server.sh [--edge]"
 echo "=========================================="
 echo ""
 

@@ -21,7 +21,7 @@ fi
 
 DOMAIN="${DOMAIN:-2wel.ru}"
 PROMO_PORT="${PROMO_PORT:-8086}"
-# App может жить на другом хосте (services11). По умолчанию — localhost.
+# На edge (2.8) задайте PROMO_UPSTREAM=192.168.2.6:8086. По умолчанию — localhost (single-host/local).
 PROMO_UPSTREAM="${PROMO_UPSTREAM:-127.0.0.1:${PROMO_PORT}}"
 # Кабинет на apex, гости на {code}.2wel.ru (wildcard).
 SERVER_NAMES="${DOMAIN} *.${DOMAIN}"

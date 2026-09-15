@@ -75,3 +75,61 @@ test(
     assert.equal(counts.missing, 1)
   }),
 )
+
+test(
+  'resolveUsedMediaFiles pulls foreign project refs from disk',
+  withPublicDir(() => {
+    const code = 'plaza2'
+    const foreign = 'adm'
+    const local = writeMedia(code, 'library/gallery/uploads/local.webp')
+    const fromAdm = writeMedia(foreign, 'library/gallery/food/03.jpg', 'adm-food')
+    writeMedia(foreign, 'music/ambient.mp3', 'adm-music')
+
+    const { files, counts } = resolveUsedMediaFiles(code, {
+      musicSrc: `/media/projects/${foreign}/music/ambient.mp3`,
+      sequences: {
+        food: {
+          clips: [
+            { src: local },
+            { src: fromAdm },
+          ],
+        },
+      },
+    })
+
+    assert.equal(counts.library, 2)
+    assert.equal(counts.music, 1)
+    assert.equal(counts.missing, 0)
+    assert.deepEqual(
+      files.map((f) => f.src).sort(),
+      [
+        `/media/projects/${code}/library/gallery/food/03.jpg`,
+        `/media/projects/${code}/library/gallery/uploads/local.webp`,
+        `/media/projects/${code}/music/ambient.mp3`,
+      ].sort(),
+    )
+    const packedFood = files.find((f) => f.rel === 'library/gallery/food/03.jpg')
+    assert.equal(fs.readFileSync(packedFood.full, 'utf8'), 'adm-food')
+  }),
+)
+
+test(
+  'resolveUsedMediaFiles prefers current project file over foreign',
+  withPublicDir(() => {
+    const code = 'plaza2'
+    const foreign = 'adm'
+    writeMedia(code, 'library/gallery/about/02.webp', 'local')
+    writeMedia(foreign, 'library/gallery/about/02.webp', 'foreign')
+
+    const { files, counts } = resolveUsedMediaFiles(code, {
+      sequences: {
+        x: { clips: [{ src: `/media/projects/${foreign}/library/gallery/about/02.webp` }] },
+      },
+    })
+
+    assert.equal(counts.library, 1)
+    assert.equal(counts.missing, 0)
+    assert.equal(files[0].src, `/media/projects/${code}/library/gallery/about/02.webp`)
+    assert.equal(fs.readFileSync(files[0].full, 'utf8'), 'local')
+  }),
+)

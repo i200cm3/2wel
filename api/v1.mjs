@@ -32,6 +32,7 @@ import { handleAmoWidgetApi, isAmoWidgetPath } from './amoWidget.mjs'
 import { issueGuestLink } from './cabinet.mjs'
 import { createApiKey, findApiKey, touchApiKeyUsed } from './keys.mjs'
 import { findLinksForAmoCall, recordLinkCrmStatus } from './links.mjs'
+import { scheduleCallSummariesFromNoteWebhook } from './callSummaryPipeline.mjs'
 import { schedulePresentationPipeline } from './presentationPipeline.mjs'
 import { guestLinkUrl } from './publicUrl.mjs'
 import { clientIp, consumeRateLimit, rateLimited } from './rateLimit.mjs'
@@ -45,6 +46,17 @@ function scheduleAmoCallRetry(run, delayMs = AMO_CALL_RECORDING_RETRY_MS[0]) {
       .catch((err) => console.error('amo call retry', err))
   }, delayMs)
   if (typeof timer.unref === 'function') timer.unref()
+}
+
+/** Авто-саммари звонка → заметка в amo (только allowlist воронки/этапа). */
+function kickCallSummaries(key, connection, redirectUri, body, noteEvents) {
+  if (!connection || !key?.project?.id) return
+  void scheduleCallSummariesFromNoteWebhook(key, connection, redirectUri, body, noteEvents, {
+    resolveLeadIds: async () => {
+      const match = await resolveCallMatchFromNoteWebhook(connection, redirectUri, body, noteEvents)
+      return match.leadIds || []
+    },
+  }).catch((err) => amoError('webhook.call_summary', err, { project: key.project.code }))
 }
 
 const AMO_WEBHOOK = /^\/api\/v1\/amocrm\/webhook\/(pk_live_[a-fA-F0-9]+)\/?$/i
@@ -486,6 +498,7 @@ async function handleAmoWebhook(req, res, url, json, extras) {
       void syncCallsFromNoteWebhook(key, connection, redirectUri, body, noteEvents).catch((err) => {
         amoError('webhook.sync', err, { project: key.project.code })
       })
+      kickCallSummaries(key, connection, redirectUri, body, noteEvents)
     } else {
       amoWarn('webhook.no_connection', { project: key.project.code, payload: summarizeAmoWebhookBody(body) })
     }
@@ -582,6 +595,9 @@ async function handleAmoWebhook(req, res, url, json, extras) {
       callsSkipped += calls.skipped
     } catch (err) {
       console.error('amo note calls', key.project.code, err)
+    }
+    if (noteEvents.length > 0) {
+      kickCallSummaries(key, connection, redirectUri, body, noteEvents)
     }
   }
 

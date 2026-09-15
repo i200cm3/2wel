@@ -11,7 +11,15 @@ import {
 import { recordingUrlFromSource } from './recordingUrl.mjs'
 
 export const AMO_NOTE_REF_PREFIX = 'amo:note:'
-const CALL_NOTE_TYPES = new Set(['call_in', 'call_out'])
+const CALL_NOTE_TYPES = new Set(['call_in', 'call_out', '10', '11'])
+
+/** call_in/10 → in, call_out/11 → out */
+export function callDirectionFromNoteType(noteType) {
+  const t = String(noteType ?? '').toLowerCase()
+  if (t === 'call_in' || t === '10') return 'in'
+  if (t === 'call_out' || t === '11') return 'out'
+  return ''
+}
 const RECORDING_PROBE_HEAD_TIMEOUT_MS = 1_500
 const RECORDING_PROBE_TIMEOUT_MS = 4_000
 const MAX_NOTE_PAGES = 10
@@ -324,7 +332,7 @@ export function inspectCallNoteFromAmo(note) {
   return { ok: true, reason: 'ok', noteId, noteType, entityType, entityId }
 }
 
-/** Разбор note amo call_in/call_out → запись для link_raw_sources. */
+/** Разбор note amo call_in/call_out (и числовых 10/11) → запись для link_raw_sources. */
 export function parseCallNoteFromAmo(note) {
   const noteType = String(note?.note_type ?? '').toLowerCase()
   if (!CALL_NOTE_TYPES.has(noteType)) return null
@@ -334,7 +342,7 @@ export function parseCallNoteFromAmo(note) {
 
   const params = normalizeNoteParams(note?.params)
   const noteId = note?.id != null ? String(note.id) : ''
-  const direction = noteType === 'call_in' ? 'in' : 'out'
+  const direction = callDirectionFromNoteType(noteType) || 'out'
   const directionLabel = direction === 'in' ? 'Входящий' : 'Исходящий'
   const duration = formatDuration(params.duration)
   const durationSec = Math.max(0, Math.floor(Number(params.duration) || 0))

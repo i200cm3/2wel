@@ -42,18 +42,18 @@ describe('testAdminIntegration', () => {
 })
 
 describe('normalizeTranscribeProvider', () => {
-  it('всегда gigaam', () => {
-    assert.equal(normalizeTranscribeProvider('gemini'), 'gigaam')
-    assert.equal(normalizeTranscribeProvider('Yandex'), 'gigaam')
+  it('всегда gigaam (в т.ч. старые значения из БД)', () => {
+    assert.equal(normalizeTranscribeProvider('gigaam'), 'gigaam')
+    assert.equal(normalizeTranscribeProvider('yandex'), 'gigaam')
     assert.equal(normalizeTranscribeProvider(''), 'gigaam')
   })
 })
 
 describe('normalizeAssemblyProvider', () => {
-  it('принимает yandex и local; gemini сводит к yandex', async () => {
+  it('принимает yandex и local; прочее → yandex', async () => {
     const { normalizeAssemblyProvider } = await import('./platformIntegrations.mjs')
     assert.equal(normalizeAssemblyProvider('yandex'), 'yandex')
-    assert.equal(normalizeAssemblyProvider('Gemini'), 'yandex')
+    assert.equal(normalizeAssemblyProvider('unknown'), 'yandex')
     assert.equal(normalizeAssemblyProvider(''), 'yandex')
     assert.equal(normalizeAssemblyProvider('local'), 'local')
     assert.equal(normalizeAssemblyProvider('ollama'), 'local')
@@ -69,9 +69,12 @@ describe('TRANSCRIBE_PROVIDERS', () => {
 })
 
 describe('ASSEMBLY_PROVIDERS', () => {
-  it('yandex и local доступны для экстракта, gemini в выборе нет', async () => {
+  it('для экстракта доступны yandex и local', async () => {
     const { ASSEMBLY_PROVIDERS } = await import('./platformIntegrations.mjs')
-    assert.equal(ASSEMBLY_PROVIDERS.some((item) => item.id === 'gemini'), false)
+    assert.deepEqual(
+      ASSEMBLY_PROVIDERS.map((item) => item.id).sort(),
+      ['local', 'yandex'],
+    )
     assert.equal(ASSEMBLY_PROVIDERS.find((item) => item.id === 'yandex')?.available, true)
     assert.equal(ASSEMBLY_PROVIDERS.find((item) => item.id === 'local')?.available, true)
     assert.equal(ASSEMBLY_PROVIDERS.find((item) => item.id === 'local')?.label, 'Qwen')

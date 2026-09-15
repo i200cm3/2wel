@@ -60,6 +60,7 @@ import {
 } from './members.mjs'
 import { isOtpPurpose, issueEmailOtp, verifyEmailOtp } from './otp.mjs'
 import { sendTeamJoinCredentialsMail } from './mail.mjs'
+import { getAdminServiceStats, listAdminProjects } from './adminProjects.mjs'
 import { getAdminTtsUsageOverview } from './ttsUsage.mjs'
 import { createDemoGuestLead } from './demoLead.mjs'
 import {
@@ -794,6 +795,19 @@ const server = http.createServer(async (req, res) => {
         const q = queryOf(req).get('q') || ''
         const users = await searchUsers(q)
         json(res, 200, { ok: true, users })
+        return
+      }
+      if ((url === '/api/admin/projects' || url === '/api/admin/projects/') && (req.method === 'GET' || req.method === 'HEAD')) {
+        const q = queryOf(req).get('q') || ''
+        const projects = await listAdminProjects(q)
+        json(res, 200, { ok: true, projects })
+        return
+      }
+      if ((url === '/api/admin/stats' || url === '/api/admin/stats/') && (req.method === 'GET' || req.method === 'HEAD')) {
+        const from = queryOf(req).get('from') || ''
+        const to = queryOf(req).get('to') || ''
+        const stats = await getAdminServiceStats({ from, to })
+        json(res, 200, { ok: true, stats })
         return
       }
       const userMatch = url.match(/^\/api\/admin\/users\/([^/]+)\/?$/)

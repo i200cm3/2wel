@@ -454,6 +454,264 @@ export async function projectEventStats(projectId, rangeInput) {
   }
 }
 
+/** Диапазон без привязки к project_id: $1 = TZ, $2 = from, $3 = to. */
+const SERVICE_RANGE_SQL = `created_at >= ($2::date)::timestamp AT TIME ZONE $1
+       AND created_at < ($3::date + 1)::timestamp AT TIME ZONE $1`
+
+/**
+ * Событийная аналитика по всему сервису (форма как у projectEventStats).
+ */
+export async function serviceEventStats(rangeInput) {
+  const range = resolveStatsRange(rangeInput)
+  const params = [MOSCOW, range.from, range.to]
+
+  const { rows: totals } = await query(
+    `SELECT type, count(*)::int AS n
+     FROM link_events
+     WHERE ${SERVICE_RANGE_SQL}
+     GROUP BY type`,
+    params,
+  )
+  const funnel = emptyFunnel()
+  for (const row of totals) {
+    if (row.type in funnel) funnel[row.type] = Number(row.n)
+  }
+  applyContactLegacy(funnel)
+
+  const { rows: byDay } = await query(
+    `SELECT to_char(created_at AT TIME ZONE $1, 'YYYY-MM-DD') AS day,
+            type,
+            count(*)::int AS n
+     FROM link_events
+     WHERE ${SERVICE_RANGE_SQL}
+     GROUP BY 1, 2`,
+    params,
+  )
+  const dayMap = new Map()
+  for (const row of byDay) {
+    const day = String(row.day ?? '').slice(0, 10)
+    if (!DAY_RE.test(day)) continue
+    const cur = dayMap.get(day) ?? emptyFunnel()
+    if (row.type in cur) cur[row.type] = Number(row.n)
+    dayMap.set(day, cur)
+  }
+  const series = daysInRange(range.from, range.to).map((date) => {
+    const day = applyContactLegacy({ ...(dayMap.get(date) ?? emptyFunnel()) })
+    return { date, ...day }
+  })
+
+  const { rows: devices } = await query(
+    `SELECT device, count(*)::int AS n
+     FROM link_events
+     WHERE type = 'open'
+       AND ${SERVICE_RANGE_SQL}
+     GROUP BY device`,
+    params,
+  )
+  const deviceCounts = { phone: 0, tablet: 0, desktop: 0 }
+  for (const row of devices) {
+    if (row.device in deviceCounts) deviceCounts[row.device] = Number(row.n)
+  }
+
+  const { rows: hours } = await query(
+    `SELECT extract(hour from created_at AT TIME ZONE $1)::int AS hour,
+            count(*)::int AS n
+     FROM link_events
+     WHERE type = 'open'
+       AND ${SERVICE_RANGE_SQL}
+     GROUP BY 1
+     ORDER BY 1`,
+    params,
+  )
+  const hourMap = new Map(hours.map((row) => [Number(row.hour), Number(row.n)]))
+  const byHour = Array.from({ length: 24 }, (_, hour) => ({ hour, opens: hourMap.get(hour) ?? 0 }))
+
+  const { rows: recent } = await query(
+    `SELECT e.created_at, e.type, e.device, e.topic, l.guest_name, l.public_id
+     FROM link_events e
+     JOIN links l ON l.id = e.link_id
+     WHERE e.created_at >= ($2::date)::timestamp AT TIME ZONE $1
+       AND e.created_at < ($3::date + 1)::timestamp AT TIME ZONE $1
+     ORDER BY e.created_at DESC
+     LIMIT 200`,
+    params,
+  )
+
+  const { rows: topicRows } = await query(
+    `SELECT topic,
+            count(*)::int AS opens,
+            count(DISTINCT link_id)::int AS guests
+     FROM link_events
+     WHERE type = 'topic'
+       AND topic IS NOT NULL
+       AND ${SERVICE_RANGE_SQL}
+     GROUP BY topic
+     ORDER BY guests DESC, opens DESC, topic ASC
+     LIMIT 50`,
+    params,
+  )
+
+  const { rows: openGuestRows } = await query(
+    `SELECT count(DISTINCT link_id)::int AS n
+     FROM link_events
+     WHERE type = 'open'
+       AND ${SERVICE_RANGE_SQL}`,
+    params,
+  )
+  const openedGuests = Number(openGuestRows[0]?.n ?? 0)
+
+  const topicIds = topicRows.map((row) => String(row.topic ?? '')).filter(Boolean)
+  const topicLabels = {}
+  if (topicIds.length) {
+    const { rows: templateRows } = await query(
+      `SELECT config FROM templates
+       WHERE config IS NOT NULL
+       ORDER BY updated_at DESC NULLS LAST
+       LIMIT 80`,
+    )
+    for (const row of templateRows) {
+      Object.assign(topicLabels, topicLabelsFromConfig(row.config))
+    }
+  }
+
+  const topics = topicRows.map((row) => {
+    const id = String(row.topic ?? '')
+    const guests = Number(row.guests)
+    return {
+      id,
+      label: topicLabels[id] || id,
+      opens: Number(row.opens),
+      guests,
+      share: openedGuests ? guests / openedGuests : 0,
+    }
+  })
+
+  const { rows: contactRows } = await query(
+    `SELECT topic AS channel, count(*)::int AS n
+     FROM link_events
+     WHERE type = 'contact'
+       AND topic IS NOT NULL
+       AND ${SERVICE_RANGE_SQL}
+     GROUP BY topic`,
+    params,
+  )
+  const channelCounts = Object.fromEntries(CONTACT_CHANNELS.map((id) => [id, 0]))
+  for (const row of contactRows) {
+    const id = parseContactChannel(row.channel)
+    if (id) channelCounts[id] = Number(row.n)
+  }
+  if (channelCounts.whatsapp === 0 && funnel.whatsapp > 0) {
+    channelCounts.whatsapp = funnel.whatsapp
+  }
+  const channels = CONTACT_CHANNELS.filter((id) => channelCounts[id] > 0).map((id) => ({
+    id,
+    clicks: channelCounts[id],
+  }))
+
+  const { rows: issuedRows } = await query(
+    `SELECT count(*)::int AS issued,
+            count(*) FILTER (WHERE first_opened_at IS NOT NULL)::int AS opened
+     FROM links
+     WHERE created_at >= ($2::date)::timestamp AT TIME ZONE $1
+       AND created_at < ($3::date + 1)::timestamp AT TIME ZONE $1`,
+    params,
+  )
+  const openRate = {
+    opened: Number(issuedRows[0]?.opened ?? 0),
+    issued: Number(issuedRows[0]?.issued ?? 0),
+  }
+
+  const { rows: unopenedRows } = await query(
+    `SELECT guest_name, public_id, created_at
+     FROM links
+     WHERE first_opened_at IS NULL
+       AND created_at >= ($2::date)::timestamp AT TIME ZONE $1
+       AND created_at < ($3::date + 1)::timestamp AT TIME ZONE $1
+     ORDER BY created_at DESC
+     LIMIT 100`,
+    params,
+  )
+  const unopened = unopenedRows.map((row) => ({
+    at: row.created_at,
+    guestName: row.guest_name,
+    publicId: row.public_id,
+  }))
+
+  const CRM_RANGE_SQL = `e.created_at >= ($2::date)::timestamp AT TIME ZONE $1
+       AND e.created_at < ($3::date + 1)::timestamp AT TIME ZONE $1`
+
+  const { rows: crmAfterRows } = await query(
+    `SELECT e.last_event_type AS type, count(*)::int AS n
+     FROM link_crm_events e
+     WHERE e.last_event_type IS NOT NULL
+       AND ${CRM_RANGE_SQL}
+     GROUP BY e.last_event_type`,
+    params,
+  )
+  const crmAfterCounts = Object.fromEntries(EVENT_TYPES.map((id) => [id, 0]))
+  for (const row of crmAfterRows) {
+    const type = String(row.type ?? '')
+    if (type in crmAfterCounts) crmAfterCounts[type] = Number(row.n)
+  }
+  const { rows: crmNoneRows } = await query(
+    `SELECT count(*)::int AS n
+     FROM link_crm_events e
+     WHERE e.last_event_type IS NULL
+       AND ${CRM_RANGE_SQL}`,
+    params,
+  )
+  const crmAfterNone = Number(crmNoneRows[0]?.n ?? 0)
+  const crmAfter = [
+    ...EVENT_TYPES.filter((id) => crmAfterCounts[id] > 0).map((id) => ({
+      eventType: id,
+      count: crmAfterCounts[id],
+    })),
+    ...(crmAfterNone > 0 ? [{ eventType: 'none', count: crmAfterNone }] : []),
+  ]
+
+  const { rows: crmRecentRows } = await query(
+    `SELECT e.created_at, e.status_id, e.pipeline_id, e.last_event_type, e.last_event_at,
+            e.prior_types, l.guest_name, l.public_id, m.label AS status_label
+     FROM link_crm_events e
+     JOIN links l ON l.id = e.link_id
+     LEFT JOIN amo_status_maps m
+       ON m.project_id = l.project_id AND m.status_id = e.status_id
+     WHERE ${CRM_RANGE_SQL}
+     ORDER BY e.created_at DESC
+     LIMIT 30`,
+    params,
+  )
+  const crmRecent = crmRecentRows.map((row) => {
+    const prior = Array.isArray(row.prior_types) ? row.prior_types.map(String) : []
+    return {
+      at: row.created_at,
+      statusId: String(row.status_id ?? ''),
+      statusLabel: row.status_label ? String(row.status_label) : null,
+      pipelineId: row.pipeline_id != null ? String(row.pipeline_id) : null,
+      lastEventType: row.last_event_type ? String(row.last_event_type) : null,
+      lastEventAt: row.last_event_at ?? null,
+      priorTypes: prior,
+      guestName: row.guest_name,
+      publicId: row.public_id,
+    }
+  })
+
+  return {
+    range,
+    funnel,
+    series,
+    devices: deviceCounts,
+    hours: byHour,
+    topics,
+    channels,
+    openRate,
+    crmAfter,
+    crmRecent,
+    unopened,
+    recent: recent.map((row) => mapRecentEvent(row, topicLabels)),
+  }
+}
+
 export function resolveLinkStatsRange(linkCreatedAt, rangeInput, now = new Date()) {
   const today = todayInZone(MOSCOW, now)
   const fromParam = parseDay(rangeInput?.from)

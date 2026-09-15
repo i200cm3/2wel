@@ -40,6 +40,34 @@ export async function ensureProjectMedia(code) {
   }
 }
 
+const PROJECT_MEDIA_SRC_RE = /^\/media\/projects\/([^/]+)\/(.+)$/
+
+/** Относительный путь внутри media проекта (`library/…`, `tts/…`) или null. */
+export function projectMediaRel(src) {
+  if (typeof src !== 'string' || !src) return null
+  const match = src.split('?')[0].match(PROJECT_MEDIA_SRC_RE)
+  return match?.[2] ?? null
+}
+
+/**
+ * Любой `/media/projects/{code}/…` → текущий проект.
+ * Нужно для переноса шаблонов и «залипших» ссылок на другой code (часто после копирования).
+ */
+export function rewriteAllProjectMediaPaths(value, code) {
+  if (!code) return value
+  if (typeof value === 'string') {
+    const rel = projectMediaRel(value)
+    return rel ? `/media/projects/${code}/${rel}` : value
+  }
+  if (Array.isArray(value)) return value.map((item) => rewriteAllProjectMediaPaths(item, code))
+  if (value && typeof value === 'object') {
+    const out = {}
+    for (const [key, item] of Object.entries(value)) out[key] = rewriteAllProjectMediaPaths(item, code)
+    return out
+  }
+  return value
+}
+
 function rewriteSrc(src, code) {
   if (typeof src !== 'string' || !src) return src
   if (src.startsWith(STARTER_PREFIX)) {
@@ -354,7 +382,7 @@ function isInsideProject(root, target) {
   return rel !== '' && !rel.startsWith('..') && !path.isAbsolute(rel)
 }
 
-/** Собирает пути `/media/projects/{code}/…` из произвольного JSON (config/draft). */
+/** Собирает пути /media/projects/{code}/... из произвольного JSON (config/draft). */
 export function collectProjectMediaSrcs(value, code, out = new Set()) {
   if (typeof value === 'string') {
     if (value.startsWith(`/media/projects/${code}/`)) out.add(value.split('?')[0])
@@ -366,6 +394,22 @@ export function collectProjectMediaSrcs(value, code, out = new Set()) {
   }
   if (value && typeof value === 'object') {
     for (const item of Object.values(value)) collectProjectMediaSrcs(item, code, out)
+  }
+  return out
+}
+
+/** Все /media/projects/{any}/... независимо от code (для экспорта с чужими ссылками). */
+export function collectAnyProjectMediaSrcs(value, out = new Set()) {
+  if (typeof value === 'string') {
+    if (PROJECT_MEDIA_SRC_RE.test(value.split('?')[0])) out.add(value.split('?')[0])
+    return out
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) collectAnyProjectMediaSrcs(item, out)
+    return out
+  }
+  if (value && typeof value === 'object') {
+    for (const item of Object.values(value)) collectAnyProjectMediaSrcs(item, out)
   }
   return out
 }

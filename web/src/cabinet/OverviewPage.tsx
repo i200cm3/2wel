@@ -41,9 +41,10 @@ function whatsAppFromConfig(config: unknown): string {
   return raw.replace(/\D/g, '')
 }
 
-/** Один объект — сразу в обзор, не в аккаунт. */
+/** Один объект — сразу в обзор. Админ — в аналитику сервиса. */
 export function AppIndex() {
-  const { projects } = useOutletContext<CabinetOutlet>()
+  const { projects, user } = useOutletContext<CabinetOutlet>()
+  if (user.isAdmin) return <Navigate to="/app/analytics" replace />
   const project = projects[0]
   if (project) return <Navigate to={`/app/projects/${project.code}`} replace />
   return <Navigate to="/app/account" replace />

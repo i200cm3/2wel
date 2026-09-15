@@ -1,5 +1,5 @@
-# Продакшен: HTTPS через host nginx (2wel.ru → :8086).
-# Перед первым запуском: ./init-letsencrypt.sh <email> 2wel.ru
+# Локально / single-host. НЕ прод: прод = docker-compose.app.yml (2.6) + docker-compose.edge.yml (2.8).
+# HTTPS через host nginx (→ :8086). Перед первым разом: ./init-letsencrypt.sh <email> 2wel.ru
 services:
   db:
     image: postgres:16-alpine

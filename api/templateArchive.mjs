@@ -5,7 +5,7 @@ import { templateRowForUser, isPropertyConfig } from './cabinet.mjs'
 import { query } from './db.js'
 import { publicDir } from './env.js'
 import { optimizeImagesInDir } from './imageOptimize.mjs'
-import { mediaSrcsFromConfigs } from './projectMedia.mjs'
+import { rewriteAllProjectMediaPaths, collectAnyProjectMediaSrcs } from './projectMedia.mjs'
 
 const PUBLIC_FILE_MODE = 0o644
 const MEDIA_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.mp4', '.webm', '.mov', '.m4v'])
@@ -129,19 +129,6 @@ function findConfig(entries) {
   return null
 }
 
-function rewriteProjectMedia(value, code) {
-  if (typeof value === 'string') {
-    return value.replace(/^\/media\/projects\/[^/]+\//, `/media/projects/${code}/`)
-  }
-  if (Array.isArray(value)) return value.map((item) => rewriteProjectMedia(item, code))
-  if (value && typeof value === 'object') {
-    const out = {}
-    for (const [key, item] of Object.entries(value)) out[key] = rewriteProjectMedia(item, code)
-    return out
-  }
-  return value
-}
-
 function writeProjectFiles(entries, code) {
   const projectRoot = path.resolve(publicDir(), 'media/projects', code)
   fs.mkdirSync(projectRoot, { recursive: true })
@@ -212,7 +199,7 @@ export async function importTemplateArchiveForUser(userId, projectCode, template
   await optimizeImagesInDir(libraryRoot, { skipIfOk: true })
   const manifest = rebuildLibraryManifest(found.project.code)
   const config = {
-    ...rewriteProjectMedia(rawConfig, found.project.code),
+    ...rewriteAllProjectMediaPaths(rawConfig, found.project.code),
     id: found.project.code,
   }
   const missing = missingProjectFiles(config, found.project.code)
@@ -253,28 +240,43 @@ function addDirToZip(zip, root, archiveRoot) {
   return count
 }
 
+function resolveMediaFileOnDisk(root, code, srcCode, rel) {
+  const candidates = [`${code}/${rel}`]
+  if (srcCode && srcCode !== code) candidates.push(`${srcCode}/${rel}`)
+  const projectsRoot = path.resolve(root, 'media/projects')
+  for (const candidate of candidates) {
+    const full = path.resolve(projectsRoot, candidate)
+    if (!isInside(projectsRoot, full)) continue
+    try {
+      if (fs.existsSync(full) && fs.statSync(full).isFile()) return full
+    } catch {
+      // skip unreadable
+    }
+  }
+  return null
+}
+
 /** Файлы, на которые ссылается конфиг и которые есть на диске (для used-only export). */
 export function resolveUsedMediaFiles(code, config) {
   const root = publicDir()
-  const projectRoot = path.resolve(root, 'media/projects', code)
   const counts = { library: 0, music: 0, tts: 0, missing: 0 }
   const files = []
-  for (const src of mediaSrcsFromConfigs([config], code)) {
-    const full = path.resolve(root, src.replace(/^\/+/, ''))
-    if (!isInside(projectRoot, full)) continue
-    const rel = path.relative(projectRoot, full).replace(/\\/g, '/')
+  const seen = new Set()
+  for (const src of collectAnyProjectMediaSrcs(config)) {
+    const match = src.match(/^\/media\/projects\/([^/]+)\/(.+)$/)
+    if (!match) continue
+    const [, srcCode, rel] = match
     const bucket = rel.split('/')[0]
     if (bucket !== 'library' && bucket !== 'music' && bucket !== 'tts') continue
-    try {
-      if (!fs.existsSync(full) || !fs.statSync(full).isFile()) {
-        counts.missing += 1
-        continue
-      }
-    } catch {
+    const normalizedSrc = `/media/projects/${code}/${rel}`
+    if (seen.has(normalizedSrc)) continue
+    seen.add(normalizedSrc)
+    const full = resolveMediaFileOnDisk(root, code, srcCode, rel)
+    if (!full) {
       counts.missing += 1
       continue
     }
-    files.push({ src, full, rel, bucket })
+    files.push({ src: normalizedSrc, full, rel, bucket })
     counts[bucket] += 1
   }
   files.sort((a, b) => a.rel.localeCompare(b.rel))
@@ -297,17 +299,20 @@ export async function exportTemplateArchiveForUser(userId, projectCode, template
   const found = await templateRowForUser(userId, projectCode, templateCode)
   if (!found) return { status: 404, error: 'template not found' }
 
-  const config = isPropertyConfig(found.row.draft_config)
+  const raw = isPropertyConfig(found.row.draft_config)
     ? found.row.draft_config
     : isPropertyConfig(found.row.config)
       ? found.row.config
       : null
-  if (!config) return { status: 400, error: 'В шаблоне нет PropertyConfig' }
+  if (!raw) return { status: 400, error: 'В шаблоне нет PropertyConfig' }
 
   const code = found.project.code
+  // Нормализуем чужие /media/projects/{other}/… → текущий проект; файлы подтягиваем и с other.
+  const config = { ...rewriteAllProjectMediaPaths(raw, code), id: code }
   const zip = new AdmZip()
   zip.addFile('property.json', Buffer.from(`${JSON.stringify(config, null, 2)}\n`, 'utf8'))
-  const counts = addUsedMediaToZip(zip, code, config)
+  // Резолв по исходному draft (с foreign codes), чтобы найти файлы на диске adm/plaza2/…
+  const counts = addUsedMediaToZip(zip, code, raw)
 
   return {
     status: 200,

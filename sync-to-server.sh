@@ -64,8 +64,12 @@ fi
 # Роль по хосту, если не задана флагом
 if [ -z "$ROLE" ]; then
   case "$REMOTE" in
+    *192.168.2.11*|*@services11)
+      echo "Ошибка: $REMOTE больше не app-хост. Используйте 192.168.2.6 (app) или 192.168.2.8 (edge)."
+      exit 1
+      ;;
     *192.168.2.8*|*@services) ROLE=edge ;;
-    *192.168.2.6*|*192.168.2.11*|*@services11) ROLE=app ;;
+    *192.168.2.6*) ROLE=app ;;
     *) ROLE=app ;;
   esac
 fi

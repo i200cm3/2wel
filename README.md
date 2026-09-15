@@ -21,7 +21,7 @@ Compose-файлы:
 
 - `docker-compose.app.yml` — app на 2.6
 - `docker-compose.edge.yml` — edge на 2.8 (прокси + SSL-агент)
-- `docker-compose.yml` — монолит «всё на одном хосте» (локально / старый режим)
+- `docker-compose.yml` — **только локально / один хост**; прод на нём не поднимаем
 
 Перед первым разом:
 
@@ -71,17 +71,19 @@ sudo ./nginx-router-update.sh
 
 | Скрипт | Назначение |
 |--------|------------|
-| `sync-to-server.sh` | rsync проекта на сервер |
-| `deploy-to-server.sh` | rsync + `./deploy.sh` на сервере по тому же SSH |
+| `sync-to-server.sh` | rsync на app (2.6) или `--edge` на 2.8 |
+| `deploy-to-server.sh` | rsync + `docker compose -f docker-compose.app.yml` / `.edge.yml` |
 | `init-letsencrypt.sh` | выпуск SSL в Docker volumes `certbot-data` / `certbot-www` |
 | `nginx-router-update.sh` | `/etc/nginx/conf.d/promo-router.conf` → `:8086` (или `PROMO_UPSTREAM`) |
-| `deploy.sh` | монолитный `docker compose build && up` + health-check |
+| `deploy.sh` | монолитный `docker-compose.yml` (локально / single-host, не split-прод) |
 
 Сертификаты обновляет контейнер `promo-certbot` (`certbot renew` каждые 12 ч). ACME challenge отдаёт host nginx из volume `certbot-www`.
 
 Rsync копирует код, **`.env`** и статику (`starter`, `music`, TTS demos/starter). Локальные загрузки проектов (`media/projects/*`), сгенерированный TTS и короткие ссылки (`s/`) на сервер **не заливаются** — они живут только на проде. После sync скрипт удаляет на сервере legacy-папки (`media/library`, `media/intro|about|…`, корневые `media/tts/*.mp3`).
 
 ## Docker (локально)
+
+Локальный стек — `docker-compose.yml` (db + api + web + guest-ssl). Прод: только `docker-compose.app.yml` / `docker-compose.edge.yml` через `./deploy-to-server.sh`.
 
 Тома Let's Encrypt общие с другими проектами на сервере; локально создайте пустые:
 

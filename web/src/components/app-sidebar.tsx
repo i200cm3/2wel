@@ -13,6 +13,7 @@ import {
 import type { AuthUser, Project } from "@/lib/api"
 import { BrandLogo } from "@/components/BrandLogo"
 import {
+  Building2Icon,
   ClapperboardIcon,
   GaugeIcon,
   LayoutDashboardIcon,
@@ -20,7 +21,9 @@ import {
   MicIcon,
   AudioLinesIcon,
   KeyRoundIcon,
+  PhoneIcon,
   PlugIcon,
+  ChartColumnIcon,
   UsersIcon,
   UsersRoundIcon,
 } from "lucide-react"
@@ -35,19 +38,27 @@ export function AppSidebar({
   project: Project | null
 }) {
   const { code } = useParams()
-  const projectCode = code || project?.code
-  const base = projectCode ? `/app/projects/${projectCode}` : "/app"
-  const homeTo = projectCode ? `/app/projects/${projectCode}` : "/app/account"
+  // Меню отеля только когда реально открыт /app/projects/:code — не подставляем «свой» проект на страницах админки.
+  const inProject = Boolean(code)
+  const base = inProject ? `/app/projects/${code}` : "/app"
+  const homeTo = inProject
+    ? `/app/projects/${code}`
+    : user.isAdmin
+      ? "/app/analytics"
+      : project?.code
+        ? `/app/projects/${project.code}`
+        : "/app/account"
 
-  const navWork = projectCode
+  const navWork = inProject
     ? [
         { title: "Аналитика", url: base, icon: <LayoutDashboardIcon /> },
         { title: "Шаблоны", url: `${base}/templates`, icon: <ClapperboardIcon /> },
         { title: "Ссылки", url: `${base}/links`, icon: <LinkIcon /> },
+        { title: "Звонки", url: `${base}/calls`, icon: <PhoneIcon /> },
       ]
     : []
 
-  const navSettings = projectCode
+  const navSettings = inProject
     ? [
         { title: "Голос", url: `${base}/voice`, icon: <MicIcon /> },
         { title: "Команда", url: `${base}/team`, icon: <UsersRoundIcon /> },
@@ -58,6 +69,8 @@ export function AppSidebar({
 
   const adminNav = user.isAdmin
     ? [
+        { title: "Аналитика", url: "/app/analytics", icon: <ChartColumnIcon /> },
+        { title: "Проекты", url: "/app/projects", icon: <Building2Icon />, exact: true },
         { title: "Пользователи", url: "/app/users", icon: <UsersIcon /> },
         { title: "API", url: "/app/api", icon: <KeyRoundIcon /> },
         { title: "Расход TTS", url: "/app/tts-usage", icon: <AudioLinesIcon /> },

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Navigate, Outlet, useLocation, useParams } from 'react-router-dom'
+import { Link, Navigate, Outlet, useLocation, useParams } from 'react-router-dom'
 import { AppSidebar } from '@/components/app-sidebar'
 import { SiteHeader } from '@/components/site-header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
@@ -11,6 +11,7 @@ const TITLES: Record<string, string> = {
   '': 'Аналитика',
   templates: 'Шаблоны',
   links: 'Ссылки',
+  calls: 'Звонки',
   integrations: 'Интеграции',
   edit: 'Конструктор',
   'edit-v2': 'Конструктор V2',
@@ -19,6 +20,8 @@ const TITLES: Record<string, string> = {
   team: 'Команда',
   account: 'Аккаунт',
   users: 'Пользователи',
+  analytics: 'Аналитика сервиса',
+  projects: 'Проекты',
   'tts-usage': 'Расход TTS',
   api: 'API',
 }
@@ -122,6 +125,9 @@ export function CabinetLayout() {
 
   const segment = location.pathname.split('/').filter(Boolean).at(-1) ?? ''
   const isUsersSection = location.pathname.startsWith('/app/users')
+  const isAnalyticsSection = location.pathname.startsWith('/app/analytics')
+  const isProjectsList =
+    location.pathname === '/app/projects' || location.pathname === '/app/projects/'
   const isTtsUsageSection = location.pathname.startsWith('/app/tts-usage')
   const isApiSection = location.pathname === '/app/api' || location.pathname.startsWith('/app/api/')
   const isEditor = segment === 'edit' || segment === 'edit-v2'
@@ -142,14 +148,20 @@ export function CabinetLayout() {
   const title = !code
     ? segment === 'account'
       ? 'Аккаунт'
-      : isUsersSection
-        ? 'Пользователи'
-        : isTtsUsageSection
-          ? 'Расход TTS'
-          : isApiSection
-            ? 'API'
-            : 'Объект'
+      : isAnalyticsSection
+        ? 'Аналитика сервиса'
+        : isProjectsList
+          ? 'Проекты'
+          : isUsersSection
+            ? 'Пользователи'
+            : isTtsUsageSection
+              ? 'Расход TTS'
+              : isApiSection
+                ? 'API'
+                : 'Объект'
     : (TITLES[segment] ?? (segment === code ? 'Аналитика' : project?.name ?? 'Кабинет'))
+
+  const supportAsAdmin = Boolean(code && project?.role === 'admin')
 
   if (unauthorized) {
     return <Navigate to="/login?next=/app" replace />
@@ -181,7 +193,18 @@ export function CabinetLayout() {
     >
       <AppSidebar variant="inset" user={user} project={project} />
       <SidebarInset className="min-h-0 min-w-0 overflow-hidden">
-        <SiteHeader title={project ? `${project.name} · ${title}` : title} />
+        <SiteHeader title={project && code ? `${project.name} · ${title}` : title} />
+        {supportAsAdmin && project ? (
+          <div className="bg-muted/60 text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-1 border-b px-4 py-2 text-sm lg:px-6">
+            <span>
+              Вы в проекте <span className="text-foreground font-medium">{project.name}</span> как
+              администратор сервиса
+            </span>
+            <Link to="/app/projects" className="text-foreground underline-offset-4 hover:underline">
+              Все проекты
+            </Link>
+          </div>
+        ) : null}
         <div
           className={
             isEditor
