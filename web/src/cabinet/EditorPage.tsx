@@ -104,6 +104,7 @@ export function EditorPage() {
       }}
       onPublish={() => void publish()}
       onRetryDraft={() => retryDraft()}
+      helloFromDialog={Boolean(project?.helloFromDialog)}
     />
   )
 }

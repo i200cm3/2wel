@@ -217,9 +217,10 @@ html.is-player-presentation #root {
 /* На узком экране — те же safe-area отступы для текста */
 @media (max-width: 900px) {
   .app.is-player .story-copy {
-    padding-bottom: max(24px, calc(14px + env(safe-area-inset-bottom, 0px)));
-    padding-left: max(22px, env(safe-area-inset-left, 0px));
-    padding-right: max(22px, env(safe-area-inset-right, 0px));
+    bottom: calc(
+      var(--story-copy-text-pad) + env(safe-area-inset-bottom, 0px) - var(--story-copy-bar-pad)
+    );
+    --story-copy-pad-x: max(22px, env(safe-area-inset-left, 0px), env(safe-area-inset-right, 0px));
   }
 
   .app.is-player .end-buttons {
@@ -350,15 +351,24 @@ html.is-player-presentation #root {
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 0;
   z-index: 3;
   box-sizing: border-box;
-  padding: 16px 22px 24px;
+  /* Отступ текста от низа кадра и «торчание» плашки — раздельно:
+     текст всегда на text-pad от края; bar-pad растёт вверх и вниз от текста. */
+  --story-copy-text-pad: var(--story-copy-text-pad-desktop, 0px);
+  --story-copy-bar-pad: var(--story-copy-bar-pad-desktop, 16px);
+  --story-copy-pad-x: 22px;
+  bottom: calc(var(--story-copy-text-pad) - var(--story-copy-bar-pad));
+  /* Горизонтальный pad только у статичного текста — бегущая строка edge-to-edge. */
+  padding: var(--story-copy-bar-pad) 0;
+  height: fit-content;
+  max-height: 100%;
   border-radius: 0;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 4px;
+  align-items: stretch;
+  gap: 0;
   overflow: hidden;
   background: rgba(10, 16, 14, 0.78);
   backdrop-filter: blur(14px);
@@ -373,15 +383,34 @@ html.is-player-presentation #root {
 /* Узкий кадр (телефон, phone-preview в редакторе) — mobile-размеры */
 @container story (max-width: 560px) {
   .story-copy {
+    --story-copy-text-pad: var(
+      --story-copy-text-pad-mobile,
+      var(--story-copy-text-pad-desktop, 0px)
+    );
+    --story-copy-bar-pad: var(
+      --story-copy-bar-pad-mobile,
+      var(--story-copy-bar-pad-desktop, 16px)
+    );
     --story-title-size: var(--story-title-size-mobile, var(--story-title-size-desktop, 1.5em));
     --story-text-size: var(--story-text-size-mobile, var(--story-text-size-desktop, 0.875em));
   }
+}
+
+.story-copy:has(.story-copy-title:not(:empty)):has(.story-copy-captions:not(:empty)) {
+  gap: 4px;
+}
+
+.story-copy-title:empty,
+.story-copy-captions:empty {
+  display: none;
 }
 
 .story-copy-title {
   flex: 0 0 auto;
   display: flex;
   align-items: flex-start;
+  padding-inline: var(--story-copy-pad-x, 22px);
+  box-sizing: border-box;
 }
 
 .story-copy-title h1,
@@ -406,12 +435,71 @@ html.is-player-presentation #root {
 }
 
 .story-copy-captions {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   gap: 2px;
+}
+
+/* Статичный титр — с боковым отступом; бегущая строка на всю ширину плашки. */
+.story-copy-captions > .story-line {
+  padding-inline: var(--story-copy-pad-x, 22px);
+  box-sizing: border-box;
+}
+
+/* Титры по cue — как YouTube / Instagram: по центру, перенос строк. */
+.story-copy.is-cues .story-copy-captions {
+  align-items: center;
+}
+
+.story-copy.is-cues .story-copy-captions > .story-line.is-cue {
+  width: 100%;
+  max-width: 100%;
+  text-align: center;
+  text-wrap: balance;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
+}
+
+.story-line-marquee {
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+}
+
+.story-line-marquee-rf {
+  width: 100%;
+  min-height: 0;
+}
+
+.story-line-marquee-rf .rfm-marquee,
+.story-line-marquee-rf .rfm-initial-child-container,
+.story-line-marquee-rf .rfm-child {
+  min-height: 0 !important;
+  height: auto !important;
+  align-items: baseline;
+}
+
+.story-line-marquee-rf .rfm-child {
+  display: flex;
+  align-items: baseline;
+}
+
+.story-line-marquee-lead {
+  display: inline-block;
+  flex-shrink: 0;
+  height: 1px;
+  pointer-events: none;
+}
+
+.story-line-marquee-gap {
+  display: inline-block;
+  white-space: pre;
+  font-family: var(--story-text-font, 'Manrope', 'Segoe UI', sans-serif);
+  font-size: var(--story-text-size, 0.9375em);
+  color: var(--story-text-color, var(--sand));
+  opacity: 0.55;
+  flex-shrink: 0;
 }
 
 .story-line {
@@ -430,6 +518,17 @@ html.is-player-presentation #root {
   overflow-wrap: anywhere;
   word-break: break-word;
   font-synthesis: weight style;
+}
+
+/* Плеер: одна склейка титров до меню, CSS-marquee */
+.story-line.is-marquee {
+  display: inline-block;
+  max-width: none;
+  margin: 0;
+  padding-right: 0;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .story-copy.is-editable {
@@ -475,7 +574,8 @@ html.is-player-presentation #root {
 }
 
 .story-copy textarea.story-line {
-  min-height: 3.2em;
+  min-height: 0;
+  field-sizing: content;
 }
 
 .menu {

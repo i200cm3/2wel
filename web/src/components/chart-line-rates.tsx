@@ -15,6 +15,7 @@ import {
 import type { FunnelCounts } from '@/lib/api'
 
 const chartConfig = {
+  playPct: { label: 'Нажал Play', color: 'var(--chart-5)' },
   autoplayPct: { label: 'Досмотрел автопоказ', color: 'var(--chart-2)' },
   contactPct: { label: 'Нажал кнопку связи', color: 'var(--chart-4)' },
 } satisfies ChartConfig
@@ -33,6 +34,7 @@ export function ChartLineRates({
 }) {
   const series = data.map((row) => ({
     date: row.date,
+    playPct: rate(row.play ?? 0, row.open),
     autoplayPct: rate(row.autoplay, row.open),
     contactPct: rate(row.contact ?? row.whatsapp, row.open),
   }))
@@ -42,7 +44,7 @@ export function ChartLineRates({
       <CardHeader>
         <CardTitle className="font-sans">Конверсия во времени</CardTitle>
         <CardDescription>
-          {periodLabel} · доля открывших, кто досмотрел ролик и кто нажал WhatsApp / MAX / звонок
+          {periodLabel} · доля открывших, кто нажал Play, досмотрел ролик и нажал связь
         </CardDescription>
       </CardHeader>
       <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
@@ -91,6 +93,14 @@ export function ChartLineRates({
                   indicator="line"
                 />
               }
+            />
+            <Line
+              dataKey="playPct"
+              type="monotone"
+              stroke="var(--color-playPct)"
+              strokeWidth={2}
+              dot={false}
+              connectNulls={false}
             />
             <Line
               dataKey="autoplayPct"

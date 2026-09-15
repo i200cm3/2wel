@@ -7,6 +7,10 @@ import {
   requiresFieldsFromSequence,
   syncedRequiresFields,
   syncRequiresFieldsInConfig,
+  guestSubstitutionPlaceholders,
+  guestSubstitutionHint,
+  guestAssemblyFieldsHint,
+  visiblePlaceholders,
 } from './guestSummaryFields.ts'
 
 function makeSequence(overrides: Partial<StorySequence> = {}): StorySequence {
@@ -116,5 +120,18 @@ describe('syncRequiresFieldsInConfig', () => {
     const synced = syncRequiresFieldsInConfig(config)
     assert.deepEqual(synced.constructorV2?.sequenceMetaById.greeting.requiresFields, ['name'])
     assert.deepEqual(synced.constructorV2?.sequenceMetaById.room.requiresFields, ['room'])
+  })
+})
+
+describe('hello-aware UI helpers', () => {
+  it('hides {hello} placeholders and hints when disabled', () => {
+    assert.deepEqual(guestSubstitutionPlaceholders(false), ['{name}', '{room}', '{dates}'])
+    assert.equal(guestSubstitutionPlaceholders(true).includes('{hello}'), true)
+    assert.equal(guestSubstitutionHint(false).includes('{hello}'), false)
+    assert.equal(guestSubstitutionHint(true).includes('{hello}'), true)
+    assert.equal(guestAssemblyFieldsHint(false).includes('hello'), false)
+    assert.equal(guestAssemblyFieldsHint(true).includes('hello'), true)
+    assert.deepEqual(visiblePlaceholders(['name', 'hello', 'room'], false), ['name', 'room'])
+    assert.deepEqual(visiblePlaceholders(['name', 'hello', 'room'], true), ['name', 'hello', 'room'])
   })
 })

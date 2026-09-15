@@ -7,6 +7,10 @@ export const inspectorShellClass =
 
 export const inspectorGridClass = 'min-[901px]:grid-cols-[minmax(0,1.4fr)_minmax(220px,0.7fr)]'
 
+/** Титр: параметры шире (~+50%), превью уже. */
+export const inspectorCueGridClass =
+  'min-[901px]:grid-cols-[minmax(0,1.05fr)_minmax(330px,1.05fr)]'
+
 export const inspectorStageClass = 'editor-inspector-stage'
 
 export const inspectorFieldsClass = 'flex min-w-0 flex-col gap-2.5'

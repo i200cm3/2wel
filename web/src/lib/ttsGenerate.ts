@@ -153,9 +153,20 @@ export function ttsTextNeedsGuestName(ttsText: string | undefined | null): boole
   )
 }
 
-/** Подставить {hello} (дефолт) и имя гостя в шаблон озвучки. */
-export function speakTextForTts(ttsText: string, guestName: string): string {
-  return fillGuestText(ttsText, guestName, DEFAULT_HELLO_TEMPLATE)
+export function ttsTextNeedsPersonalization(ttsText: string | undefined | null): boolean {
+  return (
+    ttsTextNeedsGuestName(ttsText) ||
+    (typeof ttsText === 'string' && (/\{\s*dates\s*\}/i.test(ttsText) || /\{\s*room\s*\}/i.test(ttsText)))
+  )
+}
+
+/** Подставить {hello}, имя, {dates} и {room} в шаблон озвучки. */
+export function speakTextForTts(
+  ttsText: string,
+  guestName: string,
+  fields?: { dates?: string; room?: string },
+): string {
+  return fillGuestText(ttsText, guestName, DEFAULT_HELLO_TEMPLATE, fields)
 }
 
 export type GenerateTtsResult = {

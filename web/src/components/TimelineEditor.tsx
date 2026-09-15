@@ -17,6 +17,7 @@ import {
   Plus,
   Redo2,
   Settings,
+  Type,
   Undo2,
   X,
 } from 'lucide-react'
@@ -138,15 +139,13 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Card, CardContent } from '@/components/ui/card'
 import { EmailPreviewInspector } from './editor/EmailPreviewInspector'
 import { MenuInspector } from './editor/MenuInspector'
-import { AiGenerationParamsPanel } from './editor/AiGenerationParamsPanel'
 import { Presentation } from './Presentation'
 import { StoryPlayer } from './StoryPlayer'
 import { ClipInspector } from './editor/ClipInspector'
 import { CueInspector } from './editor/CueInspector'
+import { CaptionThemeSheet } from './editor/CaptionThemeSheet'
 import { LibrarySheet } from './editor/LibrarySheet'
 import { TimelineTracks } from './editor/TimelineTracks'
 import { TrackContextMenu } from './editor/TrackContextMenu'
@@ -186,6 +185,8 @@ type Props = {
   blockSeqId?: string
   /** Инкремент при клике в библиотеке — снова выбрать первый титр. */
   blockFocusTick?: number
+  /** Конкретный cue при deep-link / повторном фокусе; иначе первый. */
+  blockFocusCueId?: string | null
   isAdmin?: boolean
   hasDraft?: boolean
   saveState?: 'idle' | 'saving' | 'saved' | 'error'
@@ -204,6 +205,8 @@ type Props = {
   onSave?: () => void
   onPublish?: () => void
   onRetryDraft?: () => void
+  /** Показывать подсказки про {hello} (настройка проекта). */
+  helloFromDialog?: boolean
 }
 
 function mediaSrcKey(src: string | undefined): string {
@@ -218,6 +221,7 @@ export function TimelineEditor({
   blockPanel = false,
   blockSeqId,
   blockFocusTick = 0,
+  blockFocusCueId = null,
   isAdmin = false,
   hasDraft = false,
   saveState = 'idle',
@@ -234,6 +238,7 @@ export function TimelineEditor({
   onSave,
   onPublish,
   onRetryDraft,
+  helloFromDialog = false,
 }: Props) {
   const history = useEditorHistory(config, persistChange, `${projectCode}:${config.id}`)
   const onChange = history.commit
@@ -291,7 +296,7 @@ export function TimelineEditor({
   const slidePreviewClipsRef = useRef<StoryClip[] | null>(null)
   const [shareCopied, setShareCopied] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const [adminWorkspace, setAdminWorkspace] = useState<'editor' | 'ai'>('editor')
+  const [captionsOpen, setCaptionsOpen] = useState(false)
   const [blockPreviewId, setBlockPreviewId] = useState<string | null>(null)
   const [blockPreviewKey, setBlockPreviewKey] = useState(0)
   const [fullPreviewOpen, setFullPreviewOpen] = useState(false)
@@ -645,7 +650,8 @@ export function TimelineEditor({
       const cues = seq.cues ?? []
       for (const cue of cues) {
         const clip = clipAtTime(seq.clips, cue.startSec)
-        const showTitle = clip?.showTitle !== false
+        const titlesOn = normalizeTheme(config.theme).showTitle
+        const showTitle = titlesOn && clip?.showTitle !== false
         const draft = buildTtsTextFromCaption({
           caption: cue.text,
           sequenceTitle: seq.title,
@@ -749,6 +755,7 @@ export function TimelineEditor({
   }, [
     ttsBatchBusy,
     config.sequences,
+    config.theme,
     config.defaultGuestName,
     projectCode,
     ensureTtsFile,
@@ -1840,24 +1847,26 @@ export function TimelineEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- только смена блока, не правки cues
   }, [seqId])
 
-  // Повторный клик в библиотеке (тот же блок) — снова первый титр.
+  // Повторный клик в библиотеке / deep-link — титр (указанный или первый).
   useEffect(() => {
     if (!isBlockPanel || !blockFocusTick || !blockSeqId) return
     const seq = config.sequences[blockSeqId]
-    const firstCueId = seq
-      ? (seq.cues?.[0]?.id ?? migrateSequenceCues(seq)[0]?.id ?? null)
-      : null
+    const cueList = seq ? migrateSequenceCues(seq) : []
+    const wanted =
+      blockFocusCueId && cueList.some((cue) => cue.id === blockFocusCueId)
+        ? blockFocusCueId
+        : (cueList[0]?.id ?? null)
     setSlidePreview(false)
-    if (firstCueId) {
-      setSelectedCueId(firstCueId)
+    if (wanted) {
+      setSelectedCueId(wanted)
       setSelectedId(null)
       setFocusCaptionTick((n) => n + 1)
     } else {
       setSelectedCueId(null)
       setSelectedId(seq?.clips[0]?.id ?? null)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- только tick клика в библиотеке
-  }, [isBlockPanel, blockFocusTick, blockSeqId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- только tick клика / deep-link
+  }, [isBlockPanel, blockFocusTick, blockSeqId, blockFocusCueId])
 
   useEffect(() => {
     const clips = config.sequences[seqId]?.clips ?? []
@@ -2403,6 +2412,7 @@ export function TimelineEditor({
             : undefined
         }
         libraryCount={isBlockPanel ? librarySrcs.length : undefined}
+        onOpenCaptionTheme={isBlockPanel ? () => setCaptionsOpen(true) : undefined}
         menus={menusList}
         defaultMenuId={getDefaultMenuId(config)}
         returnMenuId={sequenceReturnMenuId}
@@ -2479,16 +2489,9 @@ export function TimelineEditor({
           updateCue={updateCue}
           updateClip={updateClip}
           removeCue={removeCue}
-          patchTheme={patchTheme}
+          onOpenCaptionTheme={() => setCaptionsOpen(true)}
           cuePreviewClip={cuePreviewClip}
-          isAdmin={isAdmin}
-          brand={config.brand}
-          copyFacts={config.copyFacts}
-          blockMeta={
-            sequence
-              ? (config.constructorV2?.sequenceMetaById?.[sequence.id] ?? undefined)
-              : undefined
-          }
+          helloFromDialog={helloFromDialog}
         />
       ) : null}
 
@@ -2607,6 +2610,10 @@ export function TimelineEditor({
               {librarySrcs.length}
             </span>
           </Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => setCaptionsOpen(true)}>
+            <Type data-icon="inline-start" aria-hidden />
+            Титры
+          </Button>
           <Button
             type="button"
             variant="outline"
@@ -2645,7 +2652,8 @@ export function TimelineEditor({
           <DialogHeader>
             <DialogTitle>Настройки</DialogTitle>
             <DialogDescription>
-              Ориентация, громкость, публикация и обмен ссылкой на объект.
+              Ориентация, громкость, публикация и обмен ссылкой на объект. Оформление титров — в
+              панели «Титры».
             </DialogDescription>
           </DialogHeader>
           <FieldGroup className="gap-4">
@@ -2915,32 +2923,6 @@ export function TimelineEditor({
         </DialogContent>
       </Dialog>
 
-      {!isBlockPanel && isAdmin ? (
-        <Tabs
-          value={adminWorkspace}
-          onValueChange={(value) => value && setAdminWorkspace(value as typeof adminWorkspace)}
-          className="shrink-0"
-        >
-          <TabsList>
-            <TabsTrigger value="editor">Редактор</TabsTrigger>
-            <TabsTrigger value="ai">Параметры генерации</TabsTrigger>
-          </TabsList>
-        </Tabs>
-      ) : null}
-
-      {!isBlockPanel && isAdmin && adminWorkspace === 'ai' ? (
-        <Card className="min-h-0 flex-1 overflow-hidden">
-          <CardContent className="h-full min-h-0 overflow-y-auto p-4 sm:p-6">
-            <AiGenerationParamsPanel
-              brand={config.brand}
-              copyFacts={config.copyFacts}
-              onCopyFactsChange={(copyFacts) =>
-                onChange((prev) => ({ ...prev, copyFacts }))
-              }
-            />
-          </CardContent>
-        </Card>
-      ) : (
       <div
         className={`grid min-h-0 flex-1 items-stretch gap-4 ${
           isBlockPanel
@@ -3355,6 +3337,7 @@ export function TimelineEditor({
               ttsVolume={theme.ttsVolume}
               isLandscape={isLandscape}
               playArmed={menuTtsArmed}
+              helloFromDialog={helloFromDialog}
               onPlayArmedConsumed={() => setMenuTtsArmed(false)}
               refreshTts={refreshTts}
               onMenuCopyChange={(menuCopy) =>
@@ -3404,7 +3387,6 @@ export function TimelineEditor({
           ) : null}
         </main>
       </div>
-      )}
 
       {!isBlockPanel && fullPreviewOpen ? (
         <div
@@ -3447,7 +3429,11 @@ export function TimelineEditor({
                     ? fillGuestText(blockPreviewSeq.title, config.defaultGuestName, DEFAULT_HELLO_TEMPLATE)
                     : undefined
                 }
+                showTitle={theme.showTitle}
+                captionMode={theme.captionMode}
+                marqueeSpeed={theme.marqueeSpeed}
                 captionBarStyle={captionBarStyle(config.theme)}
+                marqueePaused={false}
                 onEnded={() => setBlockPreviewId(null)}
               />
             </div>
@@ -3521,6 +3507,13 @@ export function TimelineEditor({
         usedTtsItems={usedTtsItems}
         ttsDurations={ttsDurations}
         toggleLibAudio={toggleLibAudio}
+      />
+
+      <CaptionThemeSheet
+        open={captionsOpen}
+        onOpenChange={setCaptionsOpen}
+        theme={theme}
+        onPatch={patchTheme}
       />
 
       {libGhost

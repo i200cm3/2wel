@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { ChevronDown, EllipsisVertical, GripVertical, Play, Plus, Settings } from 'lucide-react'
+import { useSearchParams } from 'react-router-dom'
+import { ChevronDown, EllipsisVertical, GripVertical, Play, Plus, Settings, Type } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -47,7 +48,7 @@ import {
   type GuestSummary,
 } from '@/lib/assembly'
 import { downloadTemplateArchive, importTemplateArchive } from '@/lib/api'
-import { AiGenerationParamsPanel } from './editor/AiGenerationParamsPanel'
+import { CaptionThemeSheet } from './editor/CaptionThemeSheet'
 import { MenuInspector } from './editor/MenuInspector'
 import { Presentation } from './Presentation'
 import { TimelineEditor } from './TimelineEditor'
@@ -68,9 +69,10 @@ import {
   tagOptionsFromValues,
 } from '@/lib/blockMetaTags'
 import {
-  GUEST_ASSEMBLY_FIELDS_HINT,
-  GUEST_SUBSTITUTION_PLACEHOLDERS,
   GUEST_SUMMARY_FIELD_OPTIONS,
+  guestAssemblyFieldsHint,
+  guestSubstitutionPlaceholders,
+  visiblePlaceholders,
   placeholdersInSequence,
   syncRequiresFieldsInConfig,
 } from '@/lib/guestSummaryFields'
@@ -238,22 +240,19 @@ function parseGuestSummaryImport(
   }
 }
 
-function guestSummaryToImportJson(summary: GuestSummary): string {
-  return JSON.stringify(
-    {
-      guestName: summary.guestName,
-      dates: summary.dates,
-      partyType: summary.partyType,
-      room: summary.room,
-      topics: summary.topics,
-      objections: summary.objections,
-      confidence: summary.confidence,
-      fillRemaining: summary.fillRemaining ?? 'off',
-      hello: summary.hello ?? '',
-    },
-    null,
-    2,
-  )
+function guestSummaryToImportJson(summary: GuestSummary, includeHello = true): string {
+  const payload: Record<string, unknown> = {
+    guestName: summary.guestName,
+    dates: summary.dates,
+    partyType: summary.partyType,
+    room: summary.room,
+    topics: summary.topics,
+    objections: summary.objections,
+    confidence: summary.confidence,
+    fillRemaining: summary.fillRemaining ?? 'off',
+  }
+  if (includeHello) payload.hello = summary.hello ?? ''
+  return JSON.stringify(payload, null, 2)
 }
 
 function updateBlockMeta(
@@ -445,10 +444,21 @@ export function ConstructorV2({
   onSave,
   onPublish,
   onRetryDraft,
-  helloFromDialog = false,
+  helloFromDialog: helloFromDialogProp = false,
   onHelloFromDialogUpdated,
 }: Props) {
   const needsPublish = hasDraft || !published
+  const [helloFromDialog, setHelloFromDialog] = useState(helloFromDialogProp)
+  useEffect(() => {
+    setHelloFromDialog(helloFromDialogProp)
+  }, [helloFromDialogProp])
+  const handleHelloFromDialogUpdated = useCallback(
+    (enabled: boolean) => {
+      setHelloFromDialog(enabled)
+      onHelloFromDialogUpdated?.(enabled)
+    },
+    [onHelloFromDialogUpdated],
+  )
   const setConfig = useCallback(
     (next: PropertyConfig | ((prev: PropertyConfig) => PropertyConfig)) => {
       emitChange((prev) => {
@@ -459,14 +469,14 @@ export function ConstructorV2({
     [emitChange],
   )
 
-  const [workspace, setWorkspace] = useState<'blocks' | 'assembly' | 'menus' | 'ai'>('blocks')
-  useEffect(() => {
-    if (!isAdmin && workspace === 'ai') setWorkspace('blocks')
-  }, [isAdmin, workspace])
+  const [workspace, setWorkspace] = useState<'blocks' | 'assembly' | 'menus'>('blocks')
   const [blockTab, setBlockTab] = useState<'block' | 'params'>('block')
   const [seqId, setSeqId] = useState(() => preferredEditorSeqId(config))
   /** Каждый клик в библиотеке — снова открыть первый титр (даже тот же блок). */
   const [blockFocusTick, setBlockFocusTick] = useState(0)
+  const [blockFocusCueId, setBlockFocusCueId] = useState<string | null>(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const deepLinkAppliedRef = useRef(false)
   const [blockLibraryQuery, setBlockLibraryQuery] = useState('')
   const libraryScrollRef = useRef<HTMLDivElement>(null)
   const [summary, setSummary] = useState<GuestSummary>({
@@ -497,6 +507,7 @@ export function ConstructorV2({
     () => config.defaultMenuId ?? getDefaultMenuId(config),
   )
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [captionsOpen, setCaptionsOpen] = useState(false)
   const importInputRef = useRef<HTMLInputElement>(null)
   const archiveInputRef = useRef<HTMLInputElement>(null)
   const [archiveImporting, setArchiveImporting] = useState(false)
@@ -523,8 +534,10 @@ export function ConstructorV2({
     : defaultBlockMeta()
   const detectedPlaceholders = useMemo(() => {
     if (!selectedSequence) return []
-    return placeholdersInSequence(selectedSequence)
-  }, [selectedSequence])
+    return visiblePlaceholders(placeholdersInSequence(selectedSequence), helloFromDialog)
+  }, [selectedSequence, helloFromDialog])
+  const substitutionPlaceholders = guestSubstitutionPlaceholders(helloFromDialog)
+  const assemblyFieldsHint = guestAssemblyFieldsHint(helloFromDialog)
   const libraryBlockIds = useMemo(() => {
     const metaById = config.constructorV2?.sequenceMetaById ?? {}
     const isEnabled = (id: string) => metaById[id]?.enabled !== false
@@ -591,13 +604,34 @@ export function ConstructorV2({
     return () => window.removeEventListener('keydown', onKey)
   }, [assemblyPreviewOpen])
 
-  const selectBlock = (id: string) => {
+  const selectBlock = (id: string, cueId?: string | null) => {
     if (!config.sequences[id]) return
     setSeqId(id)
+    setBlockFocusCueId(cueId?.trim() || null)
     setBlockFocusTick((n) => n + 1)
     setWorkspace('blocks')
     setBlockTab('block')
   }
+
+  // Deep-link из кабинета ссылок: /edit-v2?seq=rooms_single&cue=…
+  useEffect(() => {
+    if (deepLinkAppliedRef.current) return
+    const seq = searchParams.get('seq')?.trim() ?? ''
+    if (!seq || !config.sequences[seq]) return
+    deepLinkAppliedRef.current = true
+    const cue = searchParams.get('cue')?.trim() || null
+    selectBlock(seq, cue)
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        next.delete('seq')
+        next.delete('cue')
+        return next
+      },
+      { replace: true },
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- один раз при открытии по ?seq=
+  }, [config.sequences, searchParams, setSearchParams])
 
   const openBlockParams = (id: string) => {
     if (!config.sequences[id]) return
@@ -969,6 +1003,15 @@ export function ConstructorV2({
           <Button
             type="button"
             variant="outline"
+            size="sm"
+            onClick={() => setCaptionsOpen(true)}
+          >
+            <Type data-icon="inline-start" aria-hidden />
+            Титры
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
             size="icon-sm"
             aria-label="Настройки"
             title="Настройки"
@@ -984,14 +1027,15 @@ export function ConstructorV2({
           <DialogHeader>
             <DialogTitle>Настройки</DialogTitle>
             <DialogDescription>
-              Громкость, кнопка «Далее», импорт и экспорт. JSON — только конфиг, ZIP — вместе с медиа и TTS.
+              Громкость, кнопка «Далее», импорт и экспорт. Оформление титров — в панели «Титры». JSON —
+              только конфиг, ZIP — вместе с медиа и TTS.
             </DialogDescription>
           </DialogHeader>
           <HelloFromDialogSetting
             compact
             projectCode={projectCode}
             enabled={helloFromDialog}
-            onUpdated={onHelloFromDialogUpdated}
+            onUpdated={handleHelloFromDialogUpdated}
           />
           <FieldGroup className="gap-3">
             <Field>
@@ -1153,7 +1197,6 @@ export function ConstructorV2({
           <TabsTrigger value="blocks">Блоки</TabsTrigger>
           <TabsTrigger value="assembly">Сборка</TabsTrigger>
           <TabsTrigger value="menus">Меню</TabsTrigger>
-          {isAdmin ? <TabsTrigger value="ai">Параметры генерации</TabsTrigger> : null}
         </TabsList>
 
         <TabsContent
@@ -1306,12 +1349,14 @@ export function ConstructorV2({
               blockPanel
               blockSeqId={selectedSequence.id}
               blockFocusTick={blockFocusTick}
+              blockFocusCueId={blockFocusCueId}
               config={config}
               onChange={setConfig}
               projectCode={projectCode}
               templateCode={templateCode}
               ttsLibrary={ttsLibrary}
               isAdmin={isAdmin}
+              helloFromDialog={helloFromDialog}
             />
           </TabsContent>
 
@@ -1510,11 +1555,11 @@ export function ConstructorV2({
                       placeholder="name, room, dates…"
                       aria-label="Обязательные параметры гостя"
                     />
-                    <p className="text-muted-foreground text-xs">{GUEST_ASSEMBLY_FIELDS_HINT}</p>
+                    <p className="text-muted-foreground text-xs">{assemblyFieldsHint}</p>
                     <p className="text-muted-foreground text-xs">
                       Блок попадёт в autoplay только если amo передала все выбранные параметры. Поля из
                       {' '}
-                      {GUEST_SUBSTITUTION_PLACEHOLDERS.join(', ')}
+                      {substitutionPlaceholders.join(', ')}
                       {' '}
                       в заголовке, титрах и TTS добавляются сюда автоматически.
                       {detectedPlaceholders.length
@@ -2215,7 +2260,7 @@ export function ConstructorV2({
                       onOpenChange={(open) => {
                         setDeveloperJsonOpen(open)
                         if (open) {
-                          setSummaryImportJson(guestSummaryToImportJson(summary))
+                          setSummaryImportJson(guestSummaryToImportJson(summary, helloFromDialog))
                           setSummaryImportError(null)
                         }
                       }}
@@ -2250,7 +2295,7 @@ export function ConstructorV2({
                                 }
                                 setSummary(result.summary)
                                 setSummaryImportError(null)
-                                setSummaryImportJson(guestSummaryToImportJson(result.summary))
+                                setSummaryImportJson(guestSummaryToImportJson(result.summary, helloFromDialog))
                               }}
                             >
                               Импортировать
@@ -2260,7 +2305,7 @@ export function ConstructorV2({
                               size="sm"
                               variant="outline"
                               onClick={() => {
-                                setSummaryImportJson(guestSummaryToImportJson(summary))
+                                setSummaryImportJson(guestSummaryToImportJson(summary, helloFromDialog))
                                 setSummaryImportError(null)
                               }}
                             >
@@ -2498,6 +2543,7 @@ export function ConstructorV2({
                     ttsFiles={ttsFiles}
                     ttsVolume={theme.ttsVolume}
                     isLandscape={menuPreviewLandscape}
+                    helloFromDialog={helloFromDialog}
                     refreshTts={refreshTts}
                     onMenuCopyChange={(menuCopy) =>
                       setConfig((prev) => updateMenu(prev, previewMenu.id, { menuCopy }))
@@ -2538,25 +2584,6 @@ export function ConstructorV2({
             </div>
         </TabsContent>
 
-        {isAdmin ? (
-          <TabsContent
-            value="ai"
-            className="min-h-0 flex-1 overflow-y-auto pr-1"
-          >
-            <Card className="overflow-hidden">
-              <CardContent className="p-4 sm:p-6">
-                <AiGenerationParamsPanel
-                  brand={config.brand}
-                  copyFacts={config.copyFacts}
-                  onCopyFactsChange={(copyFacts) =>
-                    setConfig((prev) => ({ ...prev, copyFacts }))
-                  }
-                />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        ) : null}
-
       </Tabs>
 
       {assemblyPreviewOpen ? (
@@ -2577,6 +2604,8 @@ export function ConstructorV2({
                 key={`assembly-preview-${assemblyPreviewKey}-${theme.orientation}`}
                 property={assemblyPreviewConfig}
                 guestNameOverride={summary.guestName || config.defaultGuestName}
+                guestDates={summary.dates}
+                guestRoom={summary.room}
                 embedded
               />
             </div>
@@ -2586,6 +2615,21 @@ export function ConstructorV2({
           </div>
         </div>
       ) : null}
+
+      <CaptionThemeSheet
+        open={captionsOpen}
+        onOpenChange={setCaptionsOpen}
+        theme={theme}
+        onPatch={(patch) =>
+          setConfig((prev) => ({
+            ...prev,
+            theme: {
+              ...normalizeTheme(prev.theme),
+              ...patch,
+            },
+          }))
+        }
+      />
     </div>
   )
 }

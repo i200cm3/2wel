@@ -55,6 +55,7 @@ const channelConfig = {
 
 const EVENT_LABEL: Record<string, string> = {
   open: 'Открыл ссылку',
+  play: 'Нажал Play',
   autoplay: 'Конец автопоказа → меню',
   menu: 'Зашёл в меню',
   whatsapp: 'WhatsApp',
@@ -125,6 +126,7 @@ type GuestActivity = {
   guestName: string
   lastAt: string
   opened: boolean
+  played: boolean
   autoplay: boolean
   menu: boolean
   contacted: boolean
@@ -146,6 +148,7 @@ function aggregateGuests(
         guestName: row.guestName,
         lastAt: row.at,
         opened: false,
+        played: false,
         autoplay: false,
         menu: false,
         contacted: false,
@@ -161,6 +164,7 @@ function aggregateGuests(
       guest.device = row.device
     }
     if (row.type === 'open') guest.opened = true
+    if (row.type === 'play') guest.played = true
     if (row.type === 'autoplay') guest.autoplay = true
     if (row.type === 'menu') guest.menu = true
     if (row.type === 'whatsapp' || row.type === 'contact') guest.contacted = true
@@ -174,7 +178,10 @@ function aggregateGuests(
   }
   for (const guest of byId.values()) {
     guest.events.sort((a, b) => (a.at < b.at ? 1 : a.at > b.at ? -1 : 0))
-    if (!guest.opened && (guest.autoplay || guest.menu || guest.contacted || guest.topics.length)) {
+    if (
+      !guest.opened &&
+      (guest.played || guest.autoplay || guest.menu || guest.contacted || guest.topics.length)
+    ) {
       guest.opened = true
     }
   }
@@ -185,6 +192,7 @@ function aggregateGuests(
       guestName: row.guestName,
       lastAt: row.at,
       opened: false,
+      played: false,
       autoplay: false,
       menu: false,
       contacted: false,
@@ -241,6 +249,24 @@ function StatusBadges({ guest }: { guest: GuestActivity }) {
           Не открыл
         </Badge>
       )}
+      {guest.opened && !guest.played ? (
+        <Badge
+          variant="outline"
+          className="text-muted-foreground px-1.5 font-normal"
+          title="Открыл ссылку, но не нажал Play"
+        >
+          Без Play
+        </Badge>
+      ) : null}
+      {guest.played ? (
+        <Badge
+          variant="outline"
+          className="px-1.5 font-normal"
+          title="Нажал кнопку Play и начал просмотр"
+        >
+          Play
+        </Badge>
+      ) : null}
       {guest.contacted ? (
         <Badge
           variant="outline"
@@ -610,7 +636,7 @@ export function AnalyticsPanels({
                 <TableRow>
                   <TableHead className="w-8" />
                   <TableHead>Гость</TableHead>
-                  <TableHead title="Открыл ссылку или нет · нажал кнопку связи">
+                  <TableHead title="Открыл ссылку · нажал Play · нажал связь">
                     Статус
                   </TableHead>
                   <TableHead title="Какие разделы из меню открывал гость">

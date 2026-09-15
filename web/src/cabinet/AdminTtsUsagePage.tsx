@@ -79,6 +79,9 @@ function BalanceCard({ balance }: { balance: AdminElevenlabsBalance | null }) {
         <CardDescription>
           {balance.tier ? `Тариф: ${balance.tier}` : 'Подписка'}
           {balance.status ? ` · ${balance.status}` : ''}
+          {balance.key?.keyHint
+            ? ` · ключ ${balance.key.label || balance.key.keyHint}`
+            : ''}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

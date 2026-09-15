@@ -45,6 +45,8 @@ type ScoredAssemblyEntry = AssemblyEntry & {
   topicHits: string[]
   objectionHits: string[]
   audienceHit: boolean
+  /** Явный room из сводки совпал с этим блоком (single → rooms_single). */
+  roomHit: boolean
   /** Блок размечен под конкретную аудиторию (family/couple/…) — не для cold-start. */
   hasAudienceTags: boolean
   priority: number
@@ -114,6 +116,8 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
   const objections = parseCsv(summary.objections)
   const confidence = Math.min(1, Math.max(0, Number(summary.confidence) || 0))
   const partyType = summary.partyType.trim().toLowerCase()
+  const roomHint = normalizeRoomHint(summary.room)
+  const roomHintIds = roomIdsFromHint(summary.room)
   const entries = Object.values(config.sequences).map((sequence) => {
     const meta = metaById[sequence.id] ?? defaultBlockMeta()
     const placement = placementForId(config, sequence.id)
@@ -122,6 +126,8 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
     const topicHits = meta.topicTags.filter((tag) => topics.includes(tag.toLowerCase()))
     const objectionHits = meta.objectionTags.filter((tag) => objections.includes(tag.toLowerCase()))
     const audienceHit = partyType && meta.audienceTags.some((tag) => tag.toLowerCase() === partyType)
+    // room=single → rooms_single: явный номер важнее пустого partyType / audienceTags.
+    const roomHit = roomHintIds.includes(sequence.id)
     if (topicHits.length) {
       score += topicHits.length * 3
       reasons.push(`темы: ${topicHits.join(', ')}`)
@@ -130,11 +136,16 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
       score += objectionHits.length * 4
       reasons.push(`возражения: ${objectionHits.join(', ')}`)
     }
+    if (roomHit) {
+      score += 5
+      reasons.push(`номер: ${roomHint}`)
+    }
     if (audienceHit) {
       score += 2
       reasons.push(`аудитория: ${partyType}`)
-    } else if (meta.audienceTags.length > 0) {
+    } else if (meta.audienceTags.length > 0 && !roomHit) {
       // Блок размечен под другую аудиторию (family/couple/…) — не в autoplay по общей теме.
+      // Исключение: room уже выбрал этот блок (rooms_single при room=single).
       score -= 999
       reasons.push(
         partyType
@@ -181,6 +192,7 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
       topicHits,
       objectionHits,
       audienceHit: Boolean(audienceHit),
+      roomHit: Boolean(roomHit),
       hasAudienceTags: meta.audienceTags.length > 0,
       priority: meta.priority,
       missingFields,
@@ -207,6 +219,7 @@ export function simulateAssembly(config: PropertyConfig, summary: GuestSummary):
     topics,
     objections,
     partyType,
+    room: summary.room.trim(),
     fillRemaining: summary.fillRemaining ?? 'off',
   })
   return entries
@@ -303,16 +316,200 @@ function pickAlwaysEndIds(
   return alwaysEndIds.filter((id) => chosen.has(id))
 }
 
+function compareAssemblyEntries(a: ScoredAssemblyEntry, b: ScoredAssemblyEntry): number {
+  const scoreDiff = b.score - a.score
+  if (scoreDiff) return scoreDiff
+  const hitDiff =
+    b.objectionHits.length - a.objectionHits.length ||
+    Number(b.roomHit) - Number(a.roomHit) ||
+    Number(b.audienceHit) - Number(a.audienceHit) ||
+    b.topicHits.length - a.topicHits.length
+  if (hitDiff) return hitDiff
+  const priorityDiff = b.priority - a.priority
+  if (priorityDiff) return priorityDiff
+  return a.id.localeCompare(b.id, 'ru')
+}
+
+function comparePrimaryTopicEntries(topic: string, a: ScoredAssemblyEntry, b: ScoredAssemblyEntry): number {
+  const exactTopicDiff =
+    Number(b.group === topic || b.subgroup === topic) - Number(a.group === topic || a.subgroup === topic)
+  if (exactTopicDiff) return exactTopicDiff
+  const roomDiff = Number(b.roomHit) - Number(a.roomHit)
+  if (roomDiff) return roomDiff
+  const audienceDiff = Number(b.audienceHit) - Number(a.audienceHit)
+  if (audienceDiff) return audienceDiff
+  const priorityDiff = b.priority - a.priority
+  if (priorityDiff) return priorityDiff
+  return compareAssemblyEntries(a, b)
+}
+
+/** Группы, которыми безопасно дожимать autoplay, если про них ещё не говорили. */
+const FILL_GROUP_ORDER = [
+  'rooms',
+  'treatment',
+  'food',
+  'wellness',
+  'leisure',
+  'territory',
+  'location',
+  'about',
+  'trust',
+  'price',
+  'price_value',
+] as const
+
+const FILL_GROUP_RANK: Map<string, number> = new Map(
+  FILL_GROUP_ORDER.map((group, index) => [group, index]),
+)
+
+const SOFT_FILL_MAX_EXTRA = 3
+
+const ROOM_ID_BY_HINT: Array<[string, string]> = [
+  ['single', 'rooms_single'],
+  ['solo', 'rooms_single'],
+  ['одномест', 'rooms_single'],
+  ['standard', 'rooms_standard'],
+  ['стандарт', 'rooms_standard'],
+  ['double', 'rooms_double'],
+  ['twin', 'rooms_double'],
+  ['двухмест', 'rooms_double'],
+  ['family', 'rooms_family'],
+  ['семейн', 'rooms_family'],
+  ['deluxe', 'rooms_deluxe'],
+  ['делюкс', 'rooms_deluxe'],
+  ['luxury', 'rooms_luxury'],
+  ['люкс', 'rooms_luxury'],
+  ['apart', 'rooms_luxury'],
+  ['quiet', 'rooms_quiet'],
+  ['тих', 'rooms_quiet'],
+  ['comfort', 'rooms_comfort'],
+  ['комфорт', 'rooms_comfort'],
+  ['view', 'rooms_view'],
+]
+
+const ROOM_IDS_BY_PARTY: Record<string, string[]> = {
+  solo: ['rooms_single', 'rooms_standard'],
+  couple: ['rooms_double', 'rooms_deluxe', 'rooms_view'],
+  family: ['rooms_family'],
+  senior: ['rooms_quiet', 'rooms_standard'],
+}
+
+const ROOMS_FALLBACK_IDS = ['rooms_comfort', 'rooms_standard', 'rooms_luxury', 'rooms_single']
+const TREATMENT_FALLBACK_IDS = ['treatment_start', 'treatment_individual_plan']
+
+function isFillEligibleGroup(group: string): boolean {
+  return FILL_GROUP_RANK.has(group)
+}
+
+function normalizeRoomHint(room: string): string {
+  return String(room ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+}
+
+/** Только явный room → id блоков (без party/fallback). */
+function roomIdsFromHint(room: string): string[] {
+  const hint = normalizeRoomHint(room)
+  const ids: string[] = []
+  if (!hint) return ids
+  for (const [key, id] of ROOM_ID_BY_HINT) {
+    if (hint === key || hint.includes(key)) {
+      if (!ids.includes(id)) ids.push(id)
+    }
+  }
+  return ids
+}
+
+function preferredRoomIds(room: string, partyType: string): string[] {
+  const ids: string[] = []
+  const push = (id: string) => {
+    if (id && !ids.includes(id)) ids.push(id)
+  }
+  for (const id of roomIdsFromHint(room)) push(id)
+  for (const id of ROOM_IDS_BY_PARTY[partyType] ?? []) push(id)
+  for (const id of ROOMS_FALLBACK_IDS) push(id)
+  return ids
+}
+
+function mustCoverEligible(entry: ScoredAssemblyEntry | undefined): entry is ScoredAssemblyEntry {
+  if (!entry || entry.hardBlocked) return false
+  if (entry.missingFields.length) return false
+  return true
+}
+
+function annotateMustCover(entry: ScoredAssemblyEntry, group: string): void {
+  const tag = `must-cover · ${group}`
+  entry.reason = entry.reason ? `${entry.reason} · ${tag}` : tag
+}
+
+type AdaptiveSummaryContext = {
+  topics: string[]
+  objections: string[]
+  partyType: string
+  room: string
+  fillRemaining: AssemblyFillRemaining
+}
+
+/**
+ * Выбрать блок обязательной группы.
+ * Rooms: room → partyType → score>0 → нейтральные → fallback ids.
+ * Чужую аудиторию без явного room/party не подставляем.
+ */
+function pickMustCoverEntry(
+  entries: ScoredAssemblyEntry[],
+  group: string,
+  summary: AdaptiveSummaryContext,
+  ordered: string[],
+): ScoredAssemblyEntry | null {
+  const pool = entries.filter(
+    (entry) => entry.group === group && mustCoverEligible(entry) && !ordered.includes(entry.id),
+  )
+  if (!pool.length) return null
+
+  if (group === 'rooms') {
+    const preferred = preferredRoomIds(summary.room, summary.partyType)
+    const hasRoomHint = Boolean(normalizeRoomHint(summary.room))
+    const hasParty = Boolean(summary.partyType)
+    for (const id of preferred) {
+      const hit = pool.find((entry) => entry.id === id)
+      if (!hit) continue
+      if (hit.score > 0 || hit.roomHit || hit.audienceHit) return hit
+      if (hasRoomHint && !hit.hasAudienceTags) return hit
+      if (hasRoomHint && (hit.id === preferred[0] || ROOMS_FALLBACK_IDS.includes(hit.id))) return hit
+      if (hasParty && hit.audienceHit) return hit
+      if (!hit.hasAudienceTags) return hit
+    }
+    const scored = pool.filter((entry) => entry.score > 0).sort(compareAssemblyEntries)
+    if (scored[0]) return scored[0]
+    const neutral = pool
+      .filter((entry) => !entry.hasAudienceTags)
+      .sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id, 'ru'))
+    return neutral[0] ?? null
+  }
+
+  if (group === 'treatment') {
+    for (const id of TREATMENT_FALLBACK_IDS) {
+      const hit = pool.find((entry) => entry.id === id)
+      if (hit && (hit.score > 0 || !hit.hasAudienceTags)) return hit
+    }
+    const scored = pool.filter((entry) => entry.score > 0).sort(compareAssemblyEntries)
+    if (scored[0]) return scored[0]
+    const neutral = pool
+      .filter((entry) => !entry.hasAudienceTags)
+      .sort((a, b) => b.priority - a.priority || a.id.localeCompare(b.id, 'ru'))
+    return neutral[0] ?? null
+  }
+
+  const scored = pool.filter((entry) => entry.score > 0).sort(compareAssemblyEntries)
+  return scored[0] ?? null
+}
+
 function deriveAdaptiveFlowIds(
   config: PropertyConfig,
   entries: ScoredAssemblyEntry[],
   rules: NonNullable<PropertyConfig['constructorV2']>['assembly'],
-  summary: {
-    topics: string[]
-    objections: string[]
-    partyType: string
-    fillRemaining: AssemblyFillRemaining
-  },
+  summary: AdaptiveSummaryContext,
 ): string[] {
   const maxSec = rules.maxAutoplaySec
   const maxBlocks = rules.maxBlocks
@@ -334,6 +531,7 @@ function deriveAdaptiveFlowIds(
   const wantNextStep = hasTopicInput || hasObjectionInput
   /** Reserve next-step until it is placed so body/fill never land between next-step and CTA. */
   let nextStepPending = wantNextStep
+  let treatmentPending = true
 
   const bestNextStep = () =>
     entries
@@ -347,15 +545,22 @@ function deriveAdaptiveFlowIds(
       )
       .sort(compareAssemblyEntries)[0]
 
+  const bestMustCoverTreatment = () =>
+    treatmentPending ? pickMustCoverEntry(entries, 'treatment', summary, ordered) : null
+
   const tailPendingCount = (forEntry?: { group?: string }) => {
     let count = alwaysEndEligible.filter((id) => !ordered.includes(id)).length
     if (nextStepPending && forEntry?.group !== 'next-step' && bestNextStep()) count += 1
+    if (treatmentPending && forEntry?.group !== 'treatment' && bestMustCoverTreatment()) count += 1
     return count
   }
   const tailPendingSec = (forEntry?: { group?: string }) => {
     let sec = alwaysEndSec
     if (nextStepPending && forEntry?.group !== 'next-step') {
       sec += bestNextStep()?.durationSec ?? 0
+    }
+    if (treatmentPending && forEntry?.group !== 'treatment') {
+      sec += bestMustCoverTreatment()?.durationSec ?? 0
     }
     return sec
   }
@@ -395,6 +600,22 @@ function deriveAdaptiveFlowIds(
     if (entry.group) selectedGroups.add(entry.group)
     if (entry.subgroup) selectedSubgroups.add(`${entry.group}.${entry.subgroup}`)
     if (entry.group === 'next-step') nextStepPending = false
+    if (entry.group === 'treatment') treatmentPending = false
+    return true
+  }
+
+  const pushMustCover = (group: string) => {
+    if (selectedGroups.has(group)) {
+      if (group === 'treatment') treatmentPending = false
+      return false
+    }
+    const entry = pickMustCoverEntry(entries, group, summary, ordered)
+    if (!entry) {
+      if (group === 'treatment') treatmentPending = false
+      return false
+    }
+    if (!pushCandidate(entry)) return false
+    annotateMustCover(entry, group)
     return true
   }
 
@@ -436,6 +657,8 @@ function deriveAdaptiveFlowIds(
       })
     }
   }
+
+  pushMustCover('rooms')
 
   if (isColdStart) {
     const coldStartIds = (rules.coldStartIds ?? []).filter(
@@ -510,6 +733,8 @@ function deriveAdaptiveFlowIds(
     })
   }
 
+  pushMustCover('treatment')
+
   if (wantNextStep) {
     selectSlot({
       limit: 1,
@@ -520,30 +745,6 @@ function deriveAdaptiveFlowIds(
 
   alwaysEndEligible.forEach((id) => pushIfFits(id))
   return ordered
-}
-
-/** Группы, которыми безопасно дожимать autoplay, если про них ещё не говорили. */
-const FILL_GROUP_ORDER = [
-  'treatment',
-  'food',
-  'wellness',
-  'leisure',
-  'territory',
-  'location',
-  'about',
-  'trust',
-  'price',
-  'price_value',
-] as const
-
-const FILL_GROUP_RANK: Map<string, number> = new Map(
-  FILL_GROUP_ORDER.map((group, index) => [group, index]),
-)
-
-const SOFT_FILL_MAX_EXTRA = 3
-
-function isFillEligibleGroup(group: string): boolean {
-  return FILL_GROUP_RANK.has(group)
 }
 
 /**
@@ -618,29 +819,6 @@ function fillUncoveredGroups(args: {
       filled += 1
     }
   }
-}
-
-function compareAssemblyEntries(a: ScoredAssemblyEntry, b: ScoredAssemblyEntry): number {
-  const scoreDiff = b.score - a.score
-  if (scoreDiff) return scoreDiff
-  const hitDiff =
-    b.objectionHits.length - a.objectionHits.length ||
-    Number(b.audienceHit) - Number(a.audienceHit) ||
-    b.topicHits.length - a.topicHits.length
-  if (hitDiff) return hitDiff
-  const priorityDiff = b.priority - a.priority
-  if (priorityDiff) return priorityDiff
-  return a.id.localeCompare(b.id, 'ru')
-}
-
-function comparePrimaryTopicEntries(topic: string, a: ScoredAssemblyEntry, b: ScoredAssemblyEntry): number {
-  const exactTopicDiff = Number(b.group === topic || b.subgroup === topic) - Number(a.group === topic || a.subgroup === topic)
-  if (exactTopicDiff) return exactTopicDiff
-  const audienceDiff = Number(b.audienceHit) - Number(a.audienceHit)
-  if (audienceDiff) return audienceDiff
-  const priorityDiff = b.priority - a.priority
-  if (priorityDiff) return priorityDiff
-  return compareAssemblyEntries(a, b)
 }
 
 export function deriveFlowIds(config: PropertyConfig, summary: GuestSummary): string[] {

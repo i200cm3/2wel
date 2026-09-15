@@ -23,7 +23,9 @@ import {
   clipLaneWidth,
   cueSnippet,
   cueVisualStartSec,
+  hostClipForCue,
   isLibraryDrag,
+  orphanClips,
   readLibrarySrc,
   sliderNumber,
 } from './timelineMath'
@@ -44,6 +46,7 @@ type Props = {
   blockPanel?: boolean
   onOpenLibrary?: () => void
   libraryCount?: number
+  onOpenCaptionTheme?: () => void
   /** Экраны меню — для выбора «после ролика» */
   menus: MenuScreenConfig[]
   defaultMenuId: string
@@ -142,6 +145,7 @@ export function TimelineTracks(props: Props) {
     blockPanel = false,
     onOpenLibrary,
     libraryCount,
+    onOpenCaptionTheme,
     menus,
     defaultMenuId,
     returnMenuId,
@@ -189,11 +193,16 @@ export function TimelineTracks(props: Props) {
 
   const [renaming, setRenaming] = useState(false)
   const [draftLabel, setDraftLabel] = useState(sequence.label)
+  /** Отдельная дорожка кадров: по умолчанию скрыта — бит = картинка + титр. */
+  const [showClipTrack, setShowClipTrack] = useState(false)
 
   useEffect(() => {
     setRenaming(false)
     setDraftLabel(sequence.label)
   }, [seqId, sequence.label])
+
+  const orphans = orphanClips(sequence.clips, cues)
+  const clipTrackVisible = showClipTrack || orphans.length > 0
 
   const commitRename = () => {
     const next = draftLabel.trim()
@@ -306,7 +315,12 @@ export function TimelineTracks(props: Props) {
             ) : null}
           </div>
           <p>
-            {sequence.clips.length} кадров · {total.toFixed(1)} с
+            {cues.length
+              ? `${cues.length} ${cues.length === 1 ? 'бит' : cues.length < 5 ? 'бита' : 'битов'}`
+              : `${sequence.clips.length} кадров`}
+            {' · '}
+            {total.toFixed(1)} с
+            {orphans.length > 0 ? ` · ${orphans.length} без титра` : null}
           </p>
           {!blockPanel && blockPlacement !== 'none' && menus.length > 0 ? (
             <div className="border-border/70 bg-muted/30 mt-3 flex max-w-md flex-col gap-1.5 rounded-md border px-3 py-2.5">
@@ -374,6 +388,23 @@ export function TimelineTracks(props: Props) {
           </div>
           <Button
             type="button"
+            variant={clipTrackVisible ? 'secondary' : 'outline'}
+            size="sm"
+            title={
+              orphans.length > 0 && !showClipTrack
+                ? 'Дорожка кадров открыта: есть кадры без титра'
+                : clipTrackVisible
+                  ? 'Скрыть отдельную дорожку кадров'
+                  : 'Показать дорожку кадров (порядок, trim, длительность)'
+            }
+            aria-pressed={clipTrackVisible}
+            onClick={() => setShowClipTrack((v) => !v)}
+          >
+            <Clapperboard data-icon="inline-start" aria-hidden />
+            Кадры
+          </Button>
+          <Button
+            type="button"
             variant="outline"
             size="sm"
             disabled={!sequence.clips.length}
@@ -393,6 +424,12 @@ export function TimelineTracks(props: Props) {
               {libraryCount != null ? (
                 <span className="text-muted-foreground text-xs font-normal">{libraryCount}</span>
               ) : null}
+            </Button>
+          ) : null}
+          {onOpenCaptionTheme ? (
+            <Button type="button" variant="outline" size="sm" onClick={onOpenCaptionTheme}>
+              <Type data-icon="inline-start" aria-hidden />
+              Титры
             </Button>
           ) : null}
         </div>
@@ -426,6 +463,7 @@ export function TimelineTracks(props: Props) {
               ))}
             </div>
 
+            {clipTrackVisible ? (
             <div className="editor-track">
               <div className="editor-track-label" title="Видео">
                 <Clapperboard size={14} aria-hidden />
@@ -632,40 +670,61 @@ export function TimelineTracks(props: Props) {
                 ) : null}
               </div>
             </div>
+            ) : null}
 
-            <div className="editor-track editor-track-text">
-              <div className="editor-track-label" title="Титры">
+            <div className="editor-track editor-track-text editor-track-beats">
+              <div className="editor-track-label" title="Биты · титр + кадр">
                 <Type size={14} aria-hidden />
               </div>
               <div
                 ref={cueLaneRef}
-                className="editor-track-lane editor-cue-lane"
+                className={`editor-track-lane editor-cue-lane${!clipTrackVisible && libDragSrc ? ' is-lib-drag' : ''}`}
                 role="list"
+                data-lib-drop={!clipTrackVisible ? 'lane' : undefined}
                 onClick={() => {
                   setSelectedCueId(null)
                   setSlidePreview(false)
+                }}
+                onDragOver={(e) => {
+                  if (clipTrackVisible) return
+                  if (!(isLibraryDrag(e.dataTransfer) || libDragSrc)) return
+                  e.preventDefault()
+                  e.dataTransfer.dropEffect = 'copy'
+                }}
+                onDrop={(e) => {
+                  if (clipTrackVisible) return
+                  const libSrc = readLibrarySrc(e.dataTransfer) || libDragSrc
+                  if (!libSrc) return
+                  e.preventDefault()
+                  addClip(libSrc)
+                  setLibDragSrc(null)
+                  setLibDropOnPreview(false)
                 }}
               >
                 {cues.map((cue, cueIndex) => {
                   const ttsSec = cue.ttsSrc ? ttsDurations[cue.ttsSrc] : undefined
                   const barSec =
                     ttsSec != null && ttsSec > 0 ? Math.min(ttsSec, cue.durationSec) : null
+                  const host = hostClipForCue(sequence.clips, cues, cue, cueIndex)
+                  const beatSelected =
+                    selectedCueId === cue.id || (host != null && selectedId === host.id)
                   return (
-                    <button
+                    <div
                       key={cue.id}
-                      type="button"
                       role="listitem"
+                      tabIndex={0}
                       className={[
-                        'editor-cue',
-                        selectedCueId === cue.id ? 'is-selected' : '',
+                        'editor-cue editor-beat',
+                        beatSelected ? 'is-selected' : '',
                         dragCueId === cue.id ? 'is-dragging' : '',
                         cue.ttsSrc ? 'has-tts' : '',
+                        host ? 'has-thumb' : '',
                       ]
                         .filter(Boolean)
                         .join(' ')}
                       style={{
                         left: cueStartPx(cue, cueIndex),
-                        width: Math.max(16, cue.durationSec * pxPerSec),
+                        width: Math.max(host ? 72 : 16, cue.durationSec * pxPerSec),
                       }}
                       title={
                         ttsSec != null
@@ -680,6 +739,12 @@ export function TimelineTracks(props: Props) {
                         }
                         selectCue(cue.id, { editCaption: true })
                       }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          selectCue(cue.id, { editCaption: true })
+                        }
+                      }}
                       onContextMenu={(e) => {
                         e.preventDefault()
                         e.stopPropagation()
@@ -687,11 +752,33 @@ export function TimelineTracks(props: Props) {
                       }}
                       onPointerDown={(e) => startCuePointerDrag(e, cue, 'move')}
                     >
+                      {host ? (
+                        <button
+                          type="button"
+                          className="editor-beat-thumb"
+                          title="Кадр бита · открыть настройки кадра"
+                          aria-label="Настройки кадра"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (cueDragMovedRef.current) {
+                              cueDragMovedRef.current = false
+                              return
+                            }
+                            selectClip(host.id)
+                          }}
+                          onPointerDown={(e) => e.stopPropagation()}
+                        >
+                          <ClipThumb src={host.src} timeSec={host.trimStartSec ?? 0} />
+                        </button>
+                      ) : null}
                       <span className="editor-cue-text">{cueSnippet(cue)}</span>
                       {barSec != null ? (
                         <span
                           className="editor-cue-tts-bar"
-                          style={{ width: Math.max(4, barSec * pxPerSec) }}
+                          style={{
+                            left: host ? 56 : 0,
+                            width: Math.max(4, barSec * pxPerSec - (host ? 56 : 0)),
+                          }}
                           title={`TTS ${barSec.toFixed(1)}с`}
                           aria-hidden
                         />
@@ -708,7 +795,7 @@ export function TimelineTracks(props: Props) {
                         aria-label="Изменить конец титра"
                         onPointerDown={(e) => startCuePointerDrag(e, cue, 'resize-end')}
                       />
-                    </button>
+                    </div>
                   )
                 })}
                 <Button
@@ -730,6 +817,50 @@ export function TimelineTracks(props: Props) {
                 >
                   <Plus aria-hidden />
                 </Button>
+                {!clipTrackVisible ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className={cn(
+                      'editor-track-add editor-track-add-clip-inline size-auto h-14 w-12 shrink-0 border-dashed transition-none',
+                      (libDragSrc || awaitingClipAdd) && 'border-primary bg-primary/10 text-primary',
+                    )}
+                    style={{
+                      left:
+                        (cues.length ? visualCueEndSec * pxPerSec : 0) +
+                        (cues.length ? TRACK_ADD_GAP : 4) +
+                        52,
+                    }}
+                    data-lib-drop="add"
+                    title="Добавить кадр из библиотеки"
+                    aria-label="Добавить кадр"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      beginAddClip()
+                    }}
+                    onDragOver={(e) => {
+                      if (!(isLibraryDrag(e.dataTransfer) || libDragSrc)) return
+                      e.preventDefault()
+                      e.stopPropagation()
+                      e.dataTransfer.dropEffect = 'copy'
+                    }}
+                    onDrop={(e) => {
+                      const libSrc = readLibrarySrc(e.dataTransfer) || libDragSrc
+                      if (!libSrc) return
+                      e.preventDefault()
+                      e.stopPropagation()
+                      addClip(libSrc)
+                      setLibDragSrc(null)
+                      setLibDropOnPreview(false)
+                    }}
+                  >
+                    <Images aria-hidden />
+                  </Button>
+                ) : null}
+                {!clipTrackVisible && libDragSrc && !sequence.clips.length ? (
+                  <p className="editor-track-empty">Отпустите, чтобы добавить кадр</p>
+                ) : null}
               </div>
             </div>
           </div>

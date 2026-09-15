@@ -58,6 +58,32 @@ export function cueEndSec(cue: Pick<StoryCue, 'startSec' | 'durationSec'>) {
   return cue.startSec + cue.durationSec
 }
 
+/**
+ * Кадр «хозяин» титра: при 1:1 — по индексу, иначе — клип в момент startSec.
+ */
+export function hostClipForCue(
+  clips: StoryClip[],
+  cues: StoryCue[],
+  cue: StoryCue,
+  cueIndex: number,
+): StoryClip | null {
+  if (!clips.length) return null
+  if (clips.length === cues.length && clips[cueIndex]) return clips[cueIndex]!
+  return clipAtTime(clips, cue.startSec)
+}
+
+/** Клипы, которые ни один cue не показывает как хозяина (видны только на дорожке кадров). */
+export function orphanClips(clips: StoryClip[], cues: StoryCue[]): StoryClip[] {
+  if (!clips.length) return []
+  if (!cues.length) return [...clips]
+  const hosted = new Set<string>()
+  for (let i = 0; i < cues.length; i++) {
+    const host = hostClipForCue(clips, cues, cues[i]!, i)
+    if (host) hosted.add(host.id)
+  }
+  return clips.filter((c) => !hosted.has(c.id))
+}
+
 export function snapThresholdSec(pxPerSec: number) {
   return 12 / pxPerSec
 }

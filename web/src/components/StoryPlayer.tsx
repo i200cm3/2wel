@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react'
+import MarqueeImport from 'react-fast-marquee'
 import { VIEW_ASPECT, focusToViewportLayout } from '../lib/cropMath'
 import { decodeImgElement, preloadImage, preloadVideo } from '../lib/preloadImages'
 import { ttsPlaybackUrl } from '../lib/ttsUrl'
@@ -12,9 +13,19 @@ import {
   clipMediaKind,
   clipStartTimes,
   normalizeClip,
+  type CaptionMode,
   type StoryClip,
   type StoryCue,
 } from '../types/story'
+
+/** Vite/CJS: default иногда приходит как { default: Component }. */
+const Marquee = (() => {
+  let mod: unknown = MarqueeImport
+  while (mod && typeof mod === 'object' && 'default' in (mod as object)) {
+    mod = (mod as { default: unknown }).default
+  }
+  return mod as typeof MarqueeImport
+})()
 
 type Props = {
   clips: StoryClip[]
@@ -54,13 +65,61 @@ type Props = {
   outroTtsSrc?: string
   /** Внешний audio (живёт в Presentation, не размонтируется с слайдом) */
   ttsAudioRef?: { current: HTMLAudioElement | null }
+  /**
+   * Дождаться жестовой разблокировки TTS (silent play в Presentation.armSound),
+   * иначе первая озвучка стартует поверх data: URI / muted и «молчит», пока unlock не закончится.
+   */
+  ttsUnlockGateRef?: { current: Promise<void> }
   /** Первые кадры: done/total, чтобы гость видел ход загрузки */
   onMediaProgress?: (done: number, total: number) => void
   /** Прогресс шкалы блока (для полосок / «Далее» в презентации) */
   onPlaybackProgress?: (progress: PlaybackProgress) => void
   /** Инкремент → досрочно завершить весь блок (onEnded) */
   skipRequest?: number
+  /**
+   * Бегущая строка: по умолчанию замирает вместе с paused.
+   * false — крутить даже на паузе (превью редактора со статичным кадром).
+   */
+  marqueePaused?: boolean
+  /**
+   * Общая бегущая строка снаружи (все титры flow до меню).
+   * Если задана — локальные cues не склеиваются.
+   * Игнорируется при captionMode === 'cues'.
+   */
+  captionMarquee?: CaptionMarquee | null
+  /**
+   * Глобально разрешить заголовок блока (theme.showTitle).
+   * false — не показывать и не давать править, даже если clip.showTitle !== false.
+   */
+  showTitle?: boolean
+  /**
+   * Режим титров: бегущая строка или по cue на шкале (YouTube / Instagram).
+   * По умолчанию — marquee.
+   */
+  captionMode?: CaptionMode
+  /**
+   * Скорость бегущей строки, px/sec. Используется в локальной склейке cues,
+   * если captionMarquee снаружи не передан.
+   */
+  marqueeSpeed?: number
+  /**
+   * Время на шкале для режима cues (превью в редакторе / выбранный cue).
+   * Если не задано — берётся из воспроизведения или старта activeClipId.
+   */
+  captionTimeSec?: number
 }
+
+export type CaptionMarquee = {
+  text: string
+  key: string
+  /** px/sec (react-fast-marquee) */
+  speed: number
+}
+
+/** Допустимый диапазон скорости бегущей строки, px/sec. */
+export const MARQUEE_SPEED_MIN = 10
+export const MARQUEE_SPEED_MAX = 200
+export const MARQUEE_SPEED_DEFAULT = 45
 
 export type PlaybackProgress = {
   clipIndex: number
@@ -177,14 +236,25 @@ export function StoryPlayer({
   userMuted = false,
   outroTtsSrc,
   ttsAudioRef,
+  ttsUnlockGateRef,
   onMediaProgress,
   onPlaybackProgress,
   skipRequest = 0,
+  captionMarquee = null,
+  showTitle = true,
+  captionMode = 'marquee',
+  marqueeSpeed = MARQUEE_SPEED_DEFAULT,
+  captionTimeSec,
+  marqueePaused,
 }: Props) {
+  const useMarquee = captionMode !== 'cues'
+  const marqueePlay = marqueePaused ?? paused
+  const resolvedMarqueeSpeed = clampMarqueeSpeed(marqueeSpeed)
   const rootRef = useRef<HTMLDivElement>(null)
   const internalTtsRef = useRef<HTMLAudioElement | null>(null)
   const ttsRef = ttsAudioRef ?? internalTtsRef
   const ownsTtsAudio = !ttsAudioRef
+  const ttsUnlockGateRefStable = ttsUnlockGateRef
   const outroTtsSrcRef = useRef(outroTtsSrc)
   outroTtsSrcRef.current = outroTtsSrc
   const skipFnRef = useRef<(() => void) | null>(null)
@@ -232,7 +302,8 @@ export function StoryPlayer({
   const [animToken, setAnimToken] = useState(0)
   /** Первый кадр (и по возможности весь блок) уже в кэше — можно стартовать таймер */
   const [mediaReady, setMediaReady] = useState(false)
-  const [timelineSec, setTimelineSec] = useState(0)
+  /** Шкала блока для титров в режиме cues */
+  const [playCaptionSec, setPlayCaptionSec] = useState(0)
   const endedRef = useRef(false)
   const onEndedRef = useRef(onEnded)
   const onClipChangeRef = useRef(onClipChange)
@@ -422,6 +493,7 @@ export function StoryPlayer({
     endedRef.current = false
     if (!activeClipId) {
       setIndex(0)
+      setPlayCaptionSec(0)
       setExitingIndex(null)
       setExitMode(null)
       setEntering(false)
@@ -478,7 +550,6 @@ export function StoryPlayer({
     setExitMode(null)
     setEntering(false)
     setAnimToken((t) => t + 1)
-    setTimelineSec(0)
 
     const clearExit = () => {
       setExitingIndex(null)
@@ -668,22 +739,32 @@ export function StoryPlayer({
           )
         }
 
-        if (pausedRef.current) {
-          const poll = window.setInterval(() => {
-            if (cancelled || playId !== ttsPlayGen) {
-              window.clearInterval(poll)
-              finish()
-              return
-            }
-            if (!pausedRef.current) {
-              window.clearInterval(poll)
-              begin()
-            }
-          }, 80)
-          pendingCueTimers.push(poll)
+        const startWhenReady = () => {
+          if (pausedRef.current) {
+            const poll = window.setInterval(() => {
+              if (cancelled || playId !== ttsPlayGen) {
+                window.clearInterval(poll)
+                finish()
+                return
+              }
+              if (!pausedRef.current) {
+                window.clearInterval(poll)
+                begin()
+              }
+            }, 80)
+            pendingCueTimers.push(poll)
+            return
+          }
+          begin()
+        }
+
+        // Ждём жестовый unlock в Presentation — иначе silent data: / muted гоняется с первой фразой.
+        const gate = ttsUnlockGateRefStable?.current
+        if (gate) {
+          void gate.then(startWhenReady, startWhenReady)
           return
         }
-        begin()
+        startWhenReady()
       })
 
     const waitTtsIdle = () =>
@@ -880,7 +961,6 @@ export function StoryPlayer({
         const clipEndMs = ((starts[from] ?? 0) + clipHoldSec(safeClips[from]!)) * 1000
         seqElapsedMs = Math.min(seqElapsedMs, Math.max(0, clipEndMs - 1))
         seqMark = performance.now()
-        setTimelineSec(seqElapsedMs / 1000)
         holdFreeze = true
         setExitingIndex(from)
         setExitMode('hold')
@@ -902,6 +982,7 @@ export function StoryPlayer({
     }
 
     const reportProgress = (clipIdx: number, t: number) => {
+      setPlayCaptionSec(t)
       const count = safeClips.length
       const start = starts[clipIdx] ?? 0
       const hold = clipHoldSec(safeClips[clipIdx]!)
@@ -951,7 +1032,6 @@ export function StoryPlayer({
       }
       seqElapsedMs = seqEndSec * 1000
       seqMark = performance.now()
-      setTimelineSec(seqEndSec)
       reportProgress(last, seqEndSec)
       void finishSequence()
     }
@@ -966,7 +1046,6 @@ export function StoryPlayer({
       if (cancelled || endedRef.current) return
       if (holdFreeze) return
       const t = nowElapsedMs() / 1000
-      setTimelineSec(t)
       const next = Math.min(clipIndexAt(t), Math.max(0, safeClips.length - 1))
       if (next !== i) {
         // Клипы уже выровнены под cue (syncClipsToCues); шкала ждёт хвост TTS (ttsHoldUntilMs).
@@ -985,7 +1064,6 @@ export function StoryPlayer({
         seqMark = performance.now()
         goTo(i, 0)
         i = 0
-        setTimelineSec(0)
         reportProgress(0, 0)
         ttsChainTail = playSequenceTts()
         return
@@ -1010,16 +1088,51 @@ export function StoryPlayer({
     }
   }, [clipsKey, cuesKey, loop, activeClipId, mediaReady, ownsTtsAudio])
 
-  const liveCue = activeCueAt(cues, timelineSec)
-  const cueTextVisible = liveCue?.showText !== false
+  /** Титры: снаружи (весь flow до меню) или склейка cues блока (редактор). */
+  const localMarquee = useMemo((): CaptionMarquee | null => {
+    if (!useMarquee || captionMarquee) return null
+    const list = cues
+      .filter((c) => c.showText !== false && Boolean(c.text?.trim()))
+      .slice()
+      .sort((a, b) => a.startSec - b.startSec || a.id.localeCompare(b.id))
+    if (!list.length) return null
+    const text = list.map((c) => c.text!.trim()).join('   ·   ')
+    return {
+      text,
+      key: list.map((c) => c.id).join('|'),
+      speed: resolvedMarqueeSpeed,
+    }
+  }, [useMarquee, captionMarquee, cues, resolvedMarqueeSpeed])
+  const marquee = useMarquee ? (captionMarquee ?? localMarquee) : null
+
+  const clipStarts = useMemo(() => clipStartTimes(safeClips), [safeClips])
+  const resolvedCaptionSec = useMemo(() => {
+    if (typeof captionTimeSec === 'number' && Number.isFinite(captionTimeSec)) {
+      return Math.max(0, captionTimeSec)
+    }
+    if (paused && activeClipId) {
+      const clipIdx = safeClips.findIndex((c) => c.id === activeClipId)
+      if (clipIdx >= 0) return clipStarts[clipIdx] ?? 0
+    }
+    return playCaptionSec
+  }, [captionTimeSec, paused, activeClipId, safeClips, clipStarts, playCaptionSec])
+
+  const cueLine = useMemo(() => {
+    if (useMarquee || editable) return null
+    const cue = activeCueAt(cues, resolvedCaptionSec)
+    if (!cue || cue.showText === false) return null
+    const text = cue.text?.trim()
+    return text || null
+  }, [useMarquee, editable, cues, resolvedCaptionSec])
+
   const line = editable
     ? editShowLine
       ? selectedCueText(editLine, lines)
       : null
-    : cueTextVisible && liveCue?.text?.trim()
-      ? liveCue.text
-      : null
-  const titleVisible = safeClips[index]?.showTitle !== false
+    : useMarquee
+      ? (marquee?.text ?? null)
+      : cueLine
+  const titleVisible = showTitle !== false && safeClips[index]?.showTitle !== false
   const visibleTitle = titleVisible ? title : undefined
   const hasCopy = Boolean(visibleTitle || line)
   const hasEditableCopy = editable && (titleVisible || editShowLine)
@@ -1159,7 +1272,7 @@ export function StoryPlayer({
       {showCopy ? (
         <div
           ref={copyRef}
-          className={`story-copy${editable ? ' is-editable' : ''}`}
+          className={`story-copy${editable ? ' is-editable' : ''}${!useMarquee ? ' is-cues' : ''}`}
           style={captionBarStyle as CSSProperties | undefined}
         >
           <div className="story-copy-title">
@@ -1187,8 +1300,15 @@ export function StoryPlayer({
                 multiline
                 onChange={onLineChange}
               />
+            ) : marquee ? (
+              <MarqueeCaption
+                text={marquee.text}
+                cueKey={marquee.key}
+                speed={marquee.speed}
+                paused={marqueePlay}
+              />
             ) : line ? (
-              <p className="story-line">{line}</p>
+              <p className={`story-line${!useMarquee ? ' is-cue' : ''}`}>{line}</p>
             ) : null}
           </div>
         </div>
@@ -1199,4 +1319,83 @@ export function StoryPlayer({
 
 function selectedCueText(editLine: string | undefined, lines: string[] | undefined) {
   return editLine || (lines?.length ? lines[0] : null) || null
+}
+
+/** Ограничивает скорость бегущей строки (px/sec). */
+export function clampMarqueeSpeed(pxPerSec: number): number {
+  if (!Number.isFinite(pxPerSec)) return MARQUEE_SPEED_DEFAULT
+  return Math.min(MARQUEE_SPEED_MAX, Math.max(MARQUEE_SPEED_MIN, Math.round(pxPerSec)))
+}
+
+/**
+ * @deprecated Используйте theme.marqueeSpeed / clampMarqueeSpeed.
+ * Оставлено для старых вызовов: раньше скорость = ширина текста / длительность.
+ */
+export function marqueeSpeedPxPerSec(
+  _text: string,
+  _durationSec: number,
+  themeSpeed?: number,
+): number {
+  return clampMarqueeSpeed(
+    typeof themeSpeed === 'number' ? themeSpeed : MARQUEE_SPEED_DEFAULT,
+  )
+}
+
+/**
+ * Бегущая строка на CSS (react-fast-marquee).
+ * Перед текстом — пустой lead = ширина экрана, чтобы старт был справа за кадром.
+ */
+export function MarqueeCaption({
+  text,
+  cueKey,
+  speed,
+  paused = false,
+}: {
+  text: string
+  cueKey: string
+  speed: number
+  paused?: boolean
+}) {
+  const trackRef = useRef<HTMLDivElement>(null)
+  const [leadW, setLeadW] = useState(0)
+
+  useLayoutEffect(() => {
+    const track = trackRef.current
+    if (!track) return
+    const measure = () => {
+      const next = Math.max(0, Math.ceil(track.clientWidth))
+      setLeadW((prev) => (prev === next ? prev : next))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(track)
+    return () => ro.disconnect()
+  }, [cueKey, text])
+
+  return (
+    <div ref={trackRef} className="story-line-marquee">
+      {leadW > 0 ? (
+        <Marquee
+          key={`${cueKey}:${leadW}`}
+          className="story-line-marquee-rf"
+          play={!paused}
+          speed={speed}
+          direction="left"
+          gradient={false}
+          pauseOnHover={false}
+          pauseOnClick={false}
+        >
+          <span
+            className="story-line-marquee-lead"
+            style={{ width: leadW }}
+            aria-hidden
+          />
+          <p className="story-line is-marquee">{text}</p>
+          <span className="story-line-marquee-gap" aria-hidden>
+            {'   ·   '}
+          </span>
+        </Marquee>
+      ) : null}
+    </div>
+  )
 }

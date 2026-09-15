@@ -145,9 +145,9 @@ describe('deriveFlowIds · adaptive slots', () => {
     assert.deepEqual(flow, [
       'intro',
       'greeting',
-      'family_with_kids',
       'rooms_family',
-      'objection_price',
+      'family_with_kids',
+      'food_family',
       'next_step_ask_price',
       'cta_whatsapp',
     ])
@@ -241,7 +241,7 @@ describe('deriveFlowIds · adaptive slots', () => {
     assert.equal(fillIds.filter((id) => flow.includes(id)).length, 3)
   })
 
-  it('does not soft-fill when fillRemaining is off', () => {
+  it('still must-covers treatment when fillRemaining is off', () => {
     const config = adaptiveConfig()
     config.constructorV2!.assembly.maxAutoplaySec = 120
     config.constructorV2!.assembly.maxBlocks = 12
@@ -263,7 +263,8 @@ describe('deriveFlowIds · adaptive slots', () => {
       fillRemaining: 'off',
     })
 
-    assert.equal(flow.includes('treatment_start'), false)
+    assert.ok(flow.includes('treatment_start'), flow.join(' -> '))
+    assert.equal(flow.includes('leisure_calm'), false)
   })
 
   it('places soft-fill before next-step so CTA stays adjacent', () => {
@@ -305,6 +306,7 @@ describe('deriveFlowIds · adaptive slots', () => {
     config.constructorV2!.assembly.maxBlocks = 10
     for (const [id, patch] of [
       ['territory_walks', { group: 'territory', priority: 6, topicTags: ['territory'] }],
+      ['rooms_luxury', { group: 'rooms', priority: 5, topicTags: ['room'] }],
       ['treatment_individual_plan', { group: 'treatment', subgroup: 'individual-plan', priority: 7, topicTags: ['treatment'] }],
       ['treatment_profile_cardio', {
         group: 'treatment',
@@ -352,6 +354,7 @@ describe('deriveFlowIds · adaptive slots', () => {
     assert.deepEqual(flow, [
       'intro',
       'greeting',
+      'rooms_luxury',
       'treatment_individual_plan',
       'food_diet',
       'leisure_active',
@@ -370,6 +373,8 @@ describe('deriveFlowIds · adaptive slots', () => {
     config.constructorV2!.assembly.maxBlocks = 8
     config.sequences.food_diet = sequence('food_diet')
     config.sequences.leisure_active = sequence('leisure_active')
+    config.sequences.rooms_luxury = sequence('rooms_luxury')
+    config.sequences.treatment_start = sequence('treatment_start')
     config.constructorV2!.sequenceMetaById.food_diet = meta({
       group: 'food',
       priority: 9,
@@ -379,6 +384,16 @@ describe('deriveFlowIds · adaptive slots', () => {
       group: 'leisure',
       priority: 9,
       topicTags: ['leisure'],
+    })
+    config.constructorV2!.sequenceMetaById.rooms_luxury = meta({
+      group: 'rooms',
+      priority: 5,
+      topicTags: ['room'],
+    })
+    config.constructorV2!.sequenceMetaById.treatment_start = meta({
+      group: 'treatment',
+      priority: 4,
+      topicTags: ['treatment'],
     })
     config.constructorV2!.assembly.coldStartIds = ['leisure_active', 'food_diet']
 
@@ -393,7 +408,15 @@ describe('deriveFlowIds · adaptive slots', () => {
       fillRemaining: 'aggressive',
     })
 
-    assert.deepEqual(flow, ['intro', 'greeting', 'leisure_active', 'food_diet', 'cta_whatsapp'])
+    assert.deepEqual(flow, [
+      'intro',
+      'greeting',
+      'rooms_luxury',
+      'leisure_active',
+      'food_diet',
+      'treatment_start',
+      'cta_whatsapp',
+    ])
   })
 
   it('includes menu-only blocks when they are listed in coldStartIds', () => {

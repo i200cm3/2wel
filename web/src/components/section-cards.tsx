@@ -25,8 +25,9 @@ export function SectionCards({
   status?: string
   periodLabel: string
 }) {
-  const funnel = stats.funnel ?? { open: 0, autoplay: 0, menu: 0, whatsapp: 0, contact: 0 }
+  const funnel = stats.funnel ?? { open: 0, play: 0, autoplay: 0, menu: 0, whatsapp: 0, contact: 0 }
   const opened = funnel.open
+  const played = funnel.play ?? 0
   const contacts = funnel.contact ?? funnel.whatsapp
   return (
     <div className="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card">
@@ -51,19 +52,21 @@ export function SectionCards({
       </Card>
       <Card className={cardClass}>
         <CardHeader>
-          <CardDescription>Досмотрел автопоказ</CardDescription>
+          <CardDescription>Нажал Play</CardDescription>
           <CardTitle className="font-sans text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {funnel.autoplay}
+            {played}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
               <PlayIcon />
-              {pct(funnel.autoplay, opened)}
+              {pct(played, opened)}
             </Badge>
           </CardAction>
         </CardHeader>
         <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="text-muted-foreground">Дошёл до конца вступительного ролика</div>
+          <div className="text-muted-foreground">
+            Начал просмотр · досмотрел автопоказ {funnel.autoplay} ({pct(funnel.autoplay, opened)})
+          </div>
         </CardFooter>
       </Card>
       <Card className={cardClass}>

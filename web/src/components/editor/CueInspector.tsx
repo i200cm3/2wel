@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
-import { Copy, Lock, LockOpen, Mic, Play, Sparkles, Square, Trash2, Type } from 'lucide-react'
+import {
+  Copy,
+  Lock,
+  LockOpen,
+  Mic,
+  Paintbrush,
+  Play,
+  Square,
+  Trash2,
+  Type,
+} from 'lucide-react'
 import { StoryPlayer } from '@/components/StoryPlayer'
 import { TtsFileSelect } from '@/components/TtsFileSelect'
 import { Button } from '@/components/ui/button'
@@ -8,29 +18,24 @@ import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
-import { GUEST_SUBSTITUTION_HINT } from '@/lib/guestSummaryFields'
+import { guestSubstitutionHint } from '@/lib/guestSummaryFields'
 import {
   buildTtsTextFromCaption,
   generateTts,
   speakTextForTts,
-  ttsTextNeedsGuestName,
+  ttsTextNeedsPersonalization,
 } from '@/lib/ttsGenerate'
 import { ttsPlaybackUrl } from '@/lib/ttsUrl'
 import {
   captionBarStyle,
-  defaultBlockMeta,
-  type BlockMeta,
-  type PropertyBrand,
   type PropertyTheme,
   type StoryClip,
   type StoryCue,
   type StorySequence,
 } from '@/types/story'
-import { CaptionThemeFields } from './CaptionThemeFields'
-import { CueCopyGenerateDialog } from './CueCopyGenerateDialog'
 import {
+  inspectorCueGridClass,
   inspectorFieldsClass,
-  inspectorGridClass,
   inspectorLiveFieldsClass,
   inspectorLiveShellClass,
   inspectorShellClass,
@@ -59,12 +64,10 @@ type Props = {
   updateCue: (cueId: string, patch: Partial<StoryCue>) => void
   updateClip: (clipId: string, patch: Partial<StoryClip>) => void
   removeCue: (cueId: string) => void
-  patchTheme: (patch: Partial<PropertyTheme>) => void
+  onOpenCaptionTheme?: () => void
   cuePreviewClip: StoryClip | null
-  isAdmin?: boolean
-  brand?: PropertyBrand
-  copyFacts?: string
-  blockMeta?: BlockMeta
+  /** Показывать подсказки про {hello}. */
+  helloFromDialog?: boolean
 }
 
 export function CueInspector({
@@ -88,20 +91,17 @@ export function CueInspector({
   updateCue,
   updateClip,
   removeCue,
-  patchTheme,
+  onOpenCaptionTheme,
   cuePreviewClip,
-  isAdmin = false,
-  brand,
-  copyFacts = '',
-  blockMeta,
+  helloFromDialog = false,
 }: Props) {
+  const substitutionHint = guestSubstitutionHint(helloFromDialog)
   const [ttsBusy, setTtsBusy] = useState(false)
   const [ttsGenMessage, setTtsGenMessage] = useState<string | null>(null)
   const [ttsPreviewBump, setTtsPreviewBump] = useState(0)
   const [ttsPreviewPlaying, setTtsPreviewPlaying] = useState(false)
   /** Пока есть сгенерированный TTS — поле текста заблокировано, пока не снимут замок. */
   const [ttsUnlocked, setTtsUnlocked] = useState(false)
-  const [aiOpen, setAiOpen] = useState(false)
   const ttsPreviewAudioRef = useRef<HTMLAudioElement | null>(null)
   const fieldsRef = useRef<HTMLDivElement>(null)
   const scrollerRef = useRef<HTMLElement | null>(null)
@@ -183,17 +183,18 @@ export function CueInspector({
   }, [selectedCue.id])
 
   const previewClip = cuePreviewClip ?? sequence.clips[0]
-  const showTitle = previewClip?.showTitle !== false
+  const titlesEnabled = theme.showTitle !== false
+  const showTitle = titlesEnabled && previewClip?.showTitle !== false
   const showText = selectedCue.showText !== false
   const hasGeneratedTts = Boolean(selectedCue.ttsSrc)
-  const ttsPersonalized = ttsTextNeedsGuestName(selectedCue.ttsText)
+  const ttsPersonalized = ttsTextNeedsPersonalization(selectedCue.ttsText)
   const ttsLocked = hasGeneratedTts && !ttsUnlocked && !ttsPersonalized
-  const cueIndex = Math.max(
-    0,
-    filledCues.findIndex((cue) => cue.id === selectedCue.id),
-  )
-  const canUseAi = isAdmin && Boolean(brand) && filledCues.length > 0
-  const resolvedMeta = blockMeta ?? defaultBlockMeta()
+  const previewCaptionMode = theme.captionMode === 'cues' ? 'cues' : 'marquee'
+  /** В бегущей строке превью — только этот титр, иначе чужие тексты маскируют showText. */
+  const previewCues =
+    previewCaptionMode === 'marquee'
+      ? [filledCues.find((cue) => cue.id === selectedCue.id) ?? selectedCue]
+      : filledCues
 
   const buildTtsFromCaption = useCallback(
     () =>
@@ -252,7 +253,7 @@ export function CueInspector({
         const voiceNote = result.voiceId ? ` · voice ${result.voiceId.slice(0, 8)}…` : ''
         const file = ttsFileLabel(result.src)
         const dur = ttsSec ? ` · ${ttsSec.toFixed(1)}с` : ''
-        const personal = ttsTextNeedsGuestName(draft)
+        const personal = ttsTextNeedsPersonalization(draft)
           ? ' · для гостя пересоберётся при выдаче ссылки'
           : ''
         setTtsGenMessage(`Подключено · ${file}${dur}${voiceNote}${personal}`)
@@ -277,25 +278,24 @@ export function CueInspector({
   return (
     <div
       ref={inspectorRef}
-      className={`${inspectorShellClass} ${inspectorGridClass} ${inspectorLiveShellClass}`}
+      className={`${inspectorShellClass} ${inspectorCueGridClass} ${inspectorLiveShellClass}`}
     >
       <div className="editor-inspector-stage-wrap min-w-0 min-[901px]:h-full min-[901px]:min-h-0">
         <div className={inspectorStageClass}>
           <div className={`editor-inspector-phone${isLandscape ? ' is-landscape' : ''}`}>
             <StoryPlayer
-              key={`cue-live-${selectedCue.id}-${cuePreviewClip?.id ?? 'empty'}-${theme.orientation}`}
+              key={`cue-live-${selectedCue.id}-${cuePreviewClip?.id ?? 'empty'}-${theme.orientation}-${previewCaptionMode}`}
               clips={sequence.clips}
-              cues={filledCues}
+              cues={previewCues}
               title={displayTitle}
+              showTitle={titlesEnabled}
+              captionMode={previewCaptionMode}
+              marqueeSpeed={theme.marqueeSpeed}
+              captionTimeSec={selectedCue.startSec + 0.01}
               captionBarStyle={captionBarStyle(theme)}
               paused
-              editable
+              marqueePaused={false}
               activeClipId={cuePreviewClip?.id ?? sequence.clips[0]?.id ?? null}
-              editTitle={sequenceTitle}
-              editLine={selectedCue.text ?? ''}
-              editShowLine={showText}
-              onTitleChange={onSequenceTitleChange}
-              onLineChange={(value) => updateCue(selectedCue.id, { text: value })}
               onEnded={() => undefined}
             />
           </div>
@@ -303,37 +303,33 @@ export function CueInspector({
       </div>
       <div ref={fieldsRef} className={`${inspectorFieldsClass} ${inspectorLiveFieldsClass}`}>
         <div className="flex min-w-0 flex-col gap-3">
-          {canUseAi ? (
-            <div className="flex justify-end">
-              <Button type="button" variant="outline" size="sm" onClick={() => setAiOpen(true)}>
-                <Sparkles data-icon="inline-start" />
-                ИИ · титр
-              </Button>
-            </div>
-          ) : null}
-          <Field orientation="horizontal" data-disabled={!previewClip || undefined}>
-            <Switch
-              id="editor-show-title"
-              checked={showTitle}
-              disabled={!previewClip}
-              onCheckedChange={(checked) => {
-                if (!previewClip) return
-                updateClip(previewClip.id, { showTitle: checked === true })
-              }}
-            />
-            <FieldLabel htmlFor="editor-show-title">Показывать заголовок</FieldLabel>
-          </Field>
-          {showTitle ? (
-            <Field>
-              <FieldLabel htmlFor="editor-block-title">Заголовок</FieldLabel>
-              <Input
-                id="editor-block-title"
-                value={sequenceTitle}
-                placeholder="Здравствуйте, {name}!"
-                onChange={(e) => onSequenceTitleChange(e.target.value)}
-              />
-              <FieldDescription>{GUEST_SUBSTITUTION_HINT}</FieldDescription>
-            </Field>
+          {titlesEnabled ? (
+            <>
+              <Field orientation="horizontal" data-disabled={!previewClip || undefined}>
+                <Switch
+                  id="editor-show-title"
+                  checked={showTitle}
+                  disabled={!previewClip}
+                  onCheckedChange={(checked) => {
+                    if (!previewClip) return
+                    updateClip(previewClip.id, { showTitle: checked === true })
+                  }}
+                />
+                <FieldLabel htmlFor="editor-show-title">Показывать заголовок</FieldLabel>
+              </Field>
+              {showTitle ? (
+                <Field>
+                  <FieldLabel htmlFor="editor-block-title">Заголовок</FieldLabel>
+                  <Input
+                    id="editor-block-title"
+                    value={sequenceTitle}
+                    placeholder="Здравствуйте, {name}!"
+                    onChange={(e) => onSequenceTitleChange(e.target.value)}
+                  />
+                  <FieldDescription>{substitutionHint}</FieldDescription>
+                </Field>
+              ) : null}
+            </>
           ) : null}
           <Field orientation="horizontal">
             <Switch
@@ -355,7 +351,7 @@ export function CueInspector({
               placeholder="Текст титра · {name} — имя гостя"
               onChange={(e) => updateCue(selectedCue.id, { text: e.target.value })}
             />
-            <FieldDescription>{GUEST_SUBSTITUTION_HINT}</FieldDescription>
+            <FieldDescription>{substitutionHint}</FieldDescription>
             {!showText ? (
               <FieldDescription>Текст сохранится для таймлайна и TTS, но на слайде не покажется.</FieldDescription>
             ) : null}
@@ -381,14 +377,7 @@ export function CueInspector({
                 setTtsGenMessage(null)
               }}
             />
-            {ttsTextNeedsGuestName(selectedCue.ttsText) ? (
-              <p className="editor-hint">
-                Есть {'{name}'} или {'{hello}'} — при выдаче ссылки озвучка соберётся заново с данными
-                гостя и текущим голосом проекта.
-              </p>
-            ) : (
-              <FieldDescription>{GUEST_SUBSTITUTION_HINT}</FieldDescription>
-            )}
+            <FieldDescription>{substitutionHint}</FieldDescription>
             <div className="editor-tts-actions">
               {hasGeneratedTts ? (
                 <Button
@@ -532,12 +521,6 @@ export function CueInspector({
                 </Button>
               </div>
             </div>
-            {ttsPersonalized ? (
-              <p className="editor-hint">
-                В тексте есть {'{name}'} — файл для гостя соберётся при выдаче ссылки. Выбор файла
-                отключён.
-              </p>
-            ) : null}
           </Field>
           {selectedCue.ttsSrc ? (
             <audio
@@ -568,26 +551,13 @@ export function CueInspector({
             />
           ) : null}
           {ttsError ? <p className="editor-hint">TTS: {ttsError}</p> : null}
-          {selectedCue.ttsSrc ? (
-            <p className="editor-hint">
-              Подключено · старт в момент cue
-              {ttsDurations[selectedCue.ttsSrc] != null
-                ? ` · ${ttsDurations[selectedCue.ttsSrc]!.toFixed(1)}с`
-                : ''}
-              ; длительность титра ≥ озвучки.
-            </p>
-          ) : (
-            <p className="editor-hint">
-              После генерации файл сам подключится к этому титру. Файлы только этого проекта
-              {ttsFiles.length ? ` · ${ttsFiles.length} шт.` : ''}.
-            </p>
-          )}
-          <CaptionThemeFields theme={theme} onPatch={patchTheme} />
-          <p className="editor-hint">
-            Начало: {selectedCue.startSec.toFixed(1)}с · длительность:{' '}
-            {selectedCue.durationSec.toFixed(1)}с.
-          </p>
           <div className="flex flex-wrap gap-2">
+            {onOpenCaptionTheme ? (
+              <Button type="button" variant="outline" size="sm" onClick={onOpenCaptionTheme}>
+                <Paintbrush data-icon="inline-start" aria-hidden />
+                Оформление титров
+              </Button>
+            ) : null}
             <Button type="button" variant="destructive" size="sm" onClick={() => removeCue(selectedCue.id)}>
               <Trash2 data-icon="inline-start" aria-hidden />
               Удалить титр
@@ -595,29 +565,6 @@ export function CueInspector({
           </div>
         </div>
       </div>
-      {canUseAi && brand ? (
-        <CueCopyGenerateDialog
-          open={aiOpen}
-          onOpenChange={setAiOpen}
-          brand={brand}
-          copyFacts={copyFacts}
-          sequence={sequence}
-          blockMeta={resolvedMeta}
-          cues={filledCues}
-          cueIndex={cueIndex}
-          onApply={(draft) => {
-            if (draft.title !== (sequenceTitle ?? '')) {
-              onSequenceTitleChange(draft.title)
-            }
-            updateCue(selectedCue.id, {
-              text: draft.text,
-              ttsText: draft.ttsText,
-            })
-            setTtsUnlocked(true)
-            setTtsGenMessage('Текст обновлён ИИ — при необходимости перегенерируйте озвучку')
-          }}
-        />
-      ) : null}
     </div>
   )
 }

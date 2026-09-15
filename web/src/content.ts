@@ -90,9 +90,57 @@ export function fillHello(template: string, hello: string) {
   return String(template ?? '').replace(HELLO_TOKEN, String(hello ?? ''))
 }
 
-/** Сначала {hello}, затем {name}. */
-export function fillGuestText(template: string, name: string, hello = '') {
-  return fillName(fillHello(template, hello), name)
+/** Сначала {hello}, затем {name}, затем {dates} и {room}. */
+export function fillGuestText(
+  template: string,
+  name: string,
+  hello = '',
+  fields?: { dates?: string; room?: string },
+) {
+  let s = fillName(fillHello(template, hello), name)
+  s = fillBracePlaceholder(s, 'dates', fields?.dates)
+  s = fillBracePlaceholder(s, 'room', speakRoomLabel(fields?.room))
+  return s
+}
+
+const ROOM_SPEAK: Record<string, string> = {
+  standard: 'стандарт',
+  superior: 'superior',
+  deluxe: 'делюкс',
+  luxury: 'люкс',
+  single: 'одноместный',
+  double: 'двухместный',
+  family: 'семейный',
+  quiet: 'тихий номер',
+  view: 'номер с видом',
+  'near-medical': 'номер ближе к лечебной базе',
+  comfort: 'комфорт',
+}
+
+function omitBracePlaceholder(template: string, key: string) {
+  const token = '\u0001'
+  const re = new RegExp(`\\{\\s*${key}\\s*\\}`, 'gi')
+  let s = String(template ?? '').replace(re, token)
+  s = s.replace(new RegExp(`,\\s*${token}(?=[\\s.!?…,:;]|$)`, 'g'), '')
+  s = s.replace(new RegExp(`\\s*—\\s*${token}(?=[\\s.!?…,:;]|$)`, 'g'), '')
+  s = s.replace(new RegExp(`\\s*${token}`, 'g'), '')
+  s = s.replaceAll(token, '')
+  s = s.replace(/[ \t]{2,}/g, ' ')
+  s = s.replace(/[ \t]+([.!?,:;])/g, '$1')
+  return s.replace(/[ \t]+$/gm, '').replace(/[ \t]{2,}/g, ' ')
+}
+
+function fillBracePlaceholder(template: string, key: string, value: string | undefined) {
+  const text = String(value ?? '').trim()
+  if (!text) return omitBracePlaceholder(template, key)
+  const re = new RegExp(`\\{\\s*${key}\\s*\\}`, 'gi')
+  return String(template ?? '').replace(re, text)
+}
+
+function speakRoomLabel(value: string | undefined) {
+  const raw = String(value ?? '').trim()
+  if (!raw) return ''
+  return ROOM_SPEAK[raw.toLowerCase()] || raw
 }
 
 export function fillNameOptional(template: string | undefined, name: string) {

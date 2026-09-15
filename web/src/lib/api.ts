@@ -32,6 +32,8 @@ export type AuthUser = {
 
 export type FunnelCounts = {
   open: number
+  /** Нажал Play / начал просмотр. */
+  play: number
   autoplay: number
   menu: number
   whatsapp: number
@@ -618,7 +620,7 @@ export function reassembleProjectLink(
     applyDraft?: boolean
   },
 ) {
-  return apiSend<{ ok: true; link: ProjectLinkDetail; publishedDraft?: boolean }>(
+  return apiSend<{ ok: true; link: ProjectLinkDetail; publishedDraft?: boolean; ttsWarning?: string }>(
     `/api/projects/${encodeURIComponent(projectCode)}/links/${encodeURIComponent(publicId)}/reassemble`,
     'POST',
     payload ?? {},
@@ -851,7 +853,7 @@ export async function requestDemoGuest(payload: {
   return { ok: true, mailed: Boolean(data.mailed), reused: Boolean(data.reused) }
 }
 
-export type PublicEventType = 'autoplay' | 'menu' | 'whatsapp' | 'topic' | 'contact'
+export type PublicEventType = 'play' | 'autoplay' | 'menu' | 'whatsapp' | 'topic' | 'contact'
 
 export function trackPublicEvent(
   publicId: string,
@@ -1127,40 +1129,6 @@ export function deleteAdminUser(userId: string) {
   return apiSend<{ ok: true }>(`/api/admin/users/${encodeURIComponent(userId)}`, 'DELETE')
 }
 
-export type GenerateCueCopyPayload = {
-  brand?: {
-    name?: string
-    fullName?: string
-    city?: string
-    site?: string
-  }
-  copyFacts?: string
-  block: {
-    label?: string
-    group?: string
-    subgroup?: string
-    audienceTags?: string[]
-    topicTags?: string[]
-    objectionTags?: string[]
-    slotFields?: string[]
-    title?: string
-    cues: Array<{ text?: string; ttsText?: string }>
-  }
-  cueIndex: number
-  updateTitle?: boolean
-}
-
-export type GenerateCueCopyResult = {
-  ok: true
-  title: string
-  cue: { text: string; ttsText: string }
-  model?: string
-}
-
-export function generateCueCopy(payload: GenerateCueCopyPayload) {
-  return apiSend<GenerateCueCopyResult>('/api/admin/generate-cue-copy', 'POST', payload)
-}
-
 export type AdminTtsUsageUser = {
   id: string
   login: string
@@ -1180,11 +1148,13 @@ export type AdminElevenlabsBalance =
       characterLimit: number
       charactersRemaining: number
       nextResetAt: string | null
+      key?: { id: string | null; label: string; keyHint: string | null } | null
     }
   | {
       ok: false
       error: string
       detail?: string
+      key?: { id: string | null; label: string; keyHint: string | null } | null
     }
 
 export type AdminTtsUsageOverview = {
@@ -1201,6 +1171,14 @@ export function fetchAdminTtsUsage(days = 0) {
   return apiGet<AdminTtsUsageOverview>(`/api/admin/tts-usage${qs}`)
 }
 
+export type AdminElevenlabsApiKey = {
+  id: string
+  label: string
+  keyHint: string | null
+  isActive: boolean
+  createdAt: string | null
+}
+
 export type AdminIntegrationProvider = {
   id: string
   label: string
@@ -1208,7 +1186,12 @@ export type AdminIntegrationProvider = {
   hasKey: boolean
   keyHint: string | null
   source: 'database' | 'env' | 'none'
+  /** ElevenLabs: сохранённые ключи и выбранный. */
+  keys?: AdminElevenlabsApiKey[]
+  activeKeyId?: string | null
+  /** Полный folder id больше не отдаём — только маска. */
   folderId?: string | null
+  folderIdHint?: string | null
   hasFolderId?: boolean
   folderIdSource?: 'database' | 'env' | 'none'
 }
@@ -1256,4 +1239,29 @@ export function saveAdminIntegrations(payload: {
   configs?: { yandexFolderId?: string }
 }) {
   return apiSend<AdminIntegrationsOverview>('/api/admin/integrations', 'PATCH', payload)
+}
+
+export function testAdminIntegration(provider: 'yandex' | 'elevenlabs' | 'local') {
+  return apiSend<{ ok: true; message: string }>('/api/admin/integrations/test', 'POST', {
+    provider,
+  })
+}
+
+export function addAdminElevenlabsKey(payload: { apiKey: string; label?: string; activate?: boolean }) {
+  return apiSend<AdminIntegrationsOverview>('/api/admin/integrations/elevenlabs/keys', 'POST', payload)
+}
+
+export function selectAdminElevenlabsKey(id: string) {
+  return apiSend<AdminIntegrationsOverview>(
+    `/api/admin/integrations/elevenlabs/keys/${encodeURIComponent(id)}`,
+    'POST',
+    { action: 'select' },
+  )
+}
+
+export function deleteAdminElevenlabsKey(id: string) {
+  return apiSend<AdminIntegrationsOverview>(
+    `/api/admin/integrations/elevenlabs/keys/${encodeURIComponent(id)}`,
+    'DELETE',
+  )
 }

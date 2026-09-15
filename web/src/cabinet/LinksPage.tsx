@@ -95,6 +95,7 @@ import {
 import { isPropertyConfig } from '@/hooks/usePropertyConfig'
 import { amoLeadUrl, emailFromDemoExternalId, isMarketingDemoExternalId } from '@/lib/amo'
 import { guestShareUrl } from '@/lib/utils'
+import { editorPathForPlan } from '@/lib/plans'
 import { defaultBlockMeta, normalizeProperty, type PropertyConfig } from '@/types/story'
 import { formatRangeLabel } from '@/lib/statsRange'
 import {
@@ -747,11 +748,20 @@ export function LinksPage() {
     })
       .then((data) => {
         setDetail(data.link)
-        toast.success(
-          data.publishedDraft
-            ? 'Черновик опубликован, презентация на ссылке обновлена'
-            : 'Презентация на ссылке обновлена из шаблона',
-        )
+        if (data.ttsWarning) {
+          toast.success(
+            data.publishedDraft
+              ? 'Черновик опубликован, блоки обновлены'
+              : 'Блоки на ссылке обновлены',
+          )
+          toast.warning(data.ttsWarning)
+        } else {
+          toast.success(
+            data.publishedDraft
+              ? 'Черновик опубликован, презентация на ссылке обновлена'
+              : 'Презентация на ссылке обновлена из шаблона',
+          )
+        }
         return Promise.all([
           reload(code),
           detail.templateCode
@@ -1467,12 +1477,14 @@ export function LinksPage() {
                                 : '—'}
                             </p>
                           </div>
-                          <div className="rounded-lg border px-3 py-2.5 sm:col-span-2 lg:col-span-3">
-                            <p className="text-muted-foreground text-xs">{'{hello}'}</p>
-                            <p className="mt-0.5 text-sm font-medium whitespace-pre-wrap">
-                              {detail.guestSummary.hello?.trim() || '—'}
-                            </p>
-                          </div>
+                          {project?.helloFromDialog ? (
+                            <div className="rounded-lg border px-3 py-2.5 sm:col-span-2 lg:col-span-3">
+                              <p className="text-muted-foreground text-xs">{'{hello}'}</p>
+                              <p className="mt-0.5 text-sm font-medium whitespace-pre-wrap">
+                                {detail.guestSummary.hello?.trim() || '—'}
+                              </p>
+                            </div>
+                          ) : null}
                           <div className="rounded-lg border px-3 py-2.5 sm:col-span-2 lg:col-span-3">
                             <p className="text-muted-foreground text-xs">Возражения</p>
                             <p className="mt-0.5 text-sm font-medium">
@@ -1662,6 +1674,17 @@ export function LinksPage() {
                                   linkTemplateConfig?.constructorV2?.sequenceMetaById?.[entry.id] ??
                                   defaultBlockMeta()
                                 }
+                                guest={{
+                                  guestName: summaryDraft.guestName || detail.guestName,
+                                  hello: summaryDraft.hello,
+                                  dates: summaryDraft.dates,
+                                  room: summaryDraft.room,
+                                }}
+                                editorBasePath={
+                                  code && detail.templateCode
+                                    ? editorPathForPlan(project?.plan?.id, code, detail.templateCode)
+                                    : undefined
+                                }
                               />
                             ))}
                           </ItemGroup>
@@ -1768,17 +1791,19 @@ export function LinksPage() {
                         />
                       </label>
 
-                      <label className="grid gap-1 text-sm">
-                        <span className="text-muted-foreground">{'{hello}'} — первая фраза</span>
-                        <Textarea
-                          rows={3}
-                          value={summaryDraft.hello}
-                          onChange={(e) =>
-                            setSummaryDraft((prev) => ({ ...prev, hello: e.target.value }))
-                          }
-                          placeholder="Пусто, если настройка выключена или зацепки нет"
-                        />
-                      </label>
+                      {project?.helloFromDialog ? (
+                        <label className="grid gap-1 text-sm">
+                          <span className="text-muted-foreground">{'{hello}'} — первая фраза</span>
+                          <Textarea
+                            rows={3}
+                            value={summaryDraft.hello}
+                            onChange={(e) =>
+                              setSummaryDraft((prev) => ({ ...prev, hello: e.target.value }))
+                            }
+                            placeholder="Пусто, если зацепки нет"
+                          />
+                        </label>
+                      ) : null}
 
                       <label className="grid gap-1 text-sm">
                         <span className="text-muted-foreground">Номер / категория</span>

@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   generateTts,
   speakTextForTts,
-  ttsTextNeedsGuestName,
+  ttsTextNeedsPersonalization,
 } from '@/lib/ttsGenerate'
 import {
   DEFAULT_MENU_TITLE,
@@ -73,6 +73,8 @@ type Props = {
     menuTtsHash?: string
   }) => void
   onMenuTtsFirstOnlyChange: (firstOnly: boolean) => void
+  /** Показывать подсказки про {hello}. */
+  helloFromDialog?: boolean
 }
 
 export function MenuInspector({
@@ -102,6 +104,7 @@ export function MenuInspector({
   onMenuLinksChange,
   onMenuTtsPatch,
   onMenuTtsFirstOnlyChange,
+  helloFromDialog = false,
 }: Props) {
   const [ttsPreviewKey, setTtsPreviewKey] = useState(0)
   const [ttsPlaying, setTtsPlaying] = useState(false)
@@ -110,8 +113,11 @@ export function MenuInspector({
   const [ttsUnlocked, setTtsUnlocked] = useState(false)
 
   const hasGeneratedTts = Boolean(menuTtsSrc?.trim())
-  const ttsPersonalized = ttsTextNeedsGuestName(menuTtsText)
+  const ttsPersonalized = ttsTextNeedsPersonalization(menuTtsText)
   const ttsLocked = hasGeneratedTts && !ttsUnlocked && !ttsPersonalized
+  const personalizationHint = helloFromDialog
+    ? `Есть {name} или {hello} — при выдаче ссылки озвучка соберётся заново с данными гостя и текущим голосом проекта.`
+    : `Есть {name} — при выдаче ссылки озвучка соберётся заново с данными гостя и текущим голосом проекта.`
 
   useEffect(() => {
     setTtsUnlocked(false)
@@ -168,7 +174,7 @@ export function MenuInspector({
       window.setTimeout(() => refreshTts(), 400)
       const voiceNote = result.voiceId ? ` · voice ${result.voiceId.slice(0, 8)}…` : ''
       const file = ttsFileLabel(result.src)
-      const personal = ttsTextNeedsGuestName(draft)
+      const personal = ttsTextNeedsPersonalization(draft)
         ? ' · для гостя пересоберётся при выдаче ссылки'
         : ''
       setTtsGenMessage(`Подключено · ${file}${voiceNote}${personal}`)
@@ -252,10 +258,7 @@ export function MenuInspector({
                     }}
                   />
                   {ttsPersonalized ? (
-                    <p className="editor-hint">
-                      Есть {'{name}'} или {'{hello}'} — при выдаче ссылки озвучка соберётся заново с данными
-                      гостя и текущим голосом проекта.
-                    </p>
+                    <p className="editor-hint">{personalizationHint}</p>
                   ) : null}
                   <div className="editor-tts-actions">
                     {hasGeneratedTts ? (

@@ -23,7 +23,7 @@ import {
 import { backgroundMusicSrc, syncClipsToCues } from './editor/timelineMath'
 import { MenuScreen } from './MenuScreen'
 import { PlayerLoading } from './PlayerLoading'
-import { StoryPlayer, type PlaybackProgress } from './StoryPlayer'
+import { StoryPlayer, type CaptionMarquee, clampMarqueeSpeed, type PlaybackProgress } from './StoryPlayer'
 
 /** «Далее» появляется чуть позже старта блока — не перекрывает первый кадр. */
 const NEXT_BTN_DELAY_MS = 2500
@@ -38,6 +38,33 @@ function playbackBlockDurationSec(seq: StorySequence | undefined): number {
   return Math.max(0.8, dur)
 }
 
+/** Все титры до меню (flow) — одна строка. */
+function buildFlowCaptionsMarquee(
+  blocks: StorySequence[],
+  fillText: (text: string) => string,
+  speed: number,
+): CaptionMarquee | null {
+  const parts: string[] = []
+  const keys: string[] = []
+  for (const seq of blocks) {
+    const list = (seq.cues ?? [])
+      .filter((c) => c.showText !== false && Boolean(c.text?.trim()))
+      .slice()
+      .sort((a, b) => a.startSec - b.startSec || a.id.localeCompare(b.id))
+    for (const c of list) {
+      parts.push(fillText(c.text!.trim()))
+      keys.push(`${seq.id}:${c.id}`)
+    }
+  }
+  if (!parts.length) return null
+  const text = parts.join('   ·   ')
+  return {
+    text,
+    key: keys.join('|'),
+    speed: clampMarqueeSpeed(speed),
+  }
+}
+
 type Phase = 'flow' | 'menu' | 'sequence'
 
 type Props = {
@@ -48,6 +75,9 @@ type Props = {
   publicId?: string | null
   /** Превью в конструкторе: без fullscreen и без захвата всей страницы */
   embedded?: boolean
+  /** Даты/номер из сводки — для {dates} и {room} в титрах превью */
+  guestDates?: string
+  guestRoom?: string
 }
 
 function orientationFromSearch(themeOrientation: ViewOrientation): ViewOrientation {
@@ -57,7 +87,14 @@ function orientationFromSearch(themeOrientation: ViewOrientation): ViewOrientati
 }
 
 
-export function Presentation({ property: rawProperty, guestNameOverride, publicId, embedded }: Props) {
+export function Presentation({
+  property: rawProperty,
+  guestNameOverride,
+  publicId,
+  embedded,
+  guestDates,
+  guestRoom,
+}: Props) {
   const property = useMemo(() => withoutDisabledBlocks(rawProperty), [rawProperty])
   const guestName = useGuestName(guestNameOverride ?? property.defaultGuestName)
   const [phase, setPhase] = useState<Phase>('flow')
@@ -76,6 +113,8 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
   const musicRef = useRef<HTMLAudioElement | null>(null)
   const ttsAudioRef = useRef<HTMLAudioElement | null>(null)
   const ttsUnlockedRef = useRef(false)
+  /** Резолвится после жестового silent-unlock TTS — StoryPlayer ждёт перед первой озвучкой. */
+  const ttsUnlockGateRef = useRef(Promise.resolve())
   const stageRef = useRef<HTMLDivElement | null>(null)
   const soundArmedRef = useRef(false)
   const userPausedRef = useRef(false)
@@ -98,7 +137,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
   musicVolRef.current = musicVol
 
   const track = useCallback(
-    (type: 'autoplay' | 'menu' | 'whatsapp' | 'topic' | 'contact', topicOrChannel?: string) => {
+    (type: 'play' | 'autoplay' | 'menu' | 'whatsapp' | 'topic' | 'contact', topicOrChannel?: string) => {
       if (!publicId) return
       if (type === 'topic') {
         trackPublicEvent(publicId, 'topic', { topic: topicOrChannel })
@@ -139,6 +178,25 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
       property.menus?.[cur] ? cur : getDefaultMenuId(property),
     )
   }, [property])
+
+  /** Превью в конструкторе: сразу «живой» плеер, без кнопки «Смотреть». */
+  useEffect(() => {
+    if (!embedded) return
+    setSoundArmed(true)
+    setUserPaused(false)
+  }, [embedded])
+
+  /**
+   * Если прогрев кадров завис (мобильная сеть без error) — всё равно показать «Смотреть»,
+   * иначе гость вечно на «Загружаем кадры».
+   */
+  useEffect(() => {
+    if (embedded || soundArmed || mediaReady) return
+    const timer = window.setTimeout(() => {
+      setMediaReady(true)
+    }, 8_000)
+    return () => window.clearTimeout(timer)
+  }, [embedded, soundArmed, mediaReady])
 
   useEffect(() => {
     if (embedded) return
@@ -204,21 +262,29 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
     }
 
     // iOS/Android: каждый <audio> нужно «размутить» в жесте, иначе TTS с таймера молчит.
-    // Тихий data-URI + volume=0 — без гонки с реальным cue (cleanup только если src ещё silent).
-    // Важно: silent play на TTS часто прерывает уже запущенный фон — поэтому музыку
-    // стартуем/дожимаем после unlock, иначе intro без озвучки идёт в тишине.
+    // Тихий data-URI + muted — unlock; не вызываем load() (сбрасывает media element на iOS).
+    // StoryPlayer ждёт ttsUnlockGateRef, чтобы не стартовать фразу поверх silent/muted.
     const tts = ttsAudioRef.current
     let unlockingTts = false
     if (tts && !ttsUnlockedRef.current) {
       ttsUnlockedRef.current = true
+      let releaseUnlock: () => void = () => undefined
+      ttsUnlockGateRef.current = new Promise<void>((resolve) => {
+        releaseUnlock = resolve
+      })
+      const unlockWatchdog = window.setTimeout(releaseUnlock, 1500)
+      const finishUnlock = () => {
+        window.clearTimeout(unlockWatchdog)
+        applyMuteToAudio(tts, userMutedRef.current, theme.ttsVolume)
+        resumeMusic()
+        releaseUnlock()
+      }
       const srcNow = tts.getAttribute('src') || ''
       const hasRealSrc = Boolean(srcNow) && !srcNow.startsWith('data:')
       if (hasRealSrc) {
         applyMuteToAudio(tts, userMutedRef.current, theme.ttsVolume)
         unlockingTts = true
-        void tts.play().finally(() => {
-          resumeMusic()
-        })
+        void tts.play().finally(finishUnlock)
       } else {
         const silent =
           'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA'
@@ -228,16 +294,19 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
         tts.src = silent
         void tts.play().finally(() => {
           try {
-            if (tts.src.startsWith('data:')) {
+            // Только если всё ещё silent: иначе первая фраза уже подставила mp3.
+            const stillSilent =
+              (tts.getAttribute('src') || '').startsWith('data:') ||
+              (typeof tts.src === 'string' && tts.src.startsWith('data:'))
+            if (stillSilent) {
               tts.pause()
               tts.removeAttribute('src')
-              tts.load()
+              // Не вызываем load() — на iOS это сбрасывает gesture-unlock.
             }
           } catch {
             /* ignore */
           }
-          applyMuteToAudio(tts, userMutedRef.current, theme.ttsVolume)
-          resumeMusic()
+          finishUnlock()
         })
       }
     }
@@ -249,7 +318,10 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
       window.setTimeout(resumeMusic, 320)
     }
 
-    if (!soundArmed) setSoundArmed(true)
+    if (!soundArmed) {
+      setSoundArmed(true)
+      track('play')
+    }
     setUserPaused(false)
     if (!embedded) {
       void enterPresentationFullscreen(
@@ -257,7 +329,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
         isLandscape ? 'landscape' : 'portrait',
       )
     }
-  }, [soundArmed, isLandscape, embedded, applyMuteToAudio, theme.ttsVolume])
+  }, [soundArmed, isLandscape, embedded, applyMuteToAudio, theme.ttsVolume, track])
 
   useEffect(() => {
     const music = musicRef.current
@@ -450,14 +522,48 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
   )
 
   const helloPreview = embedded ? DEFAULT_HELLO_TEMPLATE : ''
-  const filledTitle = activeSeq?.title ? fillGuestText(activeSeq.title, guestName, helloPreview) : undefined
+  const guestFields = { dates: guestDates, room: guestRoom }
+  const filledTitle = activeSeq?.title
+    ? fillGuestText(activeSeq.title, guestName, helloPreview, guestFields)
+    : undefined
   const filledCues = useMemo(() => {
     const list = activeSeq?.cues ?? []
     return list.map((c) => ({
       ...c,
-      text: c.text ? fillGuestText(c.text, guestName, helloPreview) : c.text,
+      text: c.text ? fillGuestText(c.text, guestName, helloPreview, guestFields) : c.text,
     }))
-  }, [activeSeq?.cues, guestName, helloPreview])
+  }, [activeSeq?.cues, guestName, helloPreview, guestDates, guestRoom])
+
+  /** Все титры flow до меню — одна бегущая строка (CSS, без привязки к шкале). */
+  const captionMarquee = useMemo((): CaptionMarquee | null => {
+    if (theme.captionMode === 'cues') return null
+    const fillText = (text: string) =>
+      fillGuestText(text, guestName, helloPreview, guestFields)
+    const speed = theme.marqueeSpeed
+    if (phase === 'flow') {
+      const blocks: StorySequence[] = []
+      for (const id of property.flow) {
+        const seq = property.sequences[id]
+        if (seq) blocks.push(seq)
+      }
+      return buildFlowCaptionsMarquee(blocks, fillText, speed)
+    }
+    if (phase === 'sequence' && activeSeq) {
+      return buildFlowCaptionsMarquee([activeSeq], fillText, speed)
+    }
+    return null
+  }, [
+    theme.captionMode,
+    theme.marqueeSpeed,
+    phase,
+    property.flow,
+    property.sequences,
+    activeSeq,
+    guestName,
+    helloPreview,
+    guestDates,
+    guestRoom,
+  ])
 
   const onSequenceEnded = useCallback(() => {
     const defaultMenu = getDefaultMenuId(property)
@@ -607,22 +713,24 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
     }
     void preloadImages(ordered)
 
-    const tts = new Set<string>()
-    for (const seq of Object.values(property.sequences)) {
-      for (const cue of seq.cues ?? []) {
-        if (cue.ttsSrc) tts.add(cue.ttsSrc)
-      }
-      for (const clip of seq.clips) {
-        if (clip.ttsSrc) tts.add(clip.ttsSrc)
-      }
+    // Не качаем все TTS через new Audio() — на мобильном это забивает канал,
+    // и первая озвучка/музыка могут «молчать» десятки секунд. Прогреваем только
+    // ближайшие фразы текущего блока (fetch, без отдельных media-элементов).
+    const early: string[] = []
+    const pushTts = (src?: string) => {
+      if (!src || early.includes(src) || early.length >= 4) return
+      early.push(src)
     }
-    for (const menu of Object.values(property.menus ?? {})) {
-      if (menu.menuTtsSrc) tts.add(menu.menuTtsSrc)
-    }
-    for (const src of tts) {
-      const a = new Audio()
-      a.preload = 'auto'
-      a.src = ttsPlaybackUrl(src)
+    const firstFlowId = property.flow[0]
+    const firstSeq = firstFlowId ? property.sequences[firstFlowId] : undefined
+    for (const cue of firstSeq?.cues ?? []) pushTts(cue.ttsSrc)
+    for (const menu of Object.values(property.menus ?? {})) pushTts(menu.menuTtsSrc)
+    for (const src of early) {
+      void fetch(ttsPlaybackUrl(src), {
+        method: 'GET',
+        credentials: 'same-origin',
+        cache: 'force-cache',
+      }).catch(() => undefined)
     }
   }, [property])
 
@@ -666,11 +774,15 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
         {phase !== 'menu' && activeSeq && (
           <>
             <StoryPlayer
-              key={`${phase}-${phase === 'flow' ? flowIndex : sequenceId}-${isLandscape ? 'land' : 'port'}`}
+              key={`${phase}-${phase === 'flow' ? 'flow' : sequenceId}-${isLandscape ? 'land' : 'port'}`}
               clips={activeSeq.clips}
               cues={filledCues}
               title={filledTitle}
+              showTitle={theme.showTitle}
+              captionMode={theme.captionMode}
               captionBarStyle={captionBarStyle(property.theme)}
+              captionMarquee={captionMarquee}
+              marqueeSpeed={theme.marqueeSpeed}
               paused={showEndButtons || !soundArmed || userPaused}
               hideCaptions={showEndButtons}
               onEnded={onSequenceEnded}
@@ -678,6 +790,7 @@ export function Presentation({ property: rawProperty, guestNameOverride, publicI
               ttsVolume={ttsVol}
               userMuted={userMuted}
               ttsAudioRef={ttsAudioRef}
+              ttsUnlockGateRef={ttsUnlockGateRef}
               skipRequest={skipRequest}
               onPlaybackProgress={setPlaybackProgress}
               onMediaProgress={(done, total) => {

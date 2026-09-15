@@ -566,6 +566,9 @@ export function storyFontCss(id: StoryFontId | string | undefined, fallback: Sto
 
 export type ViewOrientation = 'portrait' | 'landscape'
 
+/** Как показывать титры в плеере. */
+export type CaptionMode = 'marquee' | 'cues'
+
 export type PropertyTheme = {
   /** Ориентация кадра: портрет 9:16 или альбом 16:9 */
   orientation: ViewOrientation
@@ -573,6 +576,20 @@ export type PropertyTheme = {
   captionBarColor: string
   /** Прозрачность плашки 0..1 */
   captionBarOpacity: number
+  /**
+   * Отступ блока титров от низа кадра (desktop), px.
+   * Не влияет на высоту плашки — только поднимает текст+плашку.
+   */
+  captionTextPad: number
+  /** То же для узкого кадра (mobile), px. */
+  captionTextPadMobile: number
+  /**
+   * Насколько плашка торчит вверх и вниз от текста (desktop), px.
+   * Симметрично: сверху и снизу одинаково.
+   */
+  captionBarPad: number
+  /** То же для узкого кадра (mobile), px. */
+  captionBarPadMobile: number
   /** Цвет заголовка */
   titleColor: string
   /** Цвет текста (титров-строк) */
@@ -611,6 +628,22 @@ export type PropertyTheme = {
   ttsVolume: number
   /** Показывать кнопку «Далее» в плеере (пропуск текущего блока). */
   showNextButton: boolean
+  /**
+   * Глобально показывать заголовок блока в плеере и редакторе.
+   * false — заголовок не рисуется и не настраивается (per-clip showTitle игнорируется).
+   */
+  showTitle: boolean
+  /**
+   * Режим титров:
+   * - marquee — бегущая строка (все тексты cues склеены)
+   * - cues — по одному титру в момент активности cue (как YouTube / Instagram)
+   */
+  captionMode: CaptionMode
+  /**
+   * Скорость бегущей строки (px/sec для react-fast-marquee).
+   * Используется только при captionMode === 'marquee'.
+   */
+  marqueeSpeed: number
 }
 
 /** База 1em для титров в плеере; слайдеры в теме в «дизайн-единицах» этой базы. */
@@ -627,6 +660,10 @@ export const DEFAULT_THEME: PropertyTheme = {
   orientation: 'portrait',
   captionBarColor: '#0a100e',
   captionBarOpacity: 0.78,
+  captionTextPad: 0,
+  captionTextPadMobile: 0,
+  captionBarPad: 16,
+  captionBarPadMobile: 16,
   titleColor: '#e8dfd0',
   textColor: '#e8dfd0',
   titleFont: 'cormorant',
@@ -646,6 +683,9 @@ export const DEFAULT_THEME: PropertyTheme = {
   musicVolume: 0.22,
   ttsVolume: 1,
   showNextButton: true,
+  showTitle: true,
+  captionMode: 'marquee',
+  marqueeSpeed: 45,
 }
 
 export type MenuTheme = {
@@ -899,7 +939,7 @@ export type PropertyConfig = {
   defaultGuestName: string
   greetingSubtitle: string
   /**
-   * Факты об объекте для ИИ-генерации титров/заголовков (ручной ввод, без fetch с сайта).
+   * @deprecated Было для ИИ-титров; поле может остаться в старых JSON, UI больше не использует.
    */
   copyFacts?: string
   sequences: Record<string, StorySequence>
@@ -987,6 +1027,23 @@ function normalizeFont(value: unknown, fallback: StoryFontId): StoryFontId {
 function normalizeFontSize(value: unknown, fallback: number, min: number, max: number): number {
   if (typeof value !== 'number' || !Number.isFinite(value)) return fallback
   return Math.min(max, Math.max(min, Math.round(value)))
+}
+
+/** Старые theme.captionPadTop/Bottom → pad плашки (среднее). */
+function legacyCaptionBarPad(
+  theme: Partial<PropertyTheme> | null | undefined,
+  mobile = false,
+): number | null {
+  if (!theme) return null
+  const raw = theme as Record<string, unknown>
+  const top = mobile ? raw.captionPadTopMobile : raw.captionPadTop
+  const bottom = mobile ? raw.captionPadBottomMobile : raw.captionPadBottom
+  const hasTop = typeof top === 'number' && Number.isFinite(top)
+  const hasBottom = typeof bottom === 'number' && Number.isFinite(bottom)
+  if (!hasTop && !hasBottom) return null
+  const a = hasTop ? (top as number) : (bottom as number)
+  const b = hasBottom ? (bottom as number) : (top as number)
+  return normalizeFontSize(Math.round((a + b) / 2), 16, 0, 64)
 }
 
 function normalizeUnit(value: unknown, fallback: number): number {
@@ -1165,10 +1222,49 @@ export function normalizeTheme(theme?: Partial<PropertyTheme> | null): PropertyT
       : theme?.textFontSize != null
         ? textFontSize
         : DEFAULT_THEME.textFontSizeMobile
+  // Плашка вокруг текста vs отступ блока от низа кадра — разные вещи.
+  // Старые captionTextPad (без captionBarPad) и captionPadTop/Bottom → bar pad.
+  const legacyBarDesktop = legacyCaptionBarPad(theme)
+  const legacyBarMobile = legacyCaptionBarPad(theme, true)
+  const hasNewBarPad = theme?.captionBarPad != null
+  const hasNewBarPadMobile = theme?.captionBarPadMobile != null
+  const captionBarPad = hasNewBarPad
+    ? normalizeFontSize(theme!.captionBarPad, DEFAULT_THEME.captionBarPad, 0, 64)
+    : legacyBarDesktop != null
+      ? legacyBarDesktop
+      : theme?.captionTextPad != null
+        ? normalizeFontSize(theme.captionTextPad, DEFAULT_THEME.captionBarPad, 0, 64)
+        : DEFAULT_THEME.captionBarPad
+  const captionBarPadMobile = hasNewBarPadMobile
+    ? normalizeFontSize(theme!.captionBarPadMobile, DEFAULT_THEME.captionBarPadMobile, 0, 64)
+    : legacyBarMobile != null
+      ? legacyBarMobile
+      : theme?.captionTextPadMobile != null
+        ? normalizeFontSize(theme.captionTextPadMobile, DEFAULT_THEME.captionBarPadMobile, 0, 64)
+        : hasNewBarPad || legacyBarDesktop != null || theme?.captionTextPad != null
+          ? captionBarPad
+          : DEFAULT_THEME.captionBarPadMobile
+  // Отступ от низа: только если уже есть captionBarPad (новая модель) или явно 0.
+  const captionTextPad =
+    hasNewBarPad || hasNewBarPadMobile
+      ? normalizeFontSize(theme?.captionTextPad, DEFAULT_THEME.captionTextPad, 0, 64)
+      : DEFAULT_THEME.captionTextPad
+  const captionTextPadMobile =
+    hasNewBarPad || hasNewBarPadMobile
+      ? theme?.captionTextPadMobile != null
+        ? normalizeFontSize(theme.captionTextPadMobile, DEFAULT_THEME.captionTextPadMobile, 0, 64)
+        : theme?.captionTextPad != null
+          ? captionTextPad
+          : DEFAULT_THEME.captionTextPadMobile
+      : DEFAULT_THEME.captionTextPadMobile
   return {
     orientation,
     captionBarColor: normalizeHex(theme?.captionBarColor, DEFAULT_THEME.captionBarColor),
     captionBarOpacity: opacity,
+    captionTextPad,
+    captionTextPadMobile,
+    captionBarPad,
+    captionBarPadMobile,
     titleColor: normalizeHex(theme?.titleColor, DEFAULT_THEME.titleColor),
     textColor: normalizeHex(theme?.textColor, DEFAULT_THEME.textColor),
     titleFont: normalizeFont(theme?.titleFont, DEFAULT_THEME.titleFont),
@@ -1188,6 +1284,9 @@ export function normalizeTheme(theme?: Partial<PropertyTheme> | null): PropertyT
     musicVolume: normalizeUnit(theme?.musicVolume, DEFAULT_THEME.musicVolume),
     ttsVolume: normalizeUnit(theme?.ttsVolume, DEFAULT_THEME.ttsVolume),
     showNextButton: normalizeBool(theme?.showNextButton, DEFAULT_THEME.showNextButton),
+    showTitle: normalizeBool(theme?.showTitle, DEFAULT_THEME.showTitle),
+    captionMode: theme?.captionMode === 'cues' ? 'cues' : DEFAULT_THEME.captionMode,
+    marqueeSpeed: normalizeFontSize(theme?.marqueeSpeed, DEFAULT_THEME.marqueeSpeed, 10, 200),
   }
 }
 
@@ -1232,6 +1331,10 @@ export function captionBarStyle(
   )
   const typography = {
     '--story-copy-em': `${STORY_COPY_EM_BASE}px`,
+    '--story-copy-text-pad-desktop': `${t.captionTextPad}px`,
+    '--story-copy-text-pad-mobile': `${t.captionTextPadMobile}px`,
+    '--story-copy-bar-pad-desktop': `${t.captionBarPad}px`,
+    '--story-copy-bar-pad-mobile': `${t.captionBarPadMobile}px`,
     '--story-title-color': t.titleColor,
     '--story-text-color': t.textColor,
     '--story-title-font': storyFontCss(t.titleFont, DEFAULT_THEME.titleFont),
@@ -1745,7 +1848,11 @@ export function normalizeClip(clip: StoryClip): StoryClip {
   }
 }
 
-export function clipShowsTitle(clip: Pick<StoryClip, 'showTitle'> | undefined): boolean {
+export function clipShowsTitle(
+  clip: Pick<StoryClip, 'showTitle'> | undefined,
+  theme?: Pick<PropertyTheme, 'showTitle'> | null,
+): boolean {
+  if (theme && theme.showTitle === false) return false
   return clip?.showTitle !== false
 }
 

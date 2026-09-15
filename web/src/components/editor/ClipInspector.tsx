@@ -159,6 +159,9 @@ export function ClipInspector({
                 key={`slide-anim-${selected.id}-${slidePreviewKey}-${theme.orientation}`}
                 clips={slidePreviewClipsRef.current ?? [selected]}
                 title={displayTitle}
+                showTitle={theme.showTitle}
+                captionMode={theme.captionMode}
+                marqueeSpeed={theme.marqueeSpeed}
                 captionBarStyle={captionBarStyle(theme)}
                 onEnded={() => undefined}
               />

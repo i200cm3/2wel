@@ -20,6 +20,10 @@ const chartConfig = {
     label: "Открыл",
     color: "var(--chart-1)",
   },
+  play: {
+    label: "Play",
+    color: "var(--chart-5)",
+  },
   autoplay: {
     label: "Автопоказ",
     color: "var(--chart-2)",
@@ -86,6 +90,7 @@ export function ChartAreaInteractive({
               }
             />
             <Area dataKey="open" type="monotone" fill="url(#fillOpen)" stroke="var(--color-open)" />
+            <Area dataKey="play" type="monotone" fill="transparent" stroke="var(--color-play)" />
             <Area dataKey="autoplay" type="monotone" fill="transparent" stroke="var(--color-autoplay)" />
             <Area dataKey="menu" type="monotone" fill="transparent" stroke="var(--color-menu)" />
             <Area dataKey="contact" type="monotone" fill="transparent" stroke="var(--color-contact)" />

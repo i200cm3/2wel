@@ -28,12 +28,14 @@ import type { LinkStats } from '@/lib/api'
 
 const funnelConfig = {
   open: { label: 'Открыл', color: 'var(--chart-1)' },
+  play: { label: 'Play', color: 'var(--chart-5)' },
   autoplay: { label: 'Автопоказ', color: 'var(--chart-2)' },
   menu: { label: 'Меню', color: 'var(--chart-3)' },
   contact: { label: 'Связь', color: 'var(--chart-4)' },
 } satisfies ChartConfig
 
 const ratesConfig = {
+  playPct: { label: 'Нажал Play', color: 'var(--chart-5)' },
   autoplayPct: { label: 'Досмотрел', color: 'var(--chart-2)' },
   contactPct: { label: 'Связь', color: 'var(--chart-4)' },
 } satisfies ChartConfig
@@ -84,7 +86,15 @@ function rate(part: number, whole: number) {
 
 function hasActivity(stats: LinkStats) {
   const f = stats.funnel
-  return (f.open ?? 0) + (f.autoplay ?? 0) + (f.menu ?? 0) + (f.contact ?? 0) + (f.whatsapp ?? 0) > 0
+  return (
+    (f.open ?? 0) +
+      (f.play ?? 0) +
+      (f.autoplay ?? 0) +
+      (f.menu ?? 0) +
+      (f.contact ?? 0) +
+      (f.whatsapp ?? 0) >
+    0
+  )
 }
 
 export function LinkAnalyticsCharts({
@@ -136,6 +146,7 @@ export function LinkAnalyticsCharts({
     () =>
       stats.series.map((row) => ({
         date: row.date,
+        playPct: rate(row.play ?? 0, row.open),
         autoplayPct: rate(row.autoplay, row.open),
         contactPct: rate(row.contact ?? row.whatsapp, row.open),
       })),
@@ -198,7 +209,9 @@ export function LinkAnalyticsCharts({
         </ChartContainer>
       </div>
 
-      {ratesSeries.some((row) => row.autoplayPct != null || row.contactPct != null) ? (
+      {ratesSeries.some(
+        (row) => row.playPct != null || row.autoplayPct != null || row.contactPct != null,
+      ) ? (
         <div className="space-y-1">
           <p className="text-muted-foreground text-xs">Конверсия по дням</p>
           <ChartContainer config={ratesConfig} className="aspect-auto h-[110px] w-full">
@@ -238,6 +251,7 @@ export function LinkAnalyticsCharts({
                   />
                 }
               />
+              <Line dataKey="playPct" type="monotone" stroke="var(--color-playPct)" strokeWidth={2} dot={false} connectNulls />
               <Line dataKey="autoplayPct" type="monotone" stroke="var(--color-autoplayPct)" strokeWidth={2} dot={false} connectNulls />
               <Line dataKey="contactPct" type="monotone" stroke="var(--color-contactPct)" strokeWidth={2} dot={false} connectNulls />
             </LineChart>

@@ -6,7 +6,9 @@ import {
   cueDragFromDelta,
   cueVisualStartSec,
   fitTimelinePxPerSec,
+  hostClipForCue,
   libraryDropAtX,
+  orphanClips,
   PX_PER_SEC_DEFAULT,
   PX_PER_SEC_MAX,
   PX_PER_SEC_MIN,
@@ -231,6 +233,31 @@ describe('cueVisualStartSec', () => {
     const cues = [cue('c1', 0, 2.5), cue('c2', 2.5, 2.5)]
     assert.equal(cueVisualStartSec(clips, cues, cues[1]!, 1, 1, 2.5), 5)
     assert.equal(cueVisualStartSec(clips, cues, cues[0]!, 0, 1, 2.5), 0)
+  })
+})
+
+describe('hostClipForCue', () => {
+  it('pairs 1:1 by index', () => {
+    const clips = [img('a', 2), img('b', 3)]
+    const cues = [cue('c1', 0, 2), cue('c2', 2, 3)]
+    assert.equal(hostClipForCue(clips, cues, cues[1]!, 1)?.id, 'b')
+  })
+
+  it('falls back to clip at cue start when counts differ', () => {
+    const clips = [img('a', 5), img('b', 5)]
+    const cues = [cue('only', 6, 2)]
+    assert.equal(hostClipForCue(clips, cues, cues[0]!, 0)?.id, 'b')
+  })
+})
+
+describe('orphanClips', () => {
+  it('lists clips with no cue host', () => {
+    const clips = [img('a', 3), img('b', 3), img('c', 3)]
+    const cues = [cue('only', 0, 3)]
+    assert.deepEqual(
+      orphanClips(clips, cues).map((c) => c.id),
+      ['b', 'c'],
+    )
   })
 })
 

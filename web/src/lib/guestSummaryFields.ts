@@ -2,17 +2,47 @@ import { defaultBlockMeta, type PropertyConfig, type StorySequence } from '../ty
 import type { GuestSummary } from './assembly.ts'
 import type { TagOption } from './blockMetaTags.ts'
 
+/** Плейсхолдеры в title / титрах / TTS, которые приходят из amo (без {hello}). */
+export const GUEST_SUBSTITUTION_PLACEHOLDERS_BASE = ['{name}', '{room}', '{dates}'] as const
+
 /** Плейсхолдеры в title / титрах / TTS, которые приходят из amo. */
 export const GUEST_SUBSTITUTION_PLACEHOLDERS = ['{name}', '{hello}', '{room}', '{dates}'] as const
 
 /** Плейсхолдеры из карточки объекта — не требуют amo. */
 export const BRAND_SUBSTITUTION_PLACEHOLDERS = ['{brand}', '{phone}', '{tel}', '{telegram}', '{max}'] as const
 
+const BRAND_HINT =
+  'Из карточки объекта: {brand}, {phone}, {tel}, {telegram}, {max}.'
+
 export const GUEST_SUBSTITUTION_HINT =
   'Подстановки: {name}, {hello}, {room}, {dates}. Из карточки объекта: {brand}, {phone}, {tel}, {telegram}, {max}. {hello} — первая фраза из звонка, если включена в настройках.'
 
 export const GUEST_ASSEMBLY_FIELDS_HINT =
   'Для сборки передайте: name, room, dates, partyType, topics, objections; опционально fillRemaining (off|soft|aggressive) и hello. В тексте блока: {name}, {hello}, {room}, {dates}.'
+
+/** Список подстановок для UI: без {hello}, если персональное приветствие выключено. */
+export function guestSubstitutionPlaceholders(helloFromDialog = true): readonly string[] {
+  return helloFromDialog ? GUEST_SUBSTITUTION_PLACEHOLDERS : GUEST_SUBSTITUTION_PLACEHOLDERS_BASE
+}
+
+export function guestSubstitutionHint(helloFromDialog = true): string {
+  if (helloFromDialog) return GUEST_SUBSTITUTION_HINT
+  return `Подстановки: {name}, {room}, {dates}. ${BRAND_HINT}`
+}
+
+export function guestAssemblyFieldsHint(helloFromDialog = true): string {
+  if (helloFromDialog) return GUEST_ASSEMBLY_FIELDS_HINT
+  return 'Для сборки передайте: name, room, dates, partyType, topics, objections; опционально fillRemaining (off|soft|aggressive). В тексте блока: {name}, {room}, {dates}.'
+}
+
+/** Убрать hello из списка плейсхолдеров в тексте, если настройка выключена. */
+export function visiblePlaceholders(
+  placeholders: string[],
+  helloFromDialog = true,
+): string[] {
+  if (helloFromDialog) return placeholders
+  return placeholders.filter((item) => item.toLowerCase() !== 'hello')
+}
 
 /** Поля summary гостя, которые могут прийти из amo и участвуют в сборке. */
 export const GUEST_SUMMARY_FIELD_OPTIONS: TagOption[] = [

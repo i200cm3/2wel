@@ -434,6 +434,14 @@
   padding-bottom: 8px;
 }
 
+.editor-track-beats {
+  min-height: 80px;
+}
+
+.editor-track-beats .editor-cue-lane {
+  min-height: 76px;
+}
+
 .editor-track-label {
   display: flex;
   flex-direction: column;
@@ -643,7 +651,7 @@
 .editor-track-add-cue {
   position: absolute;
   top: 4px;
-  height: 56px;
+  height: 68px;
   margin: 0;
   z-index: 2;
   /* Button uses transition-all; don't ease `left` on zoom or it lags behind cues. */
@@ -729,6 +737,57 @@
   overflow: hidden;
   user-select: none;
   touch-action: none;
+}
+
+.editor-beat {
+  height: 68px;
+  padding: 0 14px 0 0;
+  gap: 0;
+}
+
+.editor-beat.has-thumb {
+  padding-left: 0;
+}
+
+.editor-beat-thumb {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid color-mix(in oklch, var(--foreground) 12%, transparent);
+  border-radius: 0;
+  background: var(--muted);
+  overflow: hidden;
+  cursor: pointer;
+  color: inherit;
+}
+
+.editor-beat-thumb img,
+.editor-beat-thumb video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.editor-beat .editor-cue-text {
+  padding: 8px 10px 8px 10px;
+}
+
+.editor-beat.has-tts .editor-cue-text {
+  padding-bottom: 16px;
+}
+
+.editor-track-add-clip-inline {
+  position: absolute;
+  top: 4px;
+  height: 68px;
+  margin: 0;
+  z-index: 2;
+  transition-property: color, background-color, border-color, box-shadow, opacity;
 }
 
 .editor-cue:active {
