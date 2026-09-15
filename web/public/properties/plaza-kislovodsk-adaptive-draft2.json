@@ -6719,6 +6719,7 @@
       ],
       "lowConfidenceBehavior": "menu",
       "coldStartIds": [
+        "rooms_luxury",
         "treatment_individual_plan",
         "food_diet",
         "wellness_sleep_recovery",

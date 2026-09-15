@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>2wel — после звонка гость получает ответ, а не пакет файлов</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400;1,8..60,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #f6f1e8;
+      --paper: #fbf8f2;
+      --ink: #1a2a24;
+      --muted: #5a6a63;
+      --line: #d9d0c2;
+      --forest: #2a4f3d;
+      --deep: #121c18;
+      --bronze: #b0842f;
+      --gold: #c4a574;
+      --serif: "Source Serif 4", "Iowan Old Style", Georgia, serif;
+      --sans: Manrope, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    @page { size: A4 landscape; margin: 0; }
+    body {
+      font-family: var(--sans);
+      background: #8d877c;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .s {
+      width: 297mm;
+      height: 210mm;
+      overflow: hidden;
+      position: relative;
+      page-break-after: always;
+      break-after: page;
+    }
+    .s:last-child { page-break-after: auto; break-after: auto; }
+    @media screen {
+      body { padding: 20px 0 48px; }
+      .s { margin: 0 auto 20px; box-shadow: 0 24px 60px rgba(0,0,0,.28); }
+    }
+
+    .mark { width: 22px; height: 22px; display: block; }
+    .sn {
+      position: absolute;
+      bottom: 9mm;
+      right: 12mm;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      color: var(--bronze);
+    }
+    .sn.light { color: var(--gold); }
+
+    /* 1 — hook */
+    .hook {
+      background: var(--deep);
+      color: #f3eadc;
+    }
+    .hook-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(105deg, rgba(18,28,24,0.94) 0 46%, rgba(18,28,24,0.42) 68%, rgba(18,28,24,0.28) 100%),
+        url("assets/arrive.jpg") 62% 40% / cover no-repeat;
+    }
+    .hook-in {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      padding: 14mm 16mm 16mm;
+      display: flex;
+      flex-direction: column;
+    }
+    .hook-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+    .hook h1 {
+      margin: 22mm 0 0;
+      max-width: 168mm;
+      font-family: var(--serif);
+      font-size: 44px;
+      font-weight: 600;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+    }
+    .hook h1 em { font-style: italic; font-weight: 400; color: var(--gold); }
+    .hook-sub {
+      margin: 8mm 0 0;
+      max-width: 148mm;
+      font-size: 16px;
+      line-height: 1.5;
+      color: rgba(243,234,220,0.72);
+    }
+    .hook-bottom {
+      margin-top: auto;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      color: rgba(243,234,220,0.5);
+    }
+
+    /* 2 — split */
+    .split { background: var(--paper); color: var(--ink); display: grid; grid-template-columns: 1fr 1fr; }
+    .col { padding: 16mm 14mm 18mm 16mm; display: flex; flex-direction: column; }
+    .col + .col { padding-left: 14mm; padding-right: 16mm; background: #efe8db; }
+    .k {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--bronze);
+    }
+    .col h2 {
+      margin: 5mm 0 0;
+      font-family: var(--serif);
+      font-size: 28px;
+      font-weight: 600;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+    }
+    .stack { margin-top: 8mm; display: flex; flex-direction: column; gap: 3.2mm; }
+    .scrap {
+      border: 1px dashed #c4b9a6;
+      background: #fbf8f2;
+      padding: 3.4mm 4.2mm;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .scrap b { display: block; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #8a8070; margin-bottom: 1mm; font-weight: 700; }
+    .letter {
+      margin-top: 8mm;
+      background: var(--deep);
+      color: #f3eadc;
+      padding: 7mm 7mm 6.5mm;
+      min-height: 78mm;
+      display: flex;
+      flex-direction: column;
+    }
+    .letter .from { font-size: 10px; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); }
+    .letter p {
+      margin: 5mm 0 0;
+      font-family: var(--serif);
+      font-size: 20px;
+      line-height: 1.3;
+      font-weight: 400;
+    }
+    .letter .open {
+      margin-top: auto;
+      padding-top: 6mm;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--gold);
+    }
+
+    /* 3 — scene */
+    .scene { background: var(--deep); color: #f3eadc; }
+    .scene-in { height: 100%; padding: 14mm 16mm 16mm; display: flex; flex-direction: column; }
+    .scene h2 {
+      margin: 6mm 0 0;
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      max-width: 230mm;
+      line-height: 1.12;
+    }
+    .frames {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6mm;
+    }
+    .frame { display: flex; flex-direction: column; }
+    .still {
+      height: 78mm;
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+      background: #2a3330;
+    }
+    .still img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .still span {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      padding: 8mm 5mm 4.5mm;
+      background: linear-gradient(transparent, rgba(18,28,24,0.88));
+      font-family: var(--serif);
+      font-size: 16px;
+      line-height: 1.25;
+    }
+    .frame .n { margin: 3.5mm 0 0; font-size: 10px; font-weight: 800; letter-spacing: 0.16em; color: var(--gold); }
+    .frame .t { margin: 1.5mm 0 0; font-size: 13px; line-height: 1.4; color: rgba(243,234,220,0.7); }
+
+    /* 4 — pipe */
+    .pipe { background: var(--paper); color: var(--ink); }
+    .pipe-in { height: 100%; padding: 14mm 16mm 16mm; display: flex; flex-direction: column; }
+    .pipe h2 {
+      margin: 6mm 0 0;
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      max-width: 220mm;
+    }
+    .rail {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 18px 1fr 18px 1fr 18px 1fr;
+      align-items: stretch;
+      gap: 0;
+    }
+    .node {
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 6mm 5.5mm;
+    }
+    .node .n { font-size: 10px; font-weight: 800; letter-spacing: 0.16em; color: var(--bronze); }
+    .node h3 { margin: 3mm 0 0; font-family: var(--serif); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+    .node p { margin: 2.5mm 0 0; font-size: 12.5px; line-height: 1.4; color: var(--muted); }
+    .arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--bronze);
+      font-size: 18px;
+    }
+    .aside {
+      margin-top: 7mm;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 8mm;
+      font-size: 13.5px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+    .aside strong { color: var(--ink); }
+
+    /* 5 — numbers */
+    .nums { background: var(--forest); color: #f3eadc; }
+    .nums-in { height: 100%; padding: 14mm 16mm 16mm; display: flex; flex-direction: column; }
+    .nums .k { color: var(--gold); }
+    .nums h2 {
+      margin: 6mm 0 0;
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      max-width: 210mm;
+      line-height: 1.12;
+    }
+    .grid3 {
+      margin-top: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 5mm;
+    }
+    .stat {
+      border-top: 1px solid rgba(196,165,116,0.45);
+      padding: 6mm 2mm 2mm 0;
+    }
+    .stat b {
+      display: block;
+      font-family: var(--serif);
+      font-size: 34px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .stat p { margin: 4mm 0 0; font-size: 14px; line-height: 1.4; color: rgba(243,234,220,0.78); }
+
+    /* 6 — ask */
+    .ask { background: var(--paper); color: var(--ink); }
+    .ask-in { height: 100%; padding: 14mm 16mm 12mm; display: flex; flex-direction: column; }
+    .ask h2 {
+      margin: 5mm 0 0;
+      font-family: var(--serif);
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+    .prices {
+      margin-top: 8mm;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6mm;
+    }
+    .price {
+      border-top: 2px solid var(--ink);
+      padding: 5mm 0 0;
+    }
+    .price.pro { border-top-color: var(--forest); }
+    .price .name { font-size: 13px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; color: var(--bronze); }
+    .price .sum {
+      margin: 2mm 0 0;
+      font-family: var(--serif);
+      font-size: 40px;
+      font-weight: 600;
+      letter-spacing: -0.04em;
+      line-height: 1;
+    }
+    .price .sum span { font-family: var(--sans); font-size: 14px; font-weight: 600; letter-spacing: 0; color: var(--muted); margin-left: 4px; }
+    .price p { margin: 4mm 0 0; font-size: 14px; line-height: 1.4; color: var(--muted); max-width: 118mm; }
+    .ask-box {
+      margin-top: auto;
+      background: var(--deep);
+      color: #f3eadc;
+      padding: 7mm 8mm;
+      display: grid;
+      grid-template-columns: 1.7fr auto;
+      gap: 10mm;
+      align-items: center;
+    }
+    .ask-box h3 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+    .ask-box p { margin: 2.5mm 0 0; font-size: 13px; color: rgba(243,234,220,0.7); }
+    .mail {
+      background: #f3eadc;
+      color: var(--deep);
+      padding: 4mm 6mm;
+      min-width: 58mm;
+    }
+    .mail b { display: block; font-size: 15px; }
+    .mail span { display: block; margin-top: 1mm; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+  <section class="s hook">
+    <div class="hook-bg"></div>
+    <div class="hook-in">
+      <div class="hook-brand"><img class="mark" src="assets/mark.png" alt="" />2wel</div>
+      <h1>Прайс ушёл.<br />Решение&nbsp;— <em>нет.</em></h1>
+      <p class="hook-sub">После звонка отдел продаж отправляет то же, что все вокруг: сайт, PDF, условия. Гость сравнивает три санатория. Бронирует у того, кто ответил именно ему.</p>
+      <p class="hook-bottom">Для санаториев, отелей и спа</p>
+    </div>
+    <span class="sn light">01</span>
+  </section>
+
+  <section class="s split">
+    <div class="col">
+      <p class="k">Сейчас</p>
+      <h2>Гостю уходит пачка сообщений. Ни одно не выглядит личным.</h2>
+      <div class="stack">
+        <div class="scrap"><b>Письмо</b>Прайс и «ссылка на сайт, раздел Лечение»</div>
+        <div class="scrap"><b>PDF</b>Общая презентация на 18 страниц, как у соседа</div>
+        <div class="scrap"><b>WhatsApp</b>Три фото номера и «если что — пишите»</div>
+        <div class="scrap"><b>Памятка</b>Как доехать. Приходит уже после оплаты — или не приходит</div>
+      </div>
+    </div>
+    <div class="col">
+      <p class="k">Нужно</p>
+      <h2>Одна ссылка. По тому разговору, который только что был.</h2>
+      <div class="letter">
+        <span class="from">Страница для Александра</span>
+        <p>Александр, вы выбирали корпус у парка и сомневались, хватит ли процедур на 14 дней. Здесь — номер, программа и как добраться. Можно сразу написать нам.</p>
+        <span class="open">Открыть свою страницу →</span>
+      </div>
+    </div>
+    <span class="sn">02</span>
+  </section>
+
+  <section class="s scene">
+    <div class="scene-in">
+      <p class="k" style="color:var(--gold)">Один заезд</p>
+      <h2>Не ролик «про санаторий». Ответ человеку, с которым вы уже говорили.</h2>
+      <div class="frames">
+        <article class="frame">
+          <div class="still">
+            <img src="assets/lounge.jpg" alt="" />
+            <span>Звонок 12 минут. Семья, мама, лечение спины.</span>
+          </div>
+          <p class="n">01 · Разговор</p>
+          <p class="t">В amoCRM остаётся сделка. В голове менеджера — сомнения, которые в CRM не записаны.</p>
+        </article>
+        <article class="frame">
+          <div class="still">
+            <img src="assets/spa.jpg" alt="" />
+            <span>Ссылка появляется в сделке.</span>
+          </div>
+          <p class="n">02 · Сборка</p>
+          <p class="t">На «Про» разговор разбирается сам: даты, состав, возражения. На «Старте» — готовый сценарий с именем.</p>
+        </article>
+        <article class="frame">
+          <div class="still">
+            <img src="assets/arrive.jpg" alt="" />
+            <span>Александр открывает страницу с его именем.</span>
+          </div>
+          <p class="n">03 · Ответ</p>
+          <p class="t">Смотрит, что важно именно ему. Пишет или звонит со своей страницы — не ищет, кому писать.</p>
+        </article>
+      </div>
+    </div>
+    <span class="sn light">03</span>
+  </section>
+
+  <section class="s pipe">
+    <div class="pipe-in">
+      <p class="k">Как это встаёт в продажи</p>
+      <h2>Менеджер не монтирует ролик. Ссылка оказывается в сделке.</h2>
+      <div class="rail">
+        <div class="node">
+          <p class="n">01</p>
+          <h3>Звонок</h3>
+          <p>Гость уже сказал, что ему нужно и что его смущает. Это главный материал, не бриф.</p>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <p class="n">02</p>
+          <h3>Разбор</h3>
+          <p>На «Про» запись из CRM разбирается без ручной расшифровки. Желания и сомнения выделяются сами.</p>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <p class="n">03</p>
+          <h3>Страница</h3>
+          <p>Короткая презентация под этот запрос: имя в озвучке, фото объекта, темы, о которых говорили.</p>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <p class="n">04</p>
+          <h3>След</h3>
+          <p>В кабинете видно: открыл, досмотрел, написал. Не «ну, вроде отправили прайс».</p>
+        </div>
+      </div>
+      <div class="aside">
+        <p><strong>Старт</strong> — если разбор звонка рано. Готовый сценарий по типу заезда, имя гостя, CRM и аналитика. Подключается быстрее.</p>
+        <p><strong>Свой домен</strong> — отдельно, от 5&nbsp;000&nbsp;руб. разово. В тарифе уже есть поддомен на 2wel.ru. Ссылки без лимита: платите за продукт, не за гостя.</p>
+      </div>
+    </div>
+    <span class="sn">04</span>
+  </section>
+
+  <section class="s nums">
+    <div class="nums-in">
+      <p class="k">Для директора и РОПа</p>
+      <h2>Это не «контент про объект». Это ответ, который можно посчитать.</h2>
+      <div class="grid3">
+        <div class="stat">
+          <b>1 заезд</b>
+          <p>15–20 тыс. руб. закрывают месяц тарифа «Про». Не годовой ролик на сайте — страница, которую продажник отправляет после разговора.</p>
+        </div>
+        <div class="stat">
+          <b>Без лимита</b>
+          <p>Сколько угодно гостей. Стойка меньше повторяет одно и то же: как доехать, что взять, как устроен день — уже на странице.</p>
+        </div>
+        <div class="stat">
+          <b>3 цифры</b>
+          <p>Открыл. Досмотрел. Написал. Можно разбирать смену и менеджеров по фактам, а не по ощущению «ссылку вроде кинули».</p>
+        </div>
+      </div>
+    </div>
+    <span class="sn light">05</span>
+  </section>
+
+  <section class="s ask">
+    <div class="ask-in">
+      <p class="k">Следующий шаг</p>
+      <h2>Два тарифа. Один вопрос.</h2>
+      <div class="prices">
+        <div class="price">
+          <div class="name">Старт · внедрение от 29 000 руб.</div>
+          <div class="sum">от 11 900<span>руб. / мес</span></div>
+          <p>Страница по готовому сценарию. Имя в озвучке, поддомен, кабинет, amoCRM, аналитика.</p>
+        </div>
+        <div class="price pro">
+          <div class="name">Про · внедрение от 69 000 руб.</div>
+          <div class="sum">от 29 900<span>руб. / мес</span></div>
+          <p>После звонка собираем презентацию под желания и сомнения этого гостя — не общий ролик.</p>
+        </div>
+      </div>
+      <div class="ask-box">
+        <div>
+          <h3>Напишите название объекта и сколько гостей проходит через продажи в месяц.</h3>
+          <p>Соберём пример на ваших фото — не общую демо-ссылку «для всех».</p>
+        </div>
+        <div class="mail">
+          <b>support@2wel.ru</b>
+          <span>2wel.ru</span>
+        </div>
+      </div>
+    </div>
+    <span class="sn">06</span>
+  </section>
+
+</body>
+</html>
