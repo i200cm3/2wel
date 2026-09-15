@@ -827,6 +827,9 @@ export type ProjectCallListItem = {
   summaryOutcome: string | null
   summaryNextStep: string | null
   summaryNoteId: string | null
+  operatorReviewMiss: string | null
+  operatorReviewDetail: string | null
+  operatorReviewNoteId: string | null
   status: ProjectCallStatus
   skipReason: string | null
   error: string | null
@@ -845,12 +848,13 @@ export type ProjectCallDetail = Omit<ProjectCallListItem, 'hasTranscript' | 'tra
 
 export function fetchProjectCalls(
   projectCode: string,
-  opts: { limit?: number; offset?: number; status?: string } = {},
+  opts: { limit?: number; offset?: number; status?: string; leadId?: string } = {},
 ) {
   const params = new URLSearchParams()
   if (opts.limit != null) params.set('limit', String(opts.limit))
   if (opts.offset != null) params.set('offset', String(opts.offset))
   if (opts.status) params.set('status', opts.status)
+  if (opts.leadId) params.set('leadId', opts.leadId)
   const qs = params.toString()
   return apiGet<{
     ok: true
@@ -874,6 +878,14 @@ export function deleteProjectCall(projectCode: string, callId: string) {
   return apiSend<{ ok: true }>(
     `/api/projects/${encodeURIComponent(projectCode)}/calls/${encodeURIComponent(callId)}`,
     'DELETE',
+  )
+}
+
+/** Ручной перезапуск анализа звонка (failed / skipped). */
+export function reprocessProjectCall(projectCode: string, callId: string) {
+  return apiSend<{ ok: true; call: ProjectCallDetail }>(
+    `/api/projects/${encodeURIComponent(projectCode)}/calls/${encodeURIComponent(callId)}/reprocess`,
+    'POST',
   )
 }
 

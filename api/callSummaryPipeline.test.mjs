@@ -2,10 +2,11 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   formatCallSummaryNoteText,
+  formatOperatorReviewNoteText,
   isCallSummaryAllowed,
   isCallSummaryFeatureConfigured,
 } from './callSummaryPipeline.mjs'
-import { parseCallSummaryResponse } from './callSummaryExtract.mjs'
+import { normalizeOperatorReview, parseCallSummaryResponse } from './callSummaryExtract.mjs'
 
 describe('isCallSummaryAllowed', () => {
   it('без allowlist пускает все воронки', () => {
@@ -62,6 +63,18 @@ describe('formatCallSummaryNoteText', () => {
   })
 })
 
+describe('formatOperatorReviewNoteText', () => {
+  it('отдельная заметка с маркером разбора', () => {
+    const text = formatOperatorReviewNoteText({
+      miss: 'Не предложил зафиксировать бронь',
+      detail: 'Места были, клиент ушёл думать.',
+    })
+    assert.match(text, /^⚠ РАЗБОР ОПЕРАТОРА/)
+    assert.match(text, /Не предложил зафиксировать бронь/)
+    assert.match(text, /Места были/)
+  })
+})
+
 describe('parseCallSummaryResponse', () => {
   it('читает JSON outcome/nextStep', () => {
     const parsed = parseCallSummaryResponse(
@@ -70,6 +83,7 @@ describe('parseCallSummaryResponse', () => {
     assert.equal(parsed.ok, true)
     assert.equal(parsed.outcome, 'Хочет dual')
     assert.equal(parsed.nextStep, 'Прислать цены')
+    assert.equal(parsed.operatorReview, null)
   })
 
   it('принимает fence', () => {
@@ -77,6 +91,29 @@ describe('parseCallSummaryResponse', () => {
     assert.equal(parsed.ok, true)
     assert.equal(parsed.outcome, 'A')
     assert.equal(parsed.nextStep, 'B')
+  })
+
+  it('читает operatorReview', () => {
+    const parsed = parseCallSummaryResponse(
+      JSON.stringify({
+        outcome: 'Хотел dual, места есть, ушёл думать',
+        nextStep: 'Перезвонить завтра',
+        operatorReview: {
+          miss: 'Не закрыл на бронь',
+          detail: 'Клиент готов был бронировать, оператор не предложил фиксацию.',
+        },
+      }),
+    )
+    assert.equal(parsed.ok, true)
+    assert.equal(parsed.operatorReview?.miss, 'Не закрыл на бронь')
+  })
+})
+
+describe('normalizeOperatorReview', () => {
+  it('null для информационного / пустого', () => {
+    assert.equal(normalizeOperatorReview(null), null)
+    assert.equal(normalizeOperatorReview('null'), null)
+    assert.equal(normalizeOperatorReview({}), null)
   })
 })
 

@@ -259,6 +259,38 @@ export function phonesFromAmoCallNote(note) {
   return phonesFromAmoNoteParams(normalizeNoteParams(note?.params), note?.text)
 }
 
+/** Мета звонка из params note (даже без recording URL). */
+export function callParamsMetaFromAmoNote(note) {
+  const params = normalizeNoteParams(note?.params)
+  const durationRaw = Number(params.duration ?? params.DURATION)
+  const durationSec = Number.isFinite(durationRaw) && durationRaw >= 0 ? Math.floor(durationRaw) : null
+  const callResult = String(params.call_result ?? params.callResult ?? '').trim()
+  const callStatus = Number(params.call_status ?? params.callStatus)
+  return {
+    durationSec,
+    callResult,
+    callStatus: Number.isFinite(callStatus) ? callStatus : null,
+    recordingUrl: extractRecordingFromNote(note),
+    phone: String(params.phone ?? '').trim(),
+  }
+}
+
+/**
+ * Недозвон / без разговора — записи не будет, ретраи бесполезны.
+ * Sipuni: duration=0, call_result «Не дозвонились», call_status 6.
+ */
+export function isUnansweredAmoCallNote(note) {
+  const meta = callParamsMetaFromAmoNote(note)
+  if (meta.recordingUrl) return false
+  if (meta.durationSec === 0) return true
+  if (/не\s*дозвон|нет\s*ответ|не\s*ответил|no\s*answer|busy|занят/i.test(meta.callResult)) {
+    return true
+  }
+  // 5/6 — типичные статусы недозвона в Sipuni→amo
+  if (meta.callStatus === 5 || meta.callStatus === 6) return true
+  return false
+}
+
 function pickRecordingUrl(params) {
   const normalized = normalizeNoteParams(params)
   const candidates = [

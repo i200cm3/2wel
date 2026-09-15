@@ -7,13 +7,17 @@
 import { amoApi, fetchAmoLeadSnapshot } from './amoAuth.mjs'
 import {
   claimAmoCallSummary,
+  listAmoCallSummariesNeedingRecordingRetry,
   markAmoCallSummaryRunning,
   patchAmoCallSummary,
 } from './amoCallSummaries.mjs'
 import {
   callDirectionFromNoteType,
+  callParamsMetaFromAmoNote,
+  fetchAmoNote,
   fetchLeadIdsForContact,
   fetchNotesByIds,
+  isUnansweredAmoCallNote,
   parseCallNoteFromAmo,
   phonesFromAmoCallNote,
   probeRecordingUrlsDetailed,
@@ -36,7 +40,14 @@ import { isTranscribeConfigured } from './platformIntegrations.mjs'
 import { assemblyTextConfigured } from './yandexGpt.mjs'
 
 const runningKeys = new Set()
-const CALL_SUMMARY_RETRY_MS = [20_000, 90_000]
+/** Sipuni часто дописывает link в note с задержкой — ждём дольше и перечитываем note. */
+const CALL_SUMMARY_RETRY_MS = [20_000, 60_000, 180_000, 600_000, 1_200_000]
+const CALL_SUMMARY_SWEEP_MS = 120_000
+const CALL_SUMMARY_SWEEP_MAX_AGE_MS = 24 * 60 * 60 * 1000
+const CALL_SUMMARY_SWEEP_MIN_AGE_MS = 45_000
+const CALL_SUMMARY_SWEEP_BATCH = 25
+let sweepTimer = null
+let sweepRunning = false
 
 function parseIdSet(raw) {
   return new Set(
@@ -113,6 +124,17 @@ export function formatCallSummaryNoteText({
   return `${head}\n\nИтог: ${outcomeLine}\n\nСледующий шаг: ${nextLine}`
 }
 
+/**
+ * Отдельная заметка-разбор: только при упущенном закрытии.
+ * Цвет через API amo недоступен — визуальный маркер + закрепление.
+ */
+export function formatOperatorReviewNoteText({ miss = '', detail = '' } = {}) {
+  const missLine = String(miss ?? '').trim() || 'Недоработка при возможности закрыть сделку'
+  const detailLine = String(detail ?? '').trim()
+  const body = detailLine && detailLine !== missLine ? `${missLine}\n\n${detailLine}` : missLine
+  return `⚠ РАЗБОР ОПЕРАТОРА (упущена бронь)\n\n${body}`
+}
+
 export async function writeAmoLeadCommonNote(connection, leadId, text, redirectUri) {
   const id = String(leadId ?? '').trim()
   const bodyText = String(text ?? '').trim()
@@ -128,6 +150,16 @@ export async function writeAmoLeadCommonNote(connection, leadId, text, redirectU
     ok: true,
     noteId: note?.id != null ? String(note.id) : '',
   }
+}
+
+export async function pinAmoLeadNote(connection, noteId, redirectUri) {
+  const id = String(noteId ?? '').trim()
+  if (!id) return { ok: false, error: 'no note' }
+  await amoApi(connection, `/api/v4/leads/notes/${encodeURIComponent(id)}/pin`, {
+    method: 'POST',
+    redirectUri,
+  })
+  return { ok: true }
 }
 
 function runKey(projectId, callNoteId) {
@@ -289,9 +321,22 @@ async function processOneCallSummary({
       return { ok: false, reason: 'allowlist_empty' }
     }
 
-    const parsed = parseCallNoteFromAmo(note)
-    const recordingUrl = parsed?.body || ''
-    const durationSec = durationSecFromParsed(parsed)
+    // Webhook часто приходит до того, как Sipuni дописал link — всегда берём свежий note.
+    let liveNote = note
+    try {
+      const fresh = await fetchAmoNote(connection, callNoteId, redirectUri)
+      if (fresh?.id != null) liveNote = fresh
+    } catch (err) {
+      amoWarn('call_summary.note_refresh', {
+        ...ctx,
+        error: err?.message || String(err),
+      })
+    }
+
+    const parsed = parseCallNoteFromAmo(liveNote)
+    const meta = callParamsMetaFromAmoNote(liveNote)
+    const recordingUrl = parsed?.body || meta.recordingUrl || ''
+    const durationSec = durationSecFromParsed(parsed) ?? meta.durationSec
 
     const snap = leadId ? await fetchAmoLeadSnapshot(connection, leadId, redirectUri) : null
     const pipelineId = snap?.pipelineId || ''
@@ -333,6 +378,23 @@ async function processOneCallSummary({
       return { ok: false, reason: 'pipeline_not_allowed' }
     }
 
+    if (isUnansweredAmoCallNote(liveNote)) {
+      await patchAmoCallSummary(projectId, callNoteId, {
+        status: 'skipped',
+        skipReason: 'unanswered',
+        durationSec: durationSec ?? 0,
+        leadId,
+      })
+      amoLog('call_summary.skip', {
+        ...ctx,
+        reason: 'unanswered',
+        callResult: meta.callResult || null,
+        callStatus: meta.callStatus,
+        durationSec,
+      })
+      return { ok: false, reason: 'unanswered' }
+    }
+
     if (durationSec != null && durationSec < NON_TARGET_CALL_MAX_SEC) {
       await patchAmoCallSummary(projectId, callNoteId, {
         status: 'skipped',
@@ -347,6 +409,12 @@ async function processOneCallSummary({
     if (!recordingUrl) {
       const delay = CALL_SUMMARY_RETRY_MS[retryIndex]
       if (delay != null) {
+        await patchAmoCallSummary(projectId, callNoteId, {
+          status: 'pending',
+          error: null,
+          skipReason: null,
+          leadId,
+        })
         amoLog('call_summary.retry', { ...ctx, reason: 'no_recording_url', delayMs: delay })
         scheduleRetry(
           () =>
@@ -356,7 +424,7 @@ async function processOneCallSummary({
               connection,
               redirectUri,
               leadId,
-              note,
+              note: liveNote,
               retryIndex: retryIndex + 1,
             }),
           delay,
@@ -403,6 +471,7 @@ async function processOneCallSummary({
           status: 'pending',
           error: null,
           skipReason: null,
+          recordingUrl,
         })
         amoLog('call_summary.retry', {
           ...ctx,
@@ -419,7 +488,7 @@ async function processOneCallSummary({
               connection,
               redirectUri,
               leadId,
-              note,
+              note: liveNote,
               retryIndex: retryIndex + 1,
             }),
           delay,
@@ -458,7 +527,7 @@ async function processOneCallSummary({
               connection,
               redirectUri,
               leadId,
-              note,
+              note: liveNote,
               retryIndex: retryIndex + 1,
             }),
           delay,
@@ -499,8 +568,46 @@ async function processOneCallSummary({
         error: written.error || 'amo_note_failed',
         summaryOutcome: extracted.outcome,
         summaryNextStep: extracted.nextStep,
+        operatorReviewMiss: extracted.operatorReview?.miss || null,
+        operatorReviewDetail: extracted.operatorReview?.detail || null,
       })
       return { ok: false, reason: 'amo_note_failed' }
+    }
+
+    let operatorReviewNoteId = null
+    const review = extracted.operatorReview
+    if (review) {
+      const reviewText = formatOperatorReviewNoteText(review)
+      try {
+        const reviewWritten = await writeAmoLeadCommonNote(
+          connection,
+          leadId,
+          reviewText,
+          redirectUri,
+        )
+        if (reviewWritten.ok && reviewWritten.noteId) {
+          operatorReviewNoteId = reviewWritten.noteId
+          try {
+            await pinAmoLeadNote(connection, operatorReviewNoteId, redirectUri)
+          } catch (pinErr) {
+            amoWarn('call_summary.operator_review.pin', {
+              ...ctx,
+              noteId: operatorReviewNoteId,
+              error: pinErr?.message || String(pinErr),
+            })
+          }
+        } else {
+          amoWarn('call_summary.operator_review.note', {
+            ...ctx,
+            error: reviewWritten.error || 'empty',
+          })
+        }
+      } catch (reviewErr) {
+        amoWarn('call_summary.operator_review', {
+          ...ctx,
+          error: reviewErr?.message || String(reviewErr),
+        })
+      }
     }
 
     await patchAmoCallSummary(projectId, callNoteId, {
@@ -508,6 +615,9 @@ async function processOneCallSummary({
       summaryOutcome: extracted.outcome,
       summaryNextStep: extracted.nextStep,
       summaryNoteId: written.noteId || null,
+      operatorReviewMiss: review?.miss || null,
+      operatorReviewDetail: review?.detail || null,
+      operatorReviewNoteId,
       error: null,
       skipReason: null,
     })
@@ -515,10 +625,18 @@ async function processOneCallSummary({
     amoLog('call_summary.done', {
       ...ctx,
       summaryNoteId: written.noteId || null,
+      operatorReviewNoteId,
+      hasOperatorReview: Boolean(review),
+      reviewPass: extracted.reviewPass || null,
       model: extracted.model || null,
+      reviewModel: extracted.reviewModel || null,
       sttModel: stt.model || null,
     })
-    return { ok: true, summaryNoteId: written.noteId }
+    return {
+      ok: true,
+      summaryNoteId: written.noteId,
+      operatorReviewNoteId,
+    }
   } catch (err) {
     amoError('call_summary', err, ctx)
     try {
@@ -696,4 +814,78 @@ export async function reprocessCallSummaryNote({
     note,
     retryIndex: 0,
   })
+}
+
+/**
+ * Фоновый обход: Sipuni часто дописывает recording URL после webhook.
+ * Поднимает pending / skipped(no_recording_url|recording_unavailable|no_lead).
+ */
+export async function sweepCallSummariesWaitingForRecording(redirectUri) {
+  if (sweepRunning) return { ok: true, skipped: true, reason: 'already_running' }
+  sweepRunning = true
+  try {
+    const rows = await listAmoCallSummariesNeedingRecordingRetry({
+      minAgeMs: CALL_SUMMARY_SWEEP_MIN_AGE_MS,
+      maxAgeMs: CALL_SUMMARY_SWEEP_MAX_AGE_MS,
+      limit: CALL_SUMMARY_SWEEP_BATCH,
+    })
+    if (!rows.length) return { ok: true, scheduled: 0 }
+
+    const { getAmoConnection } = await import('./amoConnections.mjs')
+    let scheduled = 0
+    for (const row of rows) {
+      const projectId = row.projectId
+      const callNoteId = row.callNoteId
+      if (!projectId || !callNoteId) continue
+      if (runningKeys.has(runKey(projectId, callNoteId))) continue
+      try {
+        const connection = await getAmoConnection(projectId)
+        if (!connection) continue
+        await patchAmoCallSummary(projectId, callNoteId, {
+          status: 'pending',
+          skipReason: null,
+          error: null,
+        })
+        void reprocessCallSummaryNote({
+          projectId,
+          projectCode: row.projectCode || '',
+          connection: { ...connection, projectId },
+          redirectUri,
+          callNoteId,
+          leadId: row.leadId && row.leadId !== '0' ? row.leadId : '',
+        }).catch((err) =>
+          amoError('call_summary.sweep.one', err, {
+            project: row.projectCode,
+            callNoteId,
+          }),
+        )
+        scheduled += 1
+      } catch (err) {
+        amoWarn('call_summary.sweep.item', {
+          project: row.projectCode,
+          callNoteId,
+          error: err?.message || String(err),
+        })
+      }
+    }
+    amoLog('call_summary.sweep', { scheduled, candidates: rows.length })
+    return { ok: true, scheduled, candidates: rows.length }
+  } finally {
+    sweepRunning = false
+  }
+}
+
+export function startCallSummaryRecordingSweeper(redirectUri) {
+  if (sweepTimer) return
+  const run = () => {
+    void sweepCallSummariesWaitingForRecording(redirectUri).catch((err) =>
+      amoError('call_summary.sweep', err, {}),
+    )
+  }
+  sweepTimer = setInterval(run, CALL_SUMMARY_SWEEP_MS)
+  if (typeof sweepTimer.unref === 'function') sweepTimer.unref()
+  // Первый проход чуть позже старта, чтобы не бить API сразу при boot.
+  const first = setTimeout(run, 20_000)
+  if (typeof first.unref === 'function') first.unref()
+  amoLog('call_summary.sweep.start', { everyMs: CALL_SUMMARY_SWEEP_MS })
 }

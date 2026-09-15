@@ -41,6 +41,7 @@ import {
 } from './users.mjs'
 import { handleV1Api } from './v1.mjs'
 import { amoRedirectUri, ensureAllAmoWebhooks } from './amoAuth.mjs'
+import { startCallSummaryRecordingSweeper } from './callSummaryPipeline.mjs'
 import { applyAmoWidgetCors, isAmoWidgetPath } from './amoWidget.mjs'
 import { parseV1Body } from './amoWebhook.mjs'
 import {
@@ -1128,4 +1129,5 @@ server.listen(PORT, '0.0.0.0', () => {
   void ensureAllAmoWebhooks(amoRedirectUri()).catch((err) => {
     console.warn('amo webhook ensure all', err?.message || err)
   })
+  startCallSummaryRecordingSweeper(amoRedirectUri())
 })

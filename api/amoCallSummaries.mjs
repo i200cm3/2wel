@@ -12,6 +12,9 @@ function mapRow(row) {
     summaryOutcome: row.summary_outcome || null,
     summaryNextStep: row.summary_next_step || null,
     summaryNoteId: row.summary_note_id || null,
+    operatorReviewMiss: row.operator_review_miss || null,
+    operatorReviewDetail: row.operator_review_detail || null,
+    operatorReviewNoteId: row.operator_review_note_id || null,
     status: row.status,
     skipReason: row.skip_reason || null,
     error: row.error || null,
@@ -70,7 +73,7 @@ export async function getAmoCallSummary(projectId, callNoteId) {
 
 /**
  * Атомарно взять в работу: pending / failed, либо skipped из‑за
- * no_lead / recording_unavailable (Sipuni часто отдаёт запись с задержкой).
+ * no_lead / no_recording_url / recording_unavailable (Sipuni дописывает запись с задержкой).
  */
 export async function markAmoCallSummaryRunning(projectId, callNoteId) {
   const { rows } = await query(
@@ -80,7 +83,10 @@ export async function markAmoCallSummaryRunning(projectId, callNoteId) {
        AND call_note_id = $2
        AND (
          status IN ('pending', 'failed')
-         OR (status = 'skipped' AND skip_reason IN ('no_lead', 'recording_unavailable'))
+         OR (
+           status = 'skipped'
+           AND skip_reason IN ('no_lead', 'no_recording_url', 'recording_unavailable')
+         )
        )
      RETURNING *`,
     [projectId, String(callNoteId ?? '').trim()],
@@ -104,6 +110,9 @@ export async function patchAmoCallSummary(projectId, callNoteId, patch = {}) {
   if ('summaryOutcome' in patch) add('summary_outcome', patch.summaryOutcome)
   if ('summaryNextStep' in patch) add('summary_next_step', patch.summaryNextStep)
   if ('summaryNoteId' in patch) add('summary_note_id', patch.summaryNoteId)
+  if ('operatorReviewMiss' in patch) add('operator_review_miss', patch.operatorReviewMiss)
+  if ('operatorReviewDetail' in patch) add('operator_review_detail', patch.operatorReviewDetail)
+  if ('operatorReviewNoteId' in patch) add('operator_review_note_id', patch.operatorReviewNoteId)
   if ('pipelineId' in patch) add('pipeline_id', patch.pipelineId)
   if ('statusId' in patch) add('status_id', patch.statusId)
   if ('durationSec' in patch) add('duration_sec', patch.durationSec)
@@ -136,11 +145,12 @@ function mapListRow(row) {
 /** Список звонков проекта (без полного транскрипта). Короткие <30 сек не показываем. */
 export async function listAmoCallSummaries(
   projectId,
-  { limit = 50, offset = 0, status = '' } = {},
+  { limit = 50, offset = 0, status = '', leadId = '' } = {},
 ) {
   const lim = Math.min(100, Math.max(1, Number(limit) || 50))
   const off = Math.max(0, Number(offset) || 0)
   const statusFilter = String(status ?? '').trim()
+  const leadIdFilter = String(leadId ?? '').trim()
   const params = [projectId]
   let where = `project_id = $1
     AND COALESCE(skip_reason, '') <> 'short_call'
@@ -149,12 +159,17 @@ export async function listAmoCallSummaries(
     params.push(statusFilter)
     where += ` AND status = $${params.length}`
   }
+  if (leadIdFilter) {
+    params.push(leadIdFilter)
+    where += ` AND lead_id = $${params.length}`
+  }
   const countRes = await query(`SELECT count(*)::int AS n FROM amo_call_summaries WHERE ${where}`, params)
   params.push(lim, off)
   const { rows } = await query(
     `SELECT id, project_id, lead_id, call_note_id, recording_url,
             left(transcript, 200) AS transcript,
             summary_outcome, summary_next_step, summary_note_id,
+            operator_review_miss, operator_review_detail, operator_review_note_id,
             status, skip_reason, error, pipeline_id, status_id, duration_sec,
             created_at, updated_at
      FROM amo_call_summaries
@@ -186,4 +201,38 @@ export async function deleteAmoCallSummaryById(projectId, id) {
     [projectId, String(id ?? '').trim()],
   )
   return Boolean(rows[0]?.id)
+}
+
+/**
+ * Звонки, ждущие ссылку/файл записи (для фонового sweep после задержки Sipuni).
+ */
+export async function listAmoCallSummariesNeedingRecordingRetry({
+  minAgeMs = 45_000,
+  maxAgeMs = 24 * 60 * 60 * 1000,
+  limit = 25,
+} = {}) {
+  const lim = Math.min(100, Math.max(1, Number(limit) || 25))
+  const minAge = Math.max(0, Number(minAgeMs) || 0)
+  const maxAge = Math.max(minAge, Number(maxAgeMs) || minAge)
+  const { rows } = await query(
+    `SELECT s.*, p.code AS project_code
+     FROM amo_call_summaries s
+     JOIN projects p ON p.id = s.project_id
+     WHERE (
+         (s.status = 'pending' AND (s.transcript IS NULL OR btrim(s.transcript) = ''))
+         OR (
+           s.status = 'skipped'
+           AND s.skip_reason IN ('no_recording_url', 'recording_unavailable', 'no_lead')
+         )
+       )
+       AND s.updated_at <= now() - ($1::bigint * interval '1 millisecond')
+       AND s.updated_at >= now() - ($2::bigint * interval '1 millisecond')
+     ORDER BY s.updated_at ASC
+     LIMIT $3`,
+    [minAge, maxAge, lim],
+  )
+  return rows.map((row) => ({
+    ...mapRow(row),
+    projectCode: row.project_code || null,
+  }))
 }

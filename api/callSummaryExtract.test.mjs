@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { parseCallSummaryResponse, sanitizeCallSummaryFacts } from './callSummaryExtract.mjs'
+import {
+  buildOperatorReviewPrompt,
+  normalizeOperatorReview,
+  parseCallSummaryResponse,
+  parseOperatorReviewResponse,
+  sanitizeCallSummaryFacts,
+  shouldRunOperatorReviewPass,
+} from './callSummaryExtract.mjs'
 
 describe('sanitizeCallSummaryFacts', () => {
   it('убирает выдуманную цену без ценового контекста в транскрипте', () => {
@@ -38,5 +45,105 @@ describe('parseCallSummaryResponse', () => {
     const parsed = parseCallSummaryResponse('{"outcome":"A","nextStep":"B"}')
     assert.equal(parsed.ok, true)
     assert.equal(parsed.outcome, 'A')
+    assert.equal(parsed.operatorReview, null)
+  })
+
+  it('нормализует operatorReview', () => {
+    assert.equal(normalizeOperatorReview(null), null)
+    assert.deepEqual(
+      normalizeOperatorReview({ miss: 'Не предложил бронь', detail: 'Места были.' }),
+      { miss: 'Не предложил бронь', detail: 'Места были.' },
+    )
+  })
+})
+
+describe('shouldRunOperatorReviewPass', () => {
+  it('включает коммерческий срыв', () => {
+    assert.equal(
+      shouldRunOperatorReviewPass({
+        outcome: 'Хотел бронь с 5 октября, мест нет, ушёл',
+        nextStep: 'Уточнить интерес',
+      }),
+      true,
+    )
+  })
+
+  it('пропускает закрытую бронь', () => {
+    assert.equal(
+      shouldRunOperatorReviewPass({
+        outcome: 'Клиент забронировал номер на 16 ноября, выставили счёт',
+        nextStep: 'дальнейших действий не требуется',
+      }),
+      false,
+    )
+  })
+
+  it('пропускает документы без брони', () => {
+    assert.equal(
+      shouldRunOperatorReviewPass({
+        outcome: 'Клиент сообщил об ошибке в документе, нужно исправить калькулятор',
+        nextStep: 'Ждать скан от клиента',
+      }),
+      false,
+    )
+  })
+})
+
+describe('parseOperatorReviewResponse', () => {
+  it('читает null', () => {
+    const parsed = parseOperatorReviewResponse('{"operatorReview":null}')
+    assert.equal(parsed.ok, true)
+    assert.equal(parsed.operatorReview, null)
+  })
+
+  it('читает miss/detail', () => {
+    const parsed = parseOperatorReviewResponse(
+      '{"operatorReview":{"miss":"не предложил другие даты","detail":"Мест нет, альтернатив не было."}}',
+    )
+    assert.equal(parsed.ok, true)
+    assert.equal(parsed.operatorReview?.miss, 'не предложил другие даты')
+  })
+})
+
+describe('reconcileOperatorReview', () => {
+  it('сбрасывает разбор, если в detail уже есть предложение и отказ', async () => {
+    const { reconcileOperatorReview } = await import('./callSummaryExtract.mjs')
+    assert.equal(
+      reconcileOperatorReview(
+        {
+          miss: 'не предложил конкретные даты',
+          detail:
+            'Оператор предложил номер с 26 сентября, но клиент отказался. На 21 октября тоже предложили.',
+        },
+        { outcome: 'Были предложены даты, клиент отказался' },
+      ),
+      null,
+    )
+  })
+
+  it('сбрасывает разбор, если в outcome уже есть конкретная доступная дата', async () => {
+    const { reconcileOperatorReview } = await import('./callSummaryExtract.mjs')
+    assert.equal(
+      reconcileOperatorReview(
+        {
+          miss: 'не предложил альтернативных дат',
+          detail: 'Оператор не предложил альтернативных дат.',
+        },
+        {
+          outcome:
+            'На 21 октября есть предложение двухкомнатного премиум-номера. Клиент отказался.',
+        },
+      ),
+      null,
+    )
+  })
+
+  it('оставляет разбор, если альтернатив не было', async () => {
+    const { reconcileOperatorReview } = await import('./callSummaryExtract.mjs')
+    const review = {
+      miss: 'не предложил другие даты',
+      detail: 'Оператор сказал, что только в ноябре, но не предложил конкретные даты.',
+    }
+    assert.deepEqual(reconcileOperatorReview(review, { outcome: 'Мест нет с 5 октября' }), review)
   })
 })

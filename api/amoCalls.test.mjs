@@ -6,6 +6,7 @@ import {
   entityIdsFromAmoNotes,
   inspectCallNoteFromAmo,
   isAmoCallSourceRef,
+  isUnansweredAmoCallNote,
   leadIdsFromAmoLinks,
   leadIdsFromEmbeddedLeads,
   recordingProbeAvailability,
@@ -107,6 +108,34 @@ describe('note timestamps', () => {
   it('читает created_at в секундах и миллисекундах', () => {
     assert.equal(noteCreatedAtMs({ created_at: 1_700_000_000 }), 1_700_000_000_000)
     assert.equal(noteCreatedAtMs({ created_at: 1_700_000_000_000 }), 1_700_000_000_000)
+  })
+})
+
+describe('isUnansweredAmoCallNote', () => {
+  it('ломает недозвон Sipuni без link', () => {
+    assert.equal(
+      isUnansweredAmoCallNote({
+        note_type: 'call_out',
+        params: {
+          duration: 0,
+          link: '',
+          call_result: 'Не дозвонились',
+          call_status: 6,
+        },
+      }),
+      true,
+    )
+    assert.equal(
+      isUnansweredAmoCallNote({
+        note_type: 'call_out',
+        params: {
+          duration: 40,
+          link: 'https://sipuni.com/record.mp3',
+          call_result: 'Ответили',
+        },
+      }),
+      false,
+    )
   })
 })
 
