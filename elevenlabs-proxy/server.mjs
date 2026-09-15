@@ -93,14 +93,18 @@ async function readBody(req, maxBytes = 64 * 1024) {
   return Buffer.concat(chunks)
 }
 
-async function synthesizeEleven({ text, voice, modelId, voiceSettings }) {
+async function synthesizeEleven({ text, voice, modelId, voiceSettings, apiKey }) {
+  const key = String(apiKey || API_KEY || '').trim()
+  if (!key) {
+    return { ok: false, status: 503, error: 'ElevenLabs API key не задан' }
+  }
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), ELEVEN_TIMEOUT_MS)
   try {
     const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voice)}`, {
       method: 'POST',
       headers: {
-        'xi-api-key': API_KEY,
+        'xi-api-key': key,
         Accept: 'audio/mpeg',
         'Content-Type': 'application/json',
       },
@@ -145,13 +149,17 @@ function elevenDetailMessage(detail) {
   return String(detail).slice(0, 800)
 }
 
-async function fetchSubscription() {
+async function fetchSubscription(apiKey) {
+  const key = String(apiKey || API_KEY || '').trim()
+  if (!key) {
+    return { ok: false, status: 503, error: 'ElevenLabs API key не задан' }
+  }
   const ctrl = new AbortController()
   const timer = setTimeout(() => ctrl.abort(), 15_000)
   try {
     const res = await fetch('https://api.elevenlabs.io/v1/user/subscription', {
       method: 'GET',
-      headers: { 'xi-api-key': API_KEY },
+      headers: { 'xi-api-key': key },
       signal: ctrl.signal,
     })
     const text = await res.text()
@@ -189,6 +197,12 @@ async function fetchSubscription() {
   }
 }
 
+function requestApiKey(req, payload = null) {
+  const fromBody = payload && typeof payload === 'object' ? String(payload.apiKey ?? '').trim() : ''
+  if (fromBody) return fromBody
+  return String(req.headers['x-elevenlabs-key'] ?? '').trim()
+}
+
 const server = http.createServer(async (req, res) => {
   const method = req.method ?? 'GET'
   const url = new URL(req.url ?? '/', `http://${req.headers.host ?? 'localhost'}`)
@@ -203,7 +217,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (method === 'GET' && url.pathname === '/v1/subscription') {
-    if (!API_KEY || !SECRET) {
+    if (!SECRET) {
       json(res, 503, { error: 'proxy not configured' })
       return
     }
@@ -215,7 +229,12 @@ const server = http.createServer(async (req, res) => {
       json(res, 403, { error: 'forbidden' })
       return
     }
-    const result = await fetchSubscription()
+    const apiKey = requestApiKey(req) || API_KEY
+    if (!apiKey) {
+      json(res, 503, { error: 'ElevenLabs API key не задан' })
+      return
+    }
+    const result = await fetchSubscription(apiKey)
     if (!result.ok) {
       json(res, result.status, { error: result.error, detail: result.detail ?? '' })
       return
@@ -229,7 +248,7 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
-  if (!API_KEY || !SECRET) {
+  if (!SECRET) {
     json(res, 503, { error: 'proxy not configured' })
     return
   }
@@ -263,6 +282,12 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
+  const apiKey = requestApiKey(req, payload) || API_KEY
+  if (!apiKey) {
+    json(res, 503, { error: 'ElevenLabs API key не задан' })
+    return
+  }
+
   const modelId = String(payload?.modelId ?? env('ELEVENLABS_MODEL_ID', 'eleven_v3'))
   const vs = payload?.voiceSettings && typeof payload.voiceSettings === 'object' ? payload.voiceSettings : {}
   const voiceSettings = {
@@ -272,7 +297,7 @@ const server = http.createServer(async (req, res) => {
     use_speaker_boost: vs.use_speaker_boost !== false,
   }
 
-  const result = await synthesizeEleven({ text, voice, modelId, voiceSettings })
+  const result = await synthesizeEleven({ text, voice, modelId, voiceSettings, apiKey })
   if (!result.ok) {
     json(res, result.status, { error: result.error, detail: result.detail ?? '' })
     return

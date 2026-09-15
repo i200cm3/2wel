@@ -1,8 +1,7 @@
-import { query } from './db.js'
+import { getPool, query } from './db.js'
 import { loadEnv } from './env.js'
 
 export const SETTING_KEYS = {
-  geminiApiKey: 'integrations.gemini.api_key',
   elevenlabsApiKey: 'integrations.elevenlabs.api_key',
   yandexApiKey: 'integrations.yandex.api_key',
   yandexFolderId: 'integrations.yandex.folder_id',
@@ -14,19 +13,11 @@ export const SETTING_KEYS = {
 export const TRANSCRIBE_PROVIDERS = [{ id: 'gigaam', label: 'GigaAM', available: true }]
 
 export const ASSEMBLY_PROVIDERS = [
-  { id: 'gemini', label: 'Gemini', available: true },
   { id: 'yandex', label: 'YandexGPT', available: true },
-  { id: 'local', label: 'Локальный (2.11)', available: true },
+  { id: 'local', label: 'Qwen', available: true },
 ]
 
 const INTEGRATION_DEFS = [
-  {
-    id: 'gemini',
-    label: 'Gemini',
-    settingKey: SETTING_KEYS.geminiApiKey,
-    envKey: 'GEMINI_API_KEY',
-    comingSoon: false,
-  },
   {
     id: 'elevenlabs',
     label: 'ElevenLabs',
@@ -44,8 +35,11 @@ const INTEGRATION_DEFS = [
 ]
 
 const CACHE_TTL_MS = 15_000
+const ELEVENLABS_PROVIDER = 'elevenlabs'
 let settingsCache = null
 let settingsCacheAt = 0
+/** @type {{ hasAny: boolean, activeKey: string, at: number } | null} */
+let elevenlabsKeyCache = null
 
 function env(key, fallback = '') {
   loadEnv()
@@ -55,6 +49,7 @@ function env(key, fallback = '') {
 export function invalidatePlatformSettingsCache() {
   settingsCache = null
   settingsCacheAt = 0
+  elevenlabsKeyCache = null
 }
 
 /** Синхронный peek: только уже загруженный кэш (без запроса в БД). */
@@ -63,8 +58,176 @@ export function peekCachedSetting(key) {
   return String(settingsCache[key] ?? '').trim()
 }
 
+/** Есть ли ключи ElevenLabs в таблице (после warm/CRUD). */
+export function peekElevenlabsHasKeys() {
+  return Boolean(elevenlabsKeyCache?.hasAny)
+}
+
 export async function warmPlatformSettingsCache() {
   await loadSettingsMap()
+  await refreshElevenlabsKeyCache()
+}
+
+async function refreshElevenlabsKeyCache() {
+  const { rows } = await query(
+    `SELECT api_key, is_active
+     FROM platform_api_keys
+     WHERE provider = $1
+     ORDER BY is_active DESC, created_at DESC`,
+    [ELEVENLABS_PROVIDER],
+  )
+  const active = rows.find((row) => row.is_active)
+  elevenlabsKeyCache = {
+    hasAny: rows.length > 0,
+    activeKey: String(active?.api_key ?? '').trim(),
+    at: Date.now(),
+  }
+  return elevenlabsKeyCache
+}
+
+function mapElevenlabsKeyRow(row) {
+  const apiKey = String(row.api_key ?? '').trim()
+  const label = String(row.label ?? '').trim()
+  return {
+    id: String(row.id),
+    label: label || maskApiKey(apiKey) || 'Ключ',
+    keyHint: maskApiKey(apiKey),
+    isActive: Boolean(row.is_active),
+    createdAt: row.created_at ? new Date(row.created_at).toISOString() : null,
+  }
+}
+
+export async function listElevenlabsApiKeys() {
+  const { rows } = await query(
+    `SELECT id, label, api_key, is_active, created_at
+     FROM platform_api_keys
+     WHERE provider = $1
+     ORDER BY is_active DESC, created_at DESC`,
+    [ELEVENLABS_PROVIDER],
+  )
+  return rows.map(mapElevenlabsKeyRow)
+}
+
+async function activateElevenlabsApiKeyTx(client, id) {
+  await client.query(
+    `UPDATE platform_api_keys SET is_active = false, updated_at = now()
+     WHERE provider = $1 AND is_active`,
+    [ELEVENLABS_PROVIDER],
+  )
+  const { rowCount } = await client.query(
+    `UPDATE platform_api_keys
+     SET is_active = true, updated_at = now()
+     WHERE id = $1 AND provider = $2`,
+    [id, ELEVENLABS_PROVIDER],
+  )
+  return rowCount > 0
+}
+
+/**
+ * Добавить ключ ElevenLabs. По умолчанию сразу делает его активным
+ * (генерация и баланс идут через выбранный ключ).
+ */
+export async function addElevenlabsApiKey({ apiKey, label = '', activate = true } = {}) {
+  const value = String(apiKey ?? '').trim()
+  if (!value) {
+    return { ok: false, status: 400, error: 'Пустой API key' }
+  }
+  const name = String(label ?? '').trim().slice(0, 80)
+  const pool = getPool()
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const inserted = await client.query(
+      `INSERT INTO platform_api_keys (provider, label, api_key, is_active)
+       VALUES ($1, $2, $3, false)
+       RETURNING id`,
+      [ELEVENLABS_PROVIDER, name, value],
+    )
+    const id = inserted.rows[0]?.id
+    if (activate && id) {
+      await activateElevenlabsApiKeyTx(client, id)
+    }
+    await client.query('COMMIT')
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
+  invalidatePlatformSettingsCache()
+  const overview = await getAdminIntegrationsOverview()
+  return { ok: true, ...overview }
+}
+
+export async function selectElevenlabsApiKey(id) {
+  const keyId = String(id ?? '').trim()
+  if (!keyId) {
+    return { ok: false, status: 400, error: 'Не указан ключ' }
+  }
+  const pool = getPool()
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const ok = await activateElevenlabsApiKeyTx(client, keyId)
+    if (!ok) {
+      await client.query('ROLLBACK')
+      return { ok: false, status: 404, error: 'Ключ не найден' }
+    }
+    await client.query('COMMIT')
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
+  invalidatePlatformSettingsCache()
+  const overview = await getAdminIntegrationsOverview()
+  return { ok: true, ...overview }
+}
+
+export async function deleteElevenlabsApiKey(id) {
+  const keyId = String(id ?? '').trim()
+  if (!keyId) {
+    return { ok: false, status: 400, error: 'Не указан ключ' }
+  }
+  const pool = getPool()
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    const existing = await client.query(
+      `SELECT id, is_active FROM platform_api_keys
+       WHERE id = $1 AND provider = $2
+       FOR UPDATE`,
+      [keyId, ELEVENLABS_PROVIDER],
+    )
+    if (!existing.rowCount) {
+      await client.query('ROLLBACK')
+      return { ok: false, status: 404, error: 'Ключ не найден' }
+    }
+    const wasActive = Boolean(existing.rows[0].is_active)
+    await client.query(`DELETE FROM platform_api_keys WHERE id = $1`, [keyId])
+    if (wasActive) {
+      const next = await client.query(
+        `SELECT id FROM platform_api_keys
+         WHERE provider = $1
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [ELEVENLABS_PROVIDER],
+      )
+      if (next.rows[0]?.id) {
+        await activateElevenlabsApiKeyTx(client, next.rows[0].id)
+      }
+    }
+    await client.query('COMMIT')
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
+  invalidatePlatformSettingsCache()
+  const overview = await getAdminIntegrationsOverview()
+  return { ok: true, ...overview }
 }
 
 export function maskApiKey(value) {
@@ -74,15 +237,22 @@ export function maskApiKey(value) {
   return `${s.slice(0, 4)}…${s.slice(-4)}`
 }
 
+/** Folder id каталога — не секрет, но в UI не светим целиком. */
+export function maskFolderId(value) {
+  const s = String(value ?? '').trim()
+  if (!s) return null
+  if (s.length <= 8) return '••••••••'
+  return `${s.slice(0, 3)}…${s.slice(-3)}`
+}
+
 export function normalizeTranscribeProvider(_value) {
   return 'gigaam'
 }
 
 export function normalizeAssemblyProvider(value) {
   const id = String(value ?? '').trim().toLowerCase()
-  if (id === 'yandex') return 'yandex'
   if (id === 'local' || id === 'ollama' || id === 'qwen') return 'local'
-  return 'gemini'
+  return 'yandex'
 }
 
 async function loadSettingsMap({ force = false } = {}) {
@@ -121,16 +291,44 @@ async function deletePlatformSetting(key) {
   invalidatePlatformSettingsCache()
 }
 
-export async function resolveGeminiApiKey() {
-  const fromDb = await getPlatformSetting(SETTING_KEYS.geminiApiKey)
-  if (fromDb) return fromDb
-  return env('GEMINI_API_KEY')
-}
-
 export async function resolveElevenlabsApiKey() {
+  const cache =
+    elevenlabsKeyCache && Date.now() - elevenlabsKeyCache.at < CACHE_TTL_MS
+      ? elevenlabsKeyCache
+      : await refreshElevenlabsKeyCache()
+  if (cache.activeKey) return cache.activeKey
+  // Legacy: одиночный ключ в platform_settings (до миграции / локально).
   const fromDb = await getPlatformSetting(SETTING_KEYS.elevenlabsApiKey)
   if (fromDb) return fromDb
   return env('ELEVENLABS_API_KEY')
+}
+
+/** Метаданные активного ключа для UI баланса (без секрета). */
+export async function resolveElevenlabsActiveKeyMeta() {
+  const { rows } = await query(
+    `SELECT id, label, api_key
+     FROM platform_api_keys
+     WHERE provider = $1 AND is_active
+     LIMIT 1`,
+    [ELEVENLABS_PROVIDER],
+  )
+  const row = rows[0]
+  if (!row) {
+    const legacy = await resolveElevenlabsApiKey()
+    if (!legacy) return null
+    return {
+      id: null,
+      label: 'Ключ',
+      keyHint: maskApiKey(legacy),
+    }
+  }
+  const apiKey = String(row.api_key ?? '').trim()
+  const label = String(row.label ?? '').trim()
+  return {
+    id: String(row.id),
+    label: label || maskApiKey(apiKey) || 'Ключ',
+    keyHint: maskApiKey(apiKey),
+  }
 }
 
 export async function resolveYandexApiKey() {
@@ -151,7 +349,7 @@ export async function resolveTranscribeProvider() {
 
 export async function resolveAssemblyProvider() {
   const raw = await getPlatformSetting(SETTING_KEYS.assemblyProvider)
-  return normalizeAssemblyProvider(raw || 'gemini')
+  return normalizeAssemblyProvider(raw || 'yandex')
 }
 
 export async function resolveExtractModel() {
@@ -164,17 +362,12 @@ export function isLocalLlmUrlConfigured() {
   return Boolean(env('LOCAL_LLM_URL'))
 }
 
-/** {hello} — облако. Локальный LLM только для extract. */
+/** {hello} — только YandexGPT. Локальный LLM только для extract. */
 export async function resolveHelloProvider() {
-  const extract = await resolveAssemblyProvider()
-  if (extract === 'yandex' || extract === 'gemini') return extract
-  if (await isGeminiTextConfigured()) return 'gemini'
-  if ((await resolveYandexApiKey()) && (await resolveYandexFolderId())) return 'yandex'
-  return 'gemini'
+  return 'yandex'
 }
 
 export async function isHelloTextConfigured() {
-  if (await isGeminiTextConfigured()) return true
   return Boolean((await resolveYandexApiKey()) && (await resolveYandexFolderId()))
 }
 
@@ -183,60 +376,65 @@ export async function isTranscribeConfigured() {
   return Boolean(env('GIGAAM_TRANSCRIBE_URL'))
 }
 
-export async function isGeminiTextConfigured() {
-  if (env('GEMINI_TRANSCRIBE_URL')) return true
-  return Boolean(await resolveGeminiApiKey())
-}
-
-/** LLM для extract-сводки (Gemini, YandexGPT или локальный Ollama). */
+/** LLM для extract-сводки (YandexGPT или Qwen). */
 export async function isAssemblyTextConfigured() {
   const provider = await resolveAssemblyProvider()
   if (provider === 'local') return isLocalLlmUrlConfigured()
-  if (provider === 'yandex') {
-    return Boolean((await resolveYandexApiKey()) && (await resolveYandexFolderId()))
-  }
-  return isGeminiTextConfigured()
+  return Boolean((await resolveYandexApiKey()) && (await resolveYandexFolderId()))
 }
 
 /** Почему extract нельзя запустить — для UI/логов. */
 export async function assemblyTextConfigError() {
   const provider = await resolveAssemblyProvider()
   if (provider === 'local') {
-    return isLocalLlmUrlConfigured() ? null : 'Не задан LOCAL_LLM_URL (Ollama на 2.11)'
+    return isLocalLlmUrlConfigured() ? null : 'Локальный LLM не подключён'
   }
-  if (provider === 'yandex') {
-    if (!(await resolveYandexApiKey())) {
-      return 'Не задан API key Яндекса (Админ → API)'
-    }
-    if (!(await resolveYandexFolderId())) {
-      return 'Не задан Folder ID каталога Яндекса (Админ → API → Яндекс)'
-    }
-    return null
+  if (!(await resolveYandexApiKey())) {
+    return 'Не задан API key Яндекса (Админ → API)'
   }
-  if (await isGeminiTextConfigured()) return null
-  return 'Не задан Gemini (ключ или GEMINI_TRANSCRIBE_URL)'
+  if (!(await resolveYandexFolderId())) {
+    return 'Не задан Folder ID каталога Яндекса (Админ → API → Яндекс)'
+  }
+  return null
 }
 
-function integrationPublicView(def, map) {
+function integrationPublicView(def, map, elevenlabsKeys = []) {
   const fromDb = String(map[def.settingKey] ?? '').trim()
   const fromEnv = env(def.envKey)
-  const hasKey = Boolean(fromDb || fromEnv)
-  let source = 'none'
-  if (fromDb) source = 'database'
-  else if (fromEnv) source = 'env'
   const view = {
     id: def.id,
     label: def.label,
     comingSoon: Boolean(def.comingSoon),
-    hasKey,
-    keyHint: fromDb ? maskApiKey(fromDb) : null,
-    source,
+    hasKey: false,
+    keyHint: null,
+    source: 'none',
   }
+
+  if (def.id === 'elevenlabs') {
+    const active = elevenlabsKeys.find((item) => item.isActive) || null
+    const hasTableKeys = elevenlabsKeys.length > 0
+    view.keys = elevenlabsKeys
+    view.activeKeyId = active?.id ?? null
+    view.hasKey = hasTableKeys || Boolean(fromDb || fromEnv || env('ELEVENLABS_PROXY_URL'))
+    view.keyHint = active?.keyHint || (fromDb ? maskApiKey(fromDb) : null)
+    if (hasTableKeys || fromDb) view.source = 'database'
+    else if (fromEnv || env('ELEVENLABS_PROXY_URL')) view.source = 'env'
+    return view
+  }
+
+  const hasKey = Boolean(fromDb || fromEnv)
+  view.hasKey = hasKey
+  view.keyHint = fromDb ? maskApiKey(fromDb) : null
+  if (fromDb) view.source = 'database'
+  else if (fromEnv) view.source = 'env'
+
   if (def.id === 'yandex') {
     const folderFromDb = String(map[SETTING_KEYS.yandexFolderId] ?? '').trim()
     const folderFromEnv = env('YANDEX_FOLDER_ID') || env('YC_FOLDER_ID')
-    view.folderId = folderFromDb || null
-    view.hasFolderId = Boolean(folderFromDb || folderFromEnv)
+    const folderRaw = folderFromDb || folderFromEnv
+    view.folderId = null
+    view.folderIdHint = folderRaw ? maskFolderId(folderRaw) : null
+    view.hasFolderId = Boolean(folderRaw)
     view.folderIdSource = folderFromDb ? 'database' : folderFromEnv ? 'env' : 'none'
   }
   return view
@@ -244,7 +442,9 @@ function integrationPublicView(def, map) {
 
 export async function getAdminIntegrationsOverview() {
   const map = await loadSettingsMap({ force: true })
-  const assemblyProvider = normalizeAssemblyProvider(map[SETTING_KEYS.assemblyProvider] || 'gemini')
+  await refreshElevenlabsKeyCache()
+  const elevenlabsKeys = await listElevenlabsApiKeys()
+  const assemblyProvider = normalizeAssemblyProvider(map[SETTING_KEYS.assemblyProvider] || 'yandex')
   const { defaultLocalLlmModel, listLocalLlmModels, normalizeLocalModelId } = await import('./localLlm.mjs')
   const listed = assemblyProvider === 'local' ? await listLocalLlmModels() : { ok: true, models: [], error: null }
   const extractModel =
@@ -262,7 +462,7 @@ export async function getAdminIntegrationsOverview() {
     extractModels: listed.models,
     localLlmConfigured: localAvailable,
     localLlmError: listed.error,
-    integrations: INTEGRATION_DEFS.map((def) => integrationPublicView(def, map)),
+    integrations: INTEGRATION_DEFS.map((def) => integrationPublicView(def, map, elevenlabsKeys)),
   }
 }
 
@@ -285,7 +485,7 @@ export async function updateAdminIntegrations(payload = {}) {
       return {
         ok: false,
         status: 400,
-        error: 'Локальный экстракт не настроен (LOCAL_LLM_URL)',
+        error: 'Локальный LLM не подключён',
       }
     }
     const meta = ASSEMBLY_PROVIDERS.find((item) => item.id === next)
@@ -323,6 +523,11 @@ export async function updateAdminIntegrations(payload = {}) {
     const raw = secrets[def.id]
     if (raw === null || raw === undefined) continue
     const value = String(raw).trim()
+    // ElevenLabs: одиночный secrets.elevenlabs → добавить ключ и сделать активным.
+    if (def.id === 'elevenlabs') {
+      if (!value) continue
+      return addElevenlabsApiKey({ apiKey: value, activate: true })
+    }
     if (!value) {
       await deletePlatformSetting(def.settingKey)
     } else {
@@ -332,4 +537,77 @@ export async function updateAdminIntegrations(payload = {}) {
 
   const overview = await getAdminIntegrationsOverview()
   return { ok: true, ...overview }
+}
+
+/**
+ * Лёгкая проверка связи для админки API.
+ * @param {string} provider `yandex` | `elevenlabs` | `local`
+ */
+export async function testAdminIntegration(provider) {
+  const id = String(provider ?? '').trim().toLowerCase()
+
+  if (id === 'local' || id === 'ollama' || id === 'qwen') {
+    if (!isLocalLlmUrlConfigured()) {
+      return { ok: false, status: 400, error: 'Локальный LLM не подключён' }
+    }
+    const { listLocalLlmModels } = await import('./localLlm.mjs')
+    const listed = await listLocalLlmModels()
+    if (!listed.ok) {
+      return {
+        ok: false,
+        status: 502,
+        error: listed.error || 'Локальный LLM недоступен',
+      }
+    }
+    return {
+      ok: true,
+      message: `Локальный LLM отвечает · моделей: ${listed.models.length}`,
+    }
+  }
+
+  if (id === 'elevenlabs') {
+    const { fetchElevenlabsBalance } = await import('./ttsUsage.mjs')
+    const bal = await fetchElevenlabsBalance()
+    if (!bal.ok) {
+      return {
+        ok: false,
+        status: 502,
+        error: bal.error || 'ElevenLabs недоступен',
+        detail: bal.detail || undefined,
+      }
+    }
+    const rem = Number(bal.charactersRemaining)
+    const remLabel = Number.isFinite(rem) ? ` · осталось ${rem} символов` : ''
+    return { ok: true, message: `ElevenLabs отвечает${remLabel}` }
+  }
+
+  if (id === 'yandex') {
+    if (!(await resolveYandexApiKey())) {
+      return { ok: false, status: 400, error: 'Не задан API key Яндекса' }
+    }
+    if (!(await resolveYandexFolderId())) {
+      return {
+        ok: false,
+        status: 400,
+        error: 'Не задан Folder ID каталога Яндекса',
+      }
+    }
+    const { generateTextWithYandex } = await import('./yandexGpt.mjs')
+    const generated = await generateTextWithYandex('Ответь одним словом: ок', {
+      maxTokens: 16,
+      temperature: 0,
+      timeoutMs: 20_000,
+    })
+    if (!generated?.ok) {
+      return {
+        ok: false,
+        status: generated?.status || 502,
+        error: generated?.error || 'YandexGPT недоступен',
+        detail: generated?.detail || undefined,
+      }
+    }
+    return { ok: true, message: 'YandexGPT отвечает (ключ и folder id ок)' }
+  }
+
+  return { ok: false, status: 400, error: 'Неизвестный провайдер' }
 }

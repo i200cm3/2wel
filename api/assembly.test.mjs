@@ -345,6 +345,8 @@ describe('deriveFlowIds · plaza2 name-only (matches Constructor V2)', () => {
     assert.equal(flow.includes('senior_calm_rhythm'), false)
     assert.equal(flow.includes('objection_dates_not_fixed'), false)
     assert.equal(flow.includes('treatment_profile_cardio'), false)
+    assert.ok(flow.some((id) => id.startsWith('rooms_')), `expected rooms must-cover, got: ${flow.join(' -> ')}`)
+    assert.ok(flow.some((id) => id.startsWith('treatment_')), `expected treatment, got: ${flow.join(' -> ')}`)
     const body = flow.slice(0, -1).filter((id) => cold.includes(id))
     assert.ok(body.length > 0, `expected some cold-start body, got: ${flow.join(' -> ')}`)
     assert.deepEqual(body, cold.slice(0, body.length), 'cold body must be a prefix of coldStartIds')
@@ -352,7 +354,8 @@ describe('deriveFlowIds · plaza2 name-only (matches Constructor V2)', () => {
       if (id === flow[flow.length - 1]) continue
       const isStart = (config.constructorV2.assembly.alwaysStartIds ?? []).includes(id)
       const isCold = cold.includes(id)
-      assert.ok(isStart || isCold, `unexpected non-cold body block ${id}`)
+      const isMustCover = id.startsWith('rooms_') || id.startsWith('treatment_')
+      assert.ok(isStart || isCold || isMustCover, `unexpected non-cold body block ${id}`)
     }
   })
 })
@@ -374,12 +377,57 @@ describe('deriveFlowIds · adm-plaza-copy-v2 name-only', () => {
     })
     assert.equal(flow[0], 'intro_generic')
     assert.equal(flow[flow.length - 1], 'cta_whatsapp')
-    assert.deepEqual(flow.slice(1, -1), cold)
+    assert.ok(flow.includes('rooms_luxury'), flow.join(' -> '))
+    assert.deepEqual(
+      flow.slice(1, -1).filter((id) => cold.includes(id)),
+      cold,
+    )
     assert.equal(flow.includes('territory_walks'), false)
     assert.equal(flow.includes('family_with_kids'), false)
     assert.equal(flow.includes('couple_quiet_rest'), false)
-    assert.equal(flow.includes('rooms_luxury'), false)
     assert.equal(flow.includes('objection_dates_not_fixed'), false)
+  })
+})
+
+describe('deriveFlowIds · must-cover rooms + treatment', () => {
+  it('always includes rooms and treatment for directed price summary', () => {
+    const config = JSON.parse(readFileSync(plazaCopyPath, 'utf8'))
+    const flow = deriveFlowIds(config, {
+      guestName: 'Виталий',
+      dates: 'с 15 ноября на 14 дней',
+      partyType: '',
+      room: 'single',
+      topics: 'price,location,trust',
+      objections: 'distance,uncertainty',
+      confidence: '0.60',
+      fillRemaining: 'soft',
+    })
+    const roomsId = flow.find((id) => id.startsWith('rooms_'))
+    const treatmentId = flow.find((id) => id.startsWith('treatment_'))
+    assert.ok(roomsId === 'rooms_single' || roomsId === 'rooms_standard', flow.join(' -> '))
+    assert.ok(treatmentId, flow.join(' -> '))
+    assert.ok(flow.indexOf(roomsId) < flow.indexOf(treatmentId), flow.join(' -> '))
+  })
+
+  it('picks rooms_single from room=single without partyType and scores номер', () => {
+    const config = JSON.parse(readFileSync(plazaCopyPath, 'utf8'))
+    const summary = {
+      guestName: 'Виталий',
+      dates: 'с 15 ноября на 14 дней',
+      partyType: '',
+      room: 'single',
+      topics: 'price,location,trust',
+      objections: 'distance,uncertainty',
+      confidence: '0.60',
+      fillRemaining: 'soft',
+    }
+    const result = computeLinkAssembly(config, 'Виталий', summary)
+    assert.equal(result.derivedFlow?.[0], 'intro_by_dates')
+    assert.equal(result.derivedFlow?.[1], 'rooms_single', result.derivedFlow?.join(' -> '))
+    const rooms = result.assemblyTrace.find((item) => item.id === 'rooms_single')
+    assert.ok(rooms?.included)
+    assert.match(rooms.reason, /номер: single/)
+    assert.ok(rooms.score > 0, `expected positive score, got ${rooms.score}`)
   })
 })
 

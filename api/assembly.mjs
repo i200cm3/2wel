@@ -182,6 +182,7 @@ function compareAssemblyEntries(a, b) {
   if (scoreDiff) return scoreDiff
   const hitDiff =
     b.objectionHits.length - a.objectionHits.length ||
+    Number(b.roomHit) - Number(a.roomHit) ||
     Number(b.audienceHit) - Number(a.audienceHit) ||
     b.topicHits.length - a.topicHits.length
   if (hitDiff) return hitDiff
@@ -194,6 +195,8 @@ function comparePrimaryTopicEntries(topic, a, b) {
   const exactTopicDiff =
     Number(b.group === topic || b.subgroup === topic) - Number(a.group === topic || a.subgroup === topic)
   if (exactTopicDiff) return exactTopicDiff
+  const roomDiff = Number(b.roomHit) - Number(a.roomHit)
+  if (roomDiff) return roomDiff
   const audienceDiff = Number(b.audienceHit) - Number(a.audienceHit)
   if (audienceDiff) return audienceDiff
   const priorityDiff = b.priority - a.priority
@@ -275,6 +278,7 @@ function pickAlwaysEndIds(alwaysEndIds, findEntry) {
 }
 
 const FILL_GROUP_ORDER = [
+  'rooms',
   'treatment',
   'food',
   'wellness',
@@ -289,8 +293,134 @@ const FILL_GROUP_ORDER = [
 const FILL_GROUP_RANK = new Map(FILL_GROUP_ORDER.map((group, index) => [group, index]))
 const SOFT_FILL_MAX_EXTRA = 3
 
+/** Обязательные слоты: проживание + лечение в каждой adaptive-сборке. */
+
+const ROOM_ID_BY_HINT = [
+  ['single', 'rooms_single'],
+  ['solo', 'rooms_single'],
+  ['одномест', 'rooms_single'],
+  ['standard', 'rooms_standard'],
+  ['стандарт', 'rooms_standard'],
+  ['double', 'rooms_double'],
+  ['twin', 'rooms_double'],
+  ['двухмест', 'rooms_double'],
+  ['family', 'rooms_family'],
+  ['семейн', 'rooms_family'],
+  ['deluxe', 'rooms_deluxe'],
+  ['делюкс', 'rooms_deluxe'],
+  ['luxury', 'rooms_luxury'],
+  ['люкс', 'rooms_luxury'],
+  ['apart', 'rooms_luxury'],
+  ['quiet', 'rooms_quiet'],
+  ['тих', 'rooms_quiet'],
+  ['comfort', 'rooms_comfort'],
+  ['комфорт', 'rooms_comfort'],
+  ['view', 'rooms_view'],
+]
+
+const ROOM_IDS_BY_PARTY = {
+  solo: ['rooms_single', 'rooms_standard'],
+  couple: ['rooms_double', 'rooms_deluxe', 'rooms_view'],
+  family: ['rooms_family'],
+  senior: ['rooms_quiet', 'rooms_standard'],
+}
+
+const ROOMS_FALLBACK_IDS = ['rooms_comfort', 'rooms_standard', 'rooms_luxury', 'rooms_single']
+const TREATMENT_FALLBACK_IDS = ['treatment_start', 'treatment_individual_plan']
+
 function isFillEligibleGroup(group) {
   return FILL_GROUP_RANK.has(group)
+}
+
+function normalizeRoomHint(room) {
+  return String(room ?? '')
+    .trim()
+    .toLowerCase()
+    .replace(/ё/g, 'е')
+}
+
+/** Только явный room → id блоков (без party/fallback). */
+function roomIdsFromHint(room) {
+  const hint = normalizeRoomHint(room)
+  const ids = []
+  if (!hint) return ids
+  for (const [key, id] of ROOM_ID_BY_HINT) {
+    if (hint === key || hint.includes(key)) {
+      if (!ids.includes(id)) ids.push(id)
+    }
+  }
+  return ids
+}
+
+function preferredRoomIds(room, partyType) {
+  const ids = []
+  const push = (id) => {
+    if (id && !ids.includes(id)) ids.push(id)
+  }
+  for (const id of roomIdsFromHint(room)) push(id)
+  for (const id of ROOM_IDS_BY_PARTY[partyType] ?? []) push(id)
+  for (const id of ROOMS_FALLBACK_IDS) push(id)
+  return ids
+}
+
+function mustCoverEligible(entry) {
+  if (!entry || entry.hardBlocked) return false
+  if ((entry.missingFields ?? []).length) return false
+  return true
+}
+
+function annotateMustCover(entry, group) {
+  const tag = `must-cover · ${group}`
+  entry.reason = entry.reason ? `${entry.reason} · ${tag}` : tag
+}
+
+/**
+ * Выбрать блок обязательной группы.
+ * Rooms: room → partyType → score>0 → нейтральные → fallback ids.
+ * Чужую аудиторию без явного room/party не подставляем.
+ */
+function pickMustCoverEntry(entries, group, summary, ordered) {
+  const pool = entries.filter(
+    (entry) => entry.group === group && mustCoverEligible(entry) && !ordered.includes(entry.id),
+  )
+  if (!pool.length) return null
+
+  if (group === 'rooms') {
+    const preferred = preferredRoomIds(summary.room, summary.partyType)
+    const hasRoomHint = Boolean(normalizeRoomHint(summary.room))
+    const hasParty = Boolean(summary.partyType)
+    for (const id of preferred) {
+      const hit = pool.find((entry) => entry.id === id)
+      if (!hit) continue
+      if (hit.score > 0 || hit.roomHit || hit.audienceHit) return hit
+      if (hasRoomHint && !hit.hasAudienceTags) return hit
+      if (hasRoomHint && (hit.id === preferred[0] || ROOMS_FALLBACK_IDS.includes(hit.id))) return hit
+      if (hasParty && hit.audienceHit) return hit
+      if (!hit.hasAudienceTags) return hit
+    }
+    const scored = pool.filter((entry) => entry.score > 0).sort(compareAssemblyEntries)
+    if (scored[0]) return scored[0]
+    const neutral = pool
+      .filter((entry) => !entry.hasAudienceTags)
+      .sort((a, b) => b.priority - a.priority || String(a.id).localeCompare(String(b.id), 'ru'))
+    return neutral[0] ?? null
+  }
+
+  if (group === 'treatment') {
+    for (const id of TREATMENT_FALLBACK_IDS) {
+      const hit = pool.find((entry) => entry.id === id)
+      if (hit && (hit.score > 0 || !hit.hasAudienceTags)) return hit
+    }
+    const scored = pool.filter((entry) => entry.score > 0).sort(compareAssemblyEntries)
+    if (scored[0]) return scored[0]
+    const neutral = pool
+      .filter((entry) => !entry.hasAudienceTags)
+      .sort((a, b) => b.priority - a.priority || String(a.id).localeCompare(String(b.id), 'ru'))
+    return neutral[0] ?? null
+  }
+
+  const scored = pool.filter((entry) => entry.score > 0).sort(compareAssemblyEntries)
+  return scored[0] ?? null
 }
 
 /**
@@ -388,6 +518,8 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
   const wantNextStep = hasTopicInput || hasObjectionInput
   /** Reserve next-step until placed so body/fill never land between next-step and CTA. */
   let nextStepPending = wantNextStep
+  /** Reserve treatment must-cover so body/fill не вытесняют лечение перед CTA. */
+  let treatmentPending = true
 
   const bestNextStep = () =>
     entries
@@ -401,15 +533,22 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
       )
       .sort(compareAssemblyEntries)[0]
 
+  const bestMustCoverTreatment = () =>
+    treatmentPending ? pickMustCoverEntry(entries, 'treatment', summary, ordered) : null
+
   const tailPendingCount = (forEntry) => {
     let count = alwaysEndEligible.filter((id) => !ordered.includes(id)).length
     if (nextStepPending && forEntry?.group !== 'next-step' && bestNextStep()) count += 1
+    if (treatmentPending && forEntry?.group !== 'treatment' && bestMustCoverTreatment()) count += 1
     return count
   }
   const tailPendingSec = (forEntry) => {
     let sec = alwaysEndSec
     if (nextStepPending && forEntry?.group !== 'next-step') {
       sec += bestNextStep()?.durationSec ?? 0
+    }
+    if (treatmentPending && forEntry?.group !== 'treatment') {
+      sec += bestMustCoverTreatment()?.durationSec ?? 0
     }
     return sec
   }
@@ -450,6 +589,22 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
     if (entry.group) selectedGroups.add(entry.group)
     if (entry.subgroup) selectedSubgroups.add(`${entry.group}.${entry.subgroup}`)
     if (entry.group === 'next-step') nextStepPending = false
+    if (entry.group === 'treatment') treatmentPending = false
+    return true
+  }
+
+  const pushMustCover = (group) => {
+    if (selectedGroups.has(group)) {
+      if (group === 'treatment') treatmentPending = false
+      return false
+    }
+    const entry = pickMustCoverEntry(entries, group, summary, ordered)
+    if (!entry) {
+      if (group === 'treatment') treatmentPending = false
+      return false
+    }
+    if (!pushCandidate(entry)) return false
+    annotateMustCover(entry, group)
     return true
   }
 
@@ -491,6 +646,9 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
       })
     }
   }
+
+  // Проживание сразу после intro — ядро оффера.
+  pushMustCover('rooms')
 
   if (isColdStart) {
     const coldStartIds = (Array.isArray(rules?.coldStartIds) ? rules.coldStartIds : []).filter(
@@ -565,6 +723,9 @@ function deriveAdaptiveFlowIds(config, entries, rules, summary) {
     })
   }
 
+  // Лечение перед next-step / CTA, если ещё не было в теле.
+  pushMustCover('treatment')
+
   if (wantNextStep) {
     selectSlot({
       limit: 1,
@@ -585,6 +746,8 @@ function scoreSequenceEntries(config, summary) {
   const objections = parseCsv(summary.objections)
   const confidence = Math.min(1, Math.max(0, Number(summary.confidence) || 0))
   const partyType = String(summary.partyType ?? '').trim().toLowerCase()
+  const roomHint = normalizeRoomHint(summary.room)
+  const roomHintIds = roomIdsFromHint(summary.room)
 
   return Object.values(sequences).map((sequence) => {
     const meta = normalizeBlockMeta(metaById[sequence.id])
@@ -593,6 +756,8 @@ function scoreSequenceEntries(config, summary) {
     const topicHits = meta.topicTags.filter((tag) => topics.includes(tag))
     const objectionHits = meta.objectionTags.filter((tag) => objections.includes(tag))
     const audienceHit = partyType && meta.audienceTags.some((tag) => tag === partyType)
+    // room=single → rooms_single: явный номер важнее пустого partyType / audienceTags.
+    const roomHit = roomHintIds.includes(sequence.id)
     if (topicHits.length) {
       score += topicHits.length * 3
       reasons.push(`темы: ${topicHits.join(', ')}`)
@@ -601,11 +766,16 @@ function scoreSequenceEntries(config, summary) {
       score += objectionHits.length * 4
       reasons.push(`возражения: ${objectionHits.join(', ')}`)
     }
+    if (roomHit) {
+      score += 5
+      reasons.push(`номер: ${roomHint}`)
+    }
     if (audienceHit) {
       score += 2
       reasons.push(`аудитория: ${partyType}`)
-    } else if (meta.audienceTags.length > 0) {
+    } else if (meta.audienceTags.length > 0 && !roomHit) {
       // Блок размечен под другую аудиторию (family/couple/…) — не в autoplay по общей теме.
+      // Исключение: room уже выбрал этот блок (rooms_single при room=single).
       score -= 999
       reasons.push(
         partyType ? `аудитория не совпала: нужен ${meta.audienceTags.join('/')}, есть ${partyType}` : 'нужна аудитория',
@@ -647,6 +817,7 @@ function scoreSequenceEntries(config, summary) {
       topicHits,
       objectionHits,
       audienceHit: Boolean(audienceHit),
+      roomHit: Boolean(roomHit),
       hasAudienceTags: meta.audienceTags.length > 0,
       priority: meta.priority,
       reason: reasons.join(' · '),
@@ -662,6 +833,7 @@ function adaptiveSummaryContext(summary) {
     topics: parseCsv(summary.topics),
     objections: parseCsv(summary.objections),
     partyType: String(summary.partyType ?? '').trim().toLowerCase(),
+    room: String(summary.room ?? '').trim(),
     fillRemaining: summary.fillRemaining ?? 'off',
   }
 }

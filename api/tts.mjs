@@ -254,7 +254,57 @@ export function elevenSettings() {
   }
 }
 
-async function synthesizeElevenViaProxy(proxyBase, text, voice, settings) {
+/** Разбор ответа ElevenLabs → понятная ошибка для UI. */
+function explainElevenlabsFailure(httpStatus, rawDetail = '') {
+  const text = String(rawDetail ?? '')
+  let code = ''
+  let message = ''
+  try {
+    const parsed = JSON.parse(text)
+    const detail = parsed?.detail && typeof parsed.detail === 'object' ? parsed.detail : parsed
+    code = String(detail?.code ?? detail?.status ?? '').toLowerCase()
+    message = String(detail?.message ?? detail?.error ?? '').trim()
+  } catch {
+    /* plain text */
+  }
+  const blob = `${code} ${message} ${text}`.toLowerCase()
+
+  if (
+    code === 'paid_plan_required' ||
+    /paid_plan_required|free users cannot use library voices|upgrade your subscription/i.test(blob)
+  ) {
+    return {
+      status: 402,
+      error:
+        'Ключ ElevenLabs на тарифе Free: library-голоса через API недоступны. Нужен платный ключ (Creator+) или свой голос в аккаунте.',
+      detail: message || text.slice(0, 400),
+    }
+  }
+  if (
+    code === 'quota_exceeded' ||
+    /quota_exceeded|exceeds your quota|credits remaining/i.test(blob)
+  ) {
+    return {
+      status: 402,
+      error: 'Квота ElevenLabs исчерпана на активном ключе. Смените ключ в Админ → API или дождитесь сброса.',
+      detail: message || text.slice(0, 400),
+    }
+  }
+  if (httpStatus === 401 || /invalid.?api.?key|unauthorized|missing_permissions/i.test(blob)) {
+    return {
+      status: 401,
+      error: 'Ключ ElevenLabs отклонён (неверный или без прав). Проверьте активный ключ в Админ → API.',
+      detail: message || text.slice(0, 400),
+    }
+  }
+  return {
+    status: 502,
+    error: `ElevenLabs HTTP ${httpStatus || '?'}`,
+    detail: message || text.slice(0, 800),
+  }
+}
+
+async function synthesizeElevenViaProxy(proxyBase, text, voice, settings, apiKey) {
   const secret = envPick(process.env, 'ELEVENLABS_PROXY_SECRET')
   if (!secret) {
     return { ok: false, status: 500, error: 'Не задан ELEVENLABS_PROXY_SECRET' }
@@ -277,12 +327,14 @@ async function synthesizeElevenViaProxy(proxyBase, text, voice, settings) {
           Authorization: `Bearer ${secret}`,
           Accept: 'audio/mpeg',
           'Content-Type': 'application/json',
+          ...(apiKey ? { 'x-elevenlabs-key': apiKey } : {}),
         },
         body: JSON.stringify({
           text,
           voice,
           modelId: settings.modelId,
           voiceSettings,
+          ...(apiKey ? { apiKey } : {}),
         }),
       },
       ELEVENLABS_TIMEOUT_MS,
@@ -298,17 +350,21 @@ async function synthesizeElevenViaProxy(proxyBase, text, voice, settings) {
 
   if (!res.ok) {
     let detail = ''
+    let upstreamStatus = res.status
     try {
       const payload = await res.json()
       detail = String(payload?.detail ?? payload?.error ?? '')
+      const fromError = String(payload?.error ?? '').match(/ElevenLabs HTTP (\d+)/i)
+      if (fromError) upstreamStatus = Number(fromError[1]) || upstreamStatus
     } catch {
       detail = (await res.text().catch(() => '')).slice(0, 800)
     }
+    const explained = explainElevenlabsFailure(upstreamStatus, detail)
     return {
       ok: false,
-      status: 502,
-      error: `Прокси ElevenLabs HTTP ${res.status}`,
-      detail,
+      status: explained.status,
+      error: explained.error,
+      detail: explained.detail,
     }
   }
 
@@ -358,24 +414,28 @@ async function synthesizeElevenDirect(text, voice, settings) {
   if (!res.ok) {
     const raw = (await res.text().catch(() => '')).slice(0, 800)
     const cloudflare = /just a moment|cf-ray|cloudflare/i.test(raw)
-    return {
-      ok: false,
-      status: 502,
-      error: cloudflare
-        ? 'ElevenLabs заблокировал прямой доступ (Cloudflare). Нужен ELEVENLABS_PROXY_URL'
-        : `ElevenLabs HTTP ${res.status}`,
-      detail: cloudflare ? 'Прямой api.elevenlabs.io недоступен с этого IP' : raw,
+    if (cloudflare) {
+      return {
+        ok: false,
+        status: 502,
+        error: 'ElevenLabs заблокировал прямой доступ (Cloudflare). Нужен ELEVENLABS_PROXY_URL',
+        detail: 'Прямой api.elevenlabs.io недоступен с этого IP',
+      }
     }
+    const explained = explainElevenlabsFailure(res.status, raw)
+    return { ok: false, ...explained }
   }
   return { ok: true, buffer: Buffer.from(await res.arrayBuffer()), ext: 'mp3' }
 }
 
 export async function synthesizeEleven(text, voice, settings) {
   if (!voice) return { ok: false, status: 500, error: 'Не задан голос ElevenLabs' }
-  // Прокси (VDS) важнее ключа в БД: прямой api.elevenlabs.io с продового IP часто
-  // ловит Cloudflare 403 («Just a moment…»), а ключ живёт на прокси.
+  const { resolveElevenlabsApiKey } = await import('./platformIntegrations.mjs')
+  const apiKey = await resolveElevenlabsApiKey()
+  // Прокси (VDS) важнее прямого доступа: api.elevenlabs.io с продового IP часто
+  // ловит Cloudflare 403. Активный ключ из админки передаём на прокси.
   const proxyUrl = envPick(process.env, 'ELEVENLABS_PROXY_URL')
-  if (proxyUrl) return synthesizeElevenViaProxy(proxyUrl, text, voice, settings)
+  if (proxyUrl) return synthesizeElevenViaProxy(proxyUrl, text, voice, settings, apiKey)
   return synthesizeElevenDirect(text, voice, settings)
 }
 

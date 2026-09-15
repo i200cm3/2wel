@@ -578,7 +578,7 @@ export function crmStatusChanged(prevStatusId, nextStatusId) {
   return prev !== next
 }
 
-const PRIOR_ORDER = ['open', 'autoplay', 'menu', 'whatsapp', 'topic', 'contact']
+const PRIOR_ORDER = ['open', 'play', 'autoplay', 'menu', 'whatsapp', 'topic', 'contact']
 
 /**
  * Снимок действий гостя к моменту смены статуса CRM.

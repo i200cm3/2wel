@@ -2,9 +2,7 @@
 
 2wel.ru → **этот сервер** → api.elevenlabs.io → MP3 обратно на 2wel.
 
-Рядом на том же VDS: **gemini-transcribe** (`:3100`) — транскрибация звонков через Gemini (googleapis.com тоже через WARP).
-
-Домены и nginx **не нужны**: 2wel стучится на `http://156.229.27.67:3099` и `:3100`.
+Домены и nginx **не нужны**: 2wel стучится на `http://156.229.27.67:3099`.
 
 ```
 2wel (api)  --POST /v1/synthesize + Bearer secret-->
@@ -60,8 +58,11 @@ sudo ufw allow 3099/tcp
 ```env
 ELEVENLABS_PROXY_URL=http://156.229.27.67:3099
 ELEVENLABS_PROXY_SECRET=тот_же_секрет
-# ELEVENLABS_API_KEY=  ← можно убрать с 2wel, ключ только на VDS
+# ELEVENLABS_API_KEY на 2wel не обязателен: активный ключ задаётся в Админ → API
+# и уходит на прокси в теле/заголовке каждого запроса.
 ```
+
+На прокси `ELEVENLABS_API_KEY` в `.env` — запасной fallback, если 2wel не прислал ключ.
 
 Перезапуск 2wel: `./deploy-to-server.sh …`
 

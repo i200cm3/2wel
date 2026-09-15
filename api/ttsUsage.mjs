@@ -71,18 +71,20 @@ export async function listTtsUsageByUser({ provider = 'elevenlabs', days = 0 } =
   return { users, totals, days: dayWindow, provider: providerValue }
 }
 
-async function fetchSubscriptionViaProxy(proxyBase) {
+async function fetchSubscriptionViaProxy(proxyBase, apiKey) {
   const secret = envPick('ELEVENLABS_PROXY_SECRET')
   if (!secret) {
     return { ok: false, error: 'ELEVENLABS_PROXY_SECRET не задан' }
   }
   const base = proxyBase.replace(/\/+$/, '')
+  const headers = { Authorization: `Bearer ${secret}` }
+  if (apiKey) headers['x-elevenlabs-key'] = apiKey
   try {
     const res = await fetchWithTimeout(
       `${base}/v1/subscription`,
       {
         method: 'GET',
-        headers: { Authorization: `Bearer ${secret}` },
+        headers,
       },
       15_000,
     )
@@ -104,9 +106,7 @@ async function fetchSubscriptionViaProxy(proxyBase) {
   }
 }
 
-async function fetchSubscriptionDirect() {
-  const { resolveElevenlabsApiKey } = await import('./platformIntegrations.mjs')
-  const apiKey = await resolveElevenlabsApiKey()
+async function fetchSubscriptionDirect(apiKey) {
   if (!apiKey) {
     return { ok: false, error: 'ElevenLabs не настроен' }
   }
@@ -152,12 +152,19 @@ function normalizeSubscription(raw) {
   }
 }
 
-/** Баланс символов ElevenLabs (через proxy или напрямую). */
+/** Баланс символов ElevenLabs (через proxy или напрямую) — по активному ключу. */
 export async function fetchElevenlabsBalance() {
-  // Тот же приоритет, что у синтеза: прокси → прямой ключ (БД/env).
+  const { resolveElevenlabsApiKey, resolveElevenlabsActiveKeyMeta } = await import(
+    './platformIntegrations.mjs'
+  )
+  const apiKey = await resolveElevenlabsApiKey()
+  const keyMeta = await resolveElevenlabsActiveKeyMeta()
   const proxyUrl = envPick('ELEVENLABS_PROXY_URL')
-  if (proxyUrl) return fetchSubscriptionViaProxy(proxyUrl)
-  return fetchSubscriptionDirect()
+  const balance = proxyUrl
+    ? await fetchSubscriptionViaProxy(proxyUrl, apiKey)
+    : await fetchSubscriptionDirect(apiKey)
+  if (!balance.ok) return { ...balance, key: keyMeta }
+  return { ...balance, key: keyMeta }
 }
 
 export async function getAdminTtsUsageOverview({ days = 0 } = {}) {

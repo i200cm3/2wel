@@ -6,7 +6,6 @@
 ```
 Обычный трафик (google.com, 2wel, …)  →  direct
 *.elevenlabs.io / IP ElevenLabs        →  WARP  →  api.elevenlabs.io
-*.googleapis.com (Gemini API)          →  WARP  →  generativelanguage.googleapis.com
 SOCKS 127.0.0.1:38182                  →  WARP
 ```
 

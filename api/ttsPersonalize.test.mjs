@@ -26,6 +26,8 @@ describe('ttsTextNeedsGuestName', () => {
   it('персонализация включает {hello}', () => {
     assert.equal(ttsTextNeedsPersonalization('{hello}'), true)
     assert.equal(ttsTextNeedsPersonalization('Здравствуйте, {name}!'), true)
+    assert.equal(ttsTextNeedsPersonalization('Ориентир — ваши даты, {dates}.'), true)
+    assert.equal(ttsTextNeedsPersonalization('Номер {room}'), true)
     assert.equal(ttsTextNeedsPersonalization('обычный текст'), false)
   })
 })
@@ -39,6 +41,26 @@ describe('fillTtsSpeakText', () => {
   it('не произносит телефон вместо имени', () => {
     assert.equal(fillTtsSpeakText('Здравствуйте, {name}!', '89282648515'), 'Здравствуйте!')
     assert.equal(fillTtsSpeakText('Здравствуйте, {name}. Рады пригласить вас.', '89282648515'), 'Здравствуйте. Рады пригласить вас.')
+  })
+
+  it('подставляет даты и убирает плейсхолдер если дат нет', () => {
+    assert.equal(
+      fillTtsSpeakText('Ориентир — ваши даты, {dates}. Начнём со стандарта.', 'Виталий', '', {
+        dates: 'с 15 ноября',
+      }),
+      'Ориентир — ваши даты, с 15 ноября. Начнём со стандарта.',
+    )
+    assert.equal(
+      fillTtsSpeakText('Ориентир — ваши даты, {dates}. Начнём со стандарта.', 'Виталий'),
+      'Ориентир — ваши даты. Начнём со стандарта.',
+    )
+  })
+
+  it('подставляет категорию номера человекочитаемо', () => {
+    assert.equal(
+      fillTtsSpeakText('Можно начать с категории {room}.', 'Виталий', '', { room: 'single' }),
+      'Можно начать с категории одноместный.',
+    )
   })
 })
 
@@ -87,10 +109,27 @@ describe('collectPersonalizedTtsJobs', () => {
     )
     assert.equal(jobs[0].speak, '')
   })
+
+  it('собирает cue с {dates} и подставляет даты', () => {
+    const jobs = collectPersonalizedTtsJobs(
+      {
+        sequences: {
+          intro: {
+            cues: [{ id: 'd1', ttsText: 'Ориентир — ваши даты, {dates}.' }],
+          },
+        },
+      },
+      'виталий',
+      '',
+      { dates: 'с 15 ноября' },
+    )
+    assert.equal(jobs.length, 1)
+    assert.equal(jobs[0].speak, 'Ориентир — ваши даты, с 15 ноября.')
+  })
 })
 
 describe('collectMissingStaticTtsJobs', () => {
-  it('берёт cue/меню с ttsText без файла и без {name}', () => {
+  it('берёт cue/меню с ttsText без файла и без персональных плейсхолдеров', () => {
     const jobs = collectMissingStaticTtsJobs({
       sequences: {
         greeting: {
@@ -99,6 +138,7 @@ describe('collectMissingStaticTtsJobs', () => {
             { id: 'c2', ttsText: 'Бассейн и тишина', ttsSrc: '' },
             { id: 'c3', ttsText: 'Уже есть', ttsSrc: '/media/projects/x/tts/a.mp3' },
             { id: 'c4', ttsText: '   ' },
+            { id: 'c5', ttsText: 'Ориентир — ваши даты, {dates}.' },
           ],
         },
       },

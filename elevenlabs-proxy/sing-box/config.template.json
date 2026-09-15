@@ -17,7 +17,7 @@
     ],
     "rules": [
       {
-        "domain_suffix": ["elevenlabs.io", "googleapis.com"],
+        "domain_suffix": ["elevenlabs.io"],
         "server": "remote"
       }
     ],
@@ -84,7 +84,7 @@
         "outbound": "eleven-proxy"
       },
       {
-        "domain_suffix": ["elevenlabs.io", "googleapis.com"],
+        "domain_suffix": ["elevenlabs.io"],
         "outbound": "eleven-proxy"
       },
       {

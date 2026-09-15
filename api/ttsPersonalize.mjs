@@ -14,26 +14,127 @@ import {
 import { resolveGenerationVoice } from './ttsVoices.mjs'
 
 const NAME_TOKEN_RE = /\{\s*name\s*\}|\[\s*name\s*\]/i
+const DATES_TOKEN_RE = /\{\s*dates\s*\}/i
+const ROOM_TOKEN_RE = /\{\s*room\s*\}/i
+
+const ROOM_SPEAK = {
+  standard: 'стандарт',
+  superior: 'superior',
+  deluxe: 'делюкс',
+  luxury: 'люкс',
+  single: 'одноместный',
+  double: 'двухместный',
+  family: 'семейный',
+  quiet: 'тихий номер',
+  view: 'номер с видом',
+  'near-medical': 'номер ближе к лечебной базе',
+  comfort: 'комфорт',
+}
 
 /** В поле TTS есть плейсхолдер имени — файл нельзя запечь в шаблоне. */
 export function ttsTextNeedsGuestName(ttsText) {
   return typeof ttsText === 'string' && NAME_TOKEN_RE.test(ttsText)
 }
 
-export function ttsTextNeedsPersonalization(ttsText) {
-  return ttsTextNeedsGuestName(ttsText) || textHasHelloPlaceholder(ttsText)
+export function ttsTextNeedsDatesOrRoom(ttsText) {
+  return typeof ttsText === 'string' && (DATES_TOKEN_RE.test(ttsText) || ROOM_TOKEN_RE.test(ttsText))
 }
 
-/** Подставить {hello}, затем имя гостя в шаблон озвучки. */
-export function fillTtsSpeakText(ttsText, guestName, hello = '') {
-  return fillGuestNameTemplate(fillHelloPlaceholder(ttsText, hello), guestName)
+export function ttsTextNeedsPersonalization(ttsText) {
+  return (
+    ttsTextNeedsGuestName(ttsText) ||
+    textHasHelloPlaceholder(ttsText) ||
+    ttsTextNeedsDatesOrRoom(ttsText)
+  )
+}
+
+function omitBracePlaceholder(template, key) {
+  const token = '\u0001'
+  const re = new RegExp(`\\{\\s*${key}\\s*\\}`, 'gi')
+  let s = String(template ?? '').replace(re, token)
+  s = s.replace(new RegExp(`,\\s*${token}(?=[\\s.!?…,:;]|$)`, 'g'), '')
+  s = s.replace(new RegExp(`\\s*—\\s*${token}(?=[\\s.!?…,:;]|$)`, 'g'), '')
+  s = s.replace(new RegExp(`\\s*${token}`, 'g'), '')
+  s = s.replaceAll(token, '')
+  s = s.replace(/[ \t]{2,}/g, ' ')
+  s = s.replace(/[ \t]+([.!?,:;])/g, '$1')
+  return s.replace(/[ \t]+$/gm, '').replace(/[ \t]{2,}/g, ' ')
+}
+
+function fillBracePlaceholder(template, key, value) {
+  const text = String(value ?? '').trim()
+  if (!text) return omitBracePlaceholder(template, key)
+  const re = new RegExp(`\\{\\s*${key}\\s*\\}`, 'gi')
+  return String(template ?? '').replace(re, text)
+}
+
+export function speakRoomLabel(value) {
+  const raw = String(value ?? '').trim()
+  if (!raw) return ''
+  return ROOM_SPEAK[raw.toLowerCase()] || raw
+}
+
+/** Подставить {hello}, имя, {dates} и {room}. */
+export function fillTtsSpeakText(ttsText, guestName, hello = '', fields = {}) {
+  let s = fillGuestNameTemplate(fillHelloPlaceholder(ttsText, hello), guestName)
+  s = fillBracePlaceholder(s, 'dates', fields.dates)
+  s = fillBracePlaceholder(s, 'room', speakRoomLabel(fields.room))
+  return s
+}
+
+function fillStringField(value, guestName, hello, fields) {
+  if (typeof value !== 'string' || !value) return value
+  return fillTtsSpeakText(value, guestName, hello, fields)
+}
+
+/** Титры и заголовки в копии конфига — чтобы на экране были те же даты, что в озвучке. */
+export function fillGuestFieldsInConfig(config, guestName, hello = '', fields = {}) {
+  if (!config || typeof config !== 'object') return config
+  const sequences = config.sequences
+  if (sequences && typeof sequences === 'object') {
+    for (const seq of Object.values(sequences)) {
+      if (!seq || typeof seq !== 'object') continue
+      if (typeof seq.title === 'string') {
+        seq.title = fillStringField(seq.title, guestName, hello, fields)
+      }
+      if (Array.isArray(seq.cues)) {
+        for (const cue of seq.cues) {
+          if (!cue || typeof cue !== 'object') continue
+          if (typeof cue.text === 'string') {
+            cue.text = fillStringField(cue.text, guestName, hello, fields)
+          }
+          if (typeof cue.ttsText === 'string') {
+            cue.ttsText = fillStringField(cue.ttsText, guestName, hello, fields)
+          }
+        }
+      }
+    }
+  }
+  const menus = config.menus
+  if (menus && typeof menus === 'object') {
+    for (const menu of Object.values(menus)) {
+      if (!menu || typeof menu !== 'object') continue
+      if (typeof menu.menuTtsText === 'string') {
+        menu.menuTtsText = fillStringField(menu.menuTtsText, guestName, hello, fields)
+      }
+      const copy = menu.menuCopy
+      if (copy && typeof copy === 'object') {
+        for (const key of ['kicker', 'title', 'hint']) {
+          if (typeof copy[key] === 'string') {
+            copy[key] = fillStringField(copy[key], guestName, hello, fields)
+          }
+        }
+      }
+    }
+  }
+  return config
 }
 
 /**
  * Cue и меню с `{name}` / `{hello}` в тексте озвучки — пересобираются при выдаче ссылки.
  * @returns {{ kind: 'cue'|'menu', sequenceId?: string, cueIndex?: number, menuId?: string, cueId: string, template: string, speak: string }[]}
  */
-export function collectPersonalizedTtsJobs(config, guestName, hello = '') {
+export function collectPersonalizedTtsJobs(config, guestName, hello = '', fields = {}) {
   const jobs = []
   const sequences = config?.sequences
   if (sequences && typeof sequences === 'object') {
@@ -48,7 +149,7 @@ export function collectPersonalizedTtsJobs(config, guestName, hello = '') {
           cueIndex,
           cueId: typeof cue.id === 'string' ? cue.id : `idx-${cueIndex}`,
           template,
-          speak: fillTtsSpeakText(template, guestName, hello),
+          speak: fillTtsSpeakText(template, guestName, hello, fields),
         })
       })
     }
@@ -64,7 +165,7 @@ export function collectPersonalizedTtsJobs(config, guestName, hello = '') {
         menuId,
         cueId: `menu:${menuId}`,
         template,
-        speak: fillTtsSpeakText(template, guestName, hello),
+        speak: fillTtsSpeakText(template, guestName, hello, fields),
       })
     }
   }
@@ -258,10 +359,15 @@ export async function personalizeConfigTts(project, config, guestName, opts = {}
   const required = Boolean(opts.required)
   const fillMissingStatic = opts.fillMissingStatic !== false
   const hello = String(opts.hello ?? '')
-  const personalJobs = collectPersonalizedTtsJobs(config, guestName, hello)
+  const fields = {
+    dates: String(opts.dates ?? '').trim(),
+    room: String(opts.room ?? '').trim(),
+  }
+  const personalJobs = collectPersonalizedTtsJobs(config, guestName, hello, fields)
   const staticJobs = fillMissingStatic ? collectMissingStaticTtsJobs(config) : []
   const needsHello = configHasHelloPlaceholder(config)
-  if (personalJobs.length === 0 && staticJobs.length === 0 && !needsHello) {
+  const needsFieldFill = Boolean(fields.dates || fields.room)
+  if (personalJobs.length === 0 && staticJobs.length === 0 && !needsHello && !needsFieldFill) {
     return { ok: true, config, generated: 0, cached: 0, staticGenerated: 0, staticCached: 0 }
   }
 
@@ -305,6 +411,8 @@ export async function personalizeConfigTts(project, config, guestName, opts = {}
   if (main) {
     next.menuTtsSrc = main.menuTtsSrc
   }
+
+  fillGuestFieldsInConfig(next, guestName, hello, fields)
 
   return {
     ok: true,

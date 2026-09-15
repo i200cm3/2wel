@@ -1,5 +1,5 @@
 import { query } from './db.js'
-import { peekCachedSetting, SETTING_KEYS } from './platformIntegrations.mjs'
+import { peekCachedSetting, peekElevenlabsHasKeys, SETTING_KEYS } from './platformIntegrations.mjs'
 import { loadEnv } from './env.js'
 import { elevenDemoAvailable, elevenDemoSrc } from './ttsVoiceDemo.mjs'
 
@@ -66,6 +66,7 @@ export function sberConfigured() {
 }
 
 export function elevenConfigured() {
+  if (peekElevenlabsHasKeys()) return true
   if (peekCachedSetting(SETTING_KEYS.elevenlabsApiKey)) return true
   return Boolean(env('ELEVENLABS_API_KEY') || env('ELEVENLABS_PROXY_URL'))
 }

@@ -10,7 +10,6 @@ import {
   clearSessionCookie,
 } from './auth.js'
 import { createProjectForUser, handleCabinetApi, projectForUser } from './cabinet.mjs'
-import { generateCueCopy } from './cueCopyGenerate.mjs'
 import { adminSetProjectPlan } from './plans.mjs'
 import { parseProjectCode } from './projectCode.mjs'
 import { query } from './db.js'
@@ -64,7 +63,11 @@ import { sendTeamJoinCredentialsMail } from './mail.mjs'
 import { getAdminTtsUsageOverview } from './ttsUsage.mjs'
 import { createDemoGuestLead } from './demoLead.mjs'
 import {
+  addElevenlabsApiKey,
+  deleteElevenlabsApiKey,
   getAdminIntegrationsOverview,
+  selectElevenlabsApiKey,
+  testAdminIntegration,
   updateAdminIntegrations,
 } from './platformIntegrations.mjs'
 
@@ -307,6 +310,8 @@ const server = http.createServer(async (req, res) => {
           required: false,
           fillMissingStatic: false,
           hello,
+          dates: String(row.guest_summary?.dates ?? ''),
+          room: String(row.guest_summary?.room ?? ''),
         },
       )
       playbackConfig = personalized.config
@@ -872,6 +877,91 @@ const server = http.createServer(async (req, res) => {
         json(res, 200, { ok: true, ...updated })
         return
       }
+      if (
+        (url === '/api/admin/integrations/test' || url === '/api/admin/integrations/test/') &&
+        req.method === 'POST'
+      ) {
+        const raw = await readBuffer(req, MAX_JSON_BYTES)
+        let payload = {}
+        try {
+          payload = JSON.parse(raw.toString('utf8') || '{}')
+        } catch {
+          json(res, 400, { error: 'invalid json' })
+          return
+        }
+        const tested = await testAdminIntegration(payload?.provider)
+        if (!tested.ok) {
+          json(res, tested.status || 400, {
+            error: tested.error || 'Проверка не удалась',
+            detail: tested.detail,
+          })
+          return
+        }
+        json(res, 200, { ok: true, message: tested.message })
+        return
+      }
+      if (
+        (url === '/api/admin/integrations/elevenlabs/keys' ||
+          url === '/api/admin/integrations/elevenlabs/keys/') &&
+        req.method === 'POST'
+      ) {
+        const raw = await readBuffer(req, MAX_JSON_BYTES)
+        let payload = {}
+        try {
+          payload = JSON.parse(raw.toString('utf8') || '{}')
+        } catch {
+          json(res, 400, { error: 'invalid json' })
+          return
+        }
+        const added = await addElevenlabsApiKey({
+          apiKey: payload?.apiKey ?? payload?.key,
+          label: payload?.label,
+          activate: payload?.activate !== false,
+        })
+        if (!added.ok) {
+          json(res, added.status || 400, { error: added.error || 'Не удалось добавить ключ' })
+          return
+        }
+        json(res, 200, { ok: true, ...added })
+        return
+      }
+      const elevenKeyMatch = url.match(/^\/api\/admin\/integrations\/elevenlabs\/keys\/([^/]+)\/?$/)
+      if (elevenKeyMatch) {
+        const keyId = decodeURIComponent(elevenKeyMatch[1] || '')
+        if (req.method === 'POST') {
+          const raw = await readBuffer(req, MAX_JSON_BYTES)
+          let payload = {}
+          try {
+            payload = JSON.parse(raw.toString('utf8') || '{}')
+          } catch {
+            json(res, 400, { error: 'invalid json' })
+            return
+          }
+          const action = String(payload?.action ?? 'select').trim().toLowerCase()
+          if (action === 'select' || action === 'activate') {
+            const selected = await selectElevenlabsApiKey(keyId)
+            if (!selected.ok) {
+              json(res, selected.status || 400, { error: selected.error || 'Не удалось выбрать ключ' })
+              return
+            }
+            json(res, 200, { ok: true, ...selected })
+            return
+          }
+          json(res, 400, { error: 'Неизвестное действие' })
+          return
+        }
+        if (req.method === 'DELETE') {
+          const removed = await deleteElevenlabsApiKey(keyId)
+          if (!removed.ok) {
+            json(res, removed.status || 400, { error: removed.error || 'Не удалось удалить ключ' })
+            return
+          }
+          json(res, 200, { ok: true, ...removed })
+          return
+        }
+        json(res, 405, { error: 'method not allowed' })
+        return
+      }
       const adminPlanMatch = url.match(/^\/api\/admin\/projects\/([^/]+)\/plan\/?$/)
       if (adminPlanMatch) {
         if (req.method !== 'POST') {
@@ -898,31 +988,6 @@ const server = http.createServer(async (req, res) => {
           return
         }
         json(res, 200, { ok: true, ...changed.plan })
-        return
-      }
-      if ((url === '/api/admin/generate-cue-copy' || url === '/api/admin/generate-cue-copy/') && req.method === 'POST') {
-        const raw = await readBuffer(req, MAX_JSON_BYTES)
-        let payload = {}
-        try {
-          payload = JSON.parse(raw.toString('utf8') || '{}')
-        } catch {
-          json(res, 400, { error: 'invalid json' })
-          return
-        }
-        const generated = await generateCueCopy(payload)
-        if (!generated.ok) {
-          json(res, generated.status || 502, {
-            error: generated.error || 'generate failed',
-            ...(generated.detail ? { detail: generated.detail } : {}),
-          })
-          return
-        }
-        json(res, 200, {
-          ok: true,
-          title: generated.title,
-          cue: generated.cue,
-          model: generated.model,
-        })
         return
       }
       json(res, 404, { error: 'not found' })

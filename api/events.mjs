@@ -1,6 +1,6 @@
 import { query } from './db.js'
 
-export const EVENT_TYPES = ['open', 'autoplay', 'menu', 'whatsapp', 'topic', 'contact']
+export const EVENT_TYPES = ['open', 'play', 'autoplay', 'menu', 'whatsapp', 'topic', 'contact']
 const CONTACT_CHANNELS = ['whatsapp', 'telegram', 'max', 'tel', 'sms', 'site', 'other']
 const CONTACT_LABEL = {
   whatsapp: 'WhatsApp',
@@ -161,7 +161,7 @@ export function resolveStatsRange({ from, to } = {}, now = new Date()) {
 }
 
 function emptyFunnel() {
-  return { open: 0, autoplay: 0, menu: 0, whatsapp: 0, contact: 0 }
+  return { open: 0, play: 0, autoplay: 0, menu: 0, whatsapp: 0, contact: 0 }
 }
 
 /** Старые клики WhatsApp без type=contact — считаем как связь. */
