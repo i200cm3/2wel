@@ -3,9 +3,12 @@ import { amoRedirectUri, clearAmoLeadPresentationUrl } from './amoAuth.mjs'
 import { syncAmoCallsToLink, probeRecordingUrlsDetailed, recordingProbeAvailability } from './amoCalls.mjs'
 import { getAmoConnection } from './amoConnections.mjs'
 import { query } from './db.js'
-import { geminiTranscribeConfigured, transcribeAudioFromUrl } from './geminiTranscribe.mjs'
+import {
+  assemblyTextConfigError,
+  isTranscribeConfigured,
+} from './platformIntegrations.mjs'
+import { transcribeAudioFromUrl } from './gigaamTranscribe.mjs'
 import { assemblyTextConfigured } from './yandexGpt.mjs'
-import { assemblyTextConfigError } from './platformIntegrations.mjs'
 import {
   buildRawTextFromSources,
   extractGuestSummaryFromRawText,
@@ -1139,10 +1142,6 @@ export async function reassembleProjectLink(project, publicId, body = {}) {
     },
   )
   const assembly = computeLinkAssembly(published, guestName, helloAttached.summary)
-  const prepared = await prepareTemplateForGuest(project, templateRow, guestName, assembly, {
-    refreshStaleTts: true,
-  })
-  if (prepared.error) return prepared
 
   const summaryMeta =
     body?.summaryMeta && typeof body.summaryMeta === 'object'
@@ -1152,7 +1151,23 @@ export async function reassembleProjectLink(project, publicId, body = {}) {
           extractedAt: new Date().toISOString(),
         }
 
-  const updated = await updateLinkTemplate(linkRow.id, prepared.row.id, {
+  // Сначала пишем flow: иначе падение TTS оставляет старую сборку и кнопка «бессмысленна».
+  let templateForLink = templateRow
+  let ttsWarning = null
+  const prepared = await prepareTemplateForGuest(project, templateRow, guestName, assembly, {
+    refreshStaleTts: true,
+  })
+  if (prepared.error) {
+    ttsWarning = prepared.error
+    console.warn(
+      'reassemble.tts',
+      JSON.stringify({ project: project.code, publicId, error: prepared.error }),
+    )
+  } else {
+    templateForLink = prepared.row
+  }
+
+  const updated = await updateLinkTemplate(linkRow.id, templateForLink.id, {
     guestSummary: assembly.guestSummary,
     derivedFlow: assembly.derivedFlow,
     assemblyTrace: assembly.assemblyTrace,
@@ -1161,15 +1176,16 @@ export async function reassembleProjectLink(project, publicId, body = {}) {
       reassembledAt: new Date().toISOString(),
       helloMode: helloAttached.helloMode,
       ...(publishedDraft ? { publishedDraft: true } : {}),
+      ...(ttsWarning ? { ttsWarning } : {}),
     },
     guestName,
   })
   if (!updated) return { status: 500, error: 'Не удалось пересобрать' }
   const detail = await getProjectLinkDetail(project.id, updated.publicId)
-  return { status: 200, link: detail, publishedDraft }
+  return { status: 200, link: detail, publishedDraft, ...(ttsWarning ? { ttsWarning } : {}) }
 }
 
-function geminiUserMessage(error, detail) {
+function transcribeUserMessage(error, detail) {
   const base = String(error ?? '').trim()
   const extra = String(detail ?? '').trim()
   if (!extra) return base
@@ -1286,14 +1302,14 @@ export async function addLinkRawSource(project, publicId, body = {}) {
   if (audioUrl && !text) {
     if (kind === 'call_transcript') {
       text = audioUrl
-    } else if (!(await geminiTranscribeConfigured())) {
+    } else if (!(await isTranscribeConfigured())) {
       return { status: 503, error: 'Транскрибация не настроена (GIGAAM_TRANSCRIBE_URL)' }
     } else {
       const transcribed = await transcribeAudioFromUrl(audioUrl)
       if (!transcribed.ok) {
         return {
           status: transcribed.status,
-          error: geminiUserMessage(transcribed.error, transcribed.detail),
+          error: transcribeUserMessage(transcribed.error, transcribed.detail),
         }
       }
       text = transcribed.text
@@ -1369,18 +1385,18 @@ export async function transcribeLinkRawSourceEntry(project, publicId, sourceId, 
 
   const audioUrl = String(body?.audioUrl ?? body?.url ?? '').trim()
   if (!audioUrl) return { status: 400, error: 'Укажите URL записи звонка' }
-  if (!(await geminiTranscribeConfigured())) {
+  if (!(await isTranscribeConfigured())) {
     return { status: 503, error: 'Транскрибация не настроена (GIGAAM_TRANSCRIBE_URL)' }
   }
 
   const started = Date.now()
   const transcribed = await transcribeAudioFromUrl(audioUrl)
-  const geminiMs = Date.now() - started
+  const transcribeMs = Date.now() - started
   if (!transcribed.ok) {
-    console.info('transcribe failed', JSON.stringify({ geminiMs, error: transcribed.error }))
+    console.info('transcribe failed', JSON.stringify({ transcribeMs, error: transcribed.error }))
     return {
       status: transcribed.status,
-      error: geminiUserMessage(transcribed.error, transcribed.detail),
+      error: transcribeUserMessage(transcribed.error, transcribed.detail),
     }
   }
 
@@ -1394,7 +1410,7 @@ export async function transcribeLinkRawSourceEntry(project, publicId, sourceId, 
   console.info(
     'transcribe timings',
     JSON.stringify({
-      geminiMs,
+      transcribeMs,
       saveMs: Date.now() - saveStarted,
       model: transcribed.model,
       bytes: transcribed.bytes ?? null,
@@ -1926,6 +1942,7 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
         ok: true,
         link: result.link,
         publishedDraft: Boolean(result.publishedDraft),
+        ...(result.ttsWarning ? { ttsWarning: result.ttsWarning } : {}),
       })
       return true
     }

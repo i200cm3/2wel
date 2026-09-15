@@ -6,7 +6,7 @@ import {
   mergeYandexStereoTurns,
   prepareYandexSyncAudio,
   speechRegionsFromSilenceLog,
-} from './geminiTranscribe.mjs'
+} from './gigaamTranscribe.mjs'
 
 function hasFfmpeg() {
   const probe = spawnSync('ffmpeg', ['-version'], { encoding: 'utf8' })

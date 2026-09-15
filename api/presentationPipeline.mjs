@@ -7,7 +7,8 @@ import { clearAmoLeadPresentationUrl, writeAmoLeadPresentationUrl } from './amoA
 import { syncAmoCallsToLink, probeRecordingUrlsDetailed, recordingProbeAvailability } from './amoCalls.mjs'
 import { selectCallsForPresentationPipeline } from './callSourceFilters.mjs'
 import { amoError, amoLog } from './amoLog.mjs'
-import { geminiTranscribeConfigured, geminiTextConfigured, transcribeAudioFromUrl } from './geminiTranscribe.mjs'
+import { transcribeAudioFromUrl } from './gigaamTranscribe.mjs'
+import { isTranscribeConfigured } from './platformIntegrations.mjs'
 import { assemblyTextConfigured } from './yandexGpt.mjs'
 import {
   buildRawTextFromSources,
@@ -291,7 +292,7 @@ async function transcribeEligibleCalls(linkId, eligible, ctx = {}) {
   const already = eligible.filter((item) => !item.needsTranscribe).length
   const todo = eligible.filter((item) => item.needsTranscribe && item.url)
 
-  if (!(await geminiTranscribeConfigured())) {
+  if (!(await isTranscribeConfigured())) {
     pipeLog('transcribe.skip', { ...ctx, reason: 'not_configured', todo: todo.length, already })
     return {
       transcribed,
@@ -380,8 +381,7 @@ export async function runPresentationPipeline(args) {
   pipeLog('run.start', {
     ...ctx,
     hasConnection: Boolean(connection),
-    geminiTranscribe: await geminiTranscribeConfigured(),
-    geminiText: await geminiTextConfigured(),
+    transcribe: await isTranscribeConfigured(),
     assemblyText: await assemblyTextConfigured(),
   })
 
@@ -492,14 +492,13 @@ export async function runPresentationPipeline(args) {
     await markPipeline(linkRow.id, { pipelineStep: step })
     sources = await listLinkRawSources(linkRow.id)
     const packed = buildRawTextFromSources(sources)
-    const geminiTextReady = await assemblyTextConfigured()
+    const assemblyReady = await assemblyTextConfigured()
     pipeLog('extract.start', {
       ...runCtx,
       packedOk: packed.ok,
       dialogItems: packed.items?.length ?? 0,
       rawTextLen: packed.rawText?.length ?? 0,
-      geminiText: geminiTextReady,
-      assemblyText: geminiTextReady,
+      assemblyText: assemblyReady,
       packedError: packed.ok ? null : packed.error,
     })
 
@@ -520,7 +519,7 @@ export async function runPresentationPipeline(args) {
     }
     let extractOk = false
 
-    if (packed.ok && geminiTextReady) {
+    if (packed.ok && assemblyReady) {
       const tExtract = Date.now()
       const extracted = await extractGuestSummaryFromRawText(packed.rawText)
       if (extracted.ok) {

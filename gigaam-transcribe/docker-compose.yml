@@ -1,0 +1,25 @@
+# Локальный STT для 2wel. Перенос: ./deploy-gigaam-transcribe.sh user@host /path
+services:
+  gigaam-transcribe:
+    build: .
+    container_name: gigaam-transcribe
+    restart: unless-stopped
+    ports:
+      - "${GIGAAM_HOST_BIND:-0.0.0.0}:${PORT:-3200}:3200"
+    env_file:
+      - .env
+    volumes:
+      # Веса модели (~430 МБ) — переживают rebuild; sync их не трогает.
+      - ${GIGAAM_CACHE_DIR:-./cache}:/root/.cache/gigaam
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3200/health')",
+        ]
+      interval: 20s
+      timeout: 8s
+      retries: 5
+      start_period: 90s

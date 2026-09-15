@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { estimateTranscribeSec } from './linkRawSourceKinds.ts'
 
-export const DEFAULT_TRANSCRIBE_MODEL = 'gemini-3.5-flash'
+export const DEFAULT_TRANSCRIBE_MODEL = 'gigaam'
 export const TRANSCRIBE_SAVE_HOLD_MS = 700
 export const WAITING_LINE_INTERVAL_MS = 2_800
 

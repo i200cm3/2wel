@@ -66,7 +66,7 @@ function authHeaders(extra = {}) {
 export async function listLocalLlmModels() {
   const base = localLlmBaseUrl()
   if (!base) {
-    return { ok: false, models: [], error: 'Не задан LOCAL_LLM_URL' }
+    return { ok: false, models: [], error: 'Локальный LLM не подключён' }
   }
   try {
     const res = await fetchWithTimeout(

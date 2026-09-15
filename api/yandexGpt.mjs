@@ -124,12 +124,7 @@ export async function generateAssemblyText(prompt, options = {}) {
     const model = options.model || (await resolveExtractModel())
     return generateTextWithLocal(prompt, { ...options, model })
   }
-  if (provider === 'yandex') return generateTextWithYandex(prompt, options)
-
-  const { generateTextWithGemini } = await import('./geminiTranscribe.mjs')
-  const generated = await generateTextWithGemini(prompt, options)
-  if (generated?.ok) return { ...generated, provider: 'gemini' }
-  return generated
+  return generateTextWithYandex(prompt, options)
 }
 
 export async function assemblyTextConfigured() {

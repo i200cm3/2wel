@@ -7,7 +7,7 @@ import {
 
 /**
  * Логика «URL в amo только после ready» — чистая проверка контракта пайплайна.
- * Полный runPresentationPipeline требует БД/Gemini; здесь фиксируем инварианты ответа webhook.
+ * Полный runPresentationPipeline требует БД/LLM; здесь фиксируем инварианты ответа webhook.
  */
 
 describe('presentation pipeline amo write contract', () => {
