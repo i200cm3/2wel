@@ -10,41 +10,63 @@
 
 ## Деплой на сервер
 
+Продакшен разнесён на два хоста:
+
+| Хост | Роль |
+|------|------|
+| `192.168.2.8` | Edge: host nginx + TLS/ACME, `promo-edge-proxy` (:8086→2.6), `guest-ssl`, `certbot` |
+| `192.168.2.6` | App: `promo-db` / `promo-api` / `promo-web`, GigaAM `:3200`, Ollama `:3201` |
+
+Compose-файлы:
+
+- `docker-compose.app.yml` — app на 2.6
+- `docker-compose.edge.yml` — edge на 2.8 (прокси + SSL-агент)
+- `docker-compose.yml` — монолит «всё на одном хосте» (локально / старый режим)
+
 Перед первым разом:
 
-- DNS `2wel.ru` → IP сервера
+- DNS `2wel.ru` → IP сервера **2.8**
 - DNS `*.2wel.ru` → тот же IP (**один раз**, не на каждый отель)
 
-С локальной машины:
+С локальной машины (код на оба хоста по необходимости):
 
 ```bash
-./sync-to-server.sh vitaliy@192.168.2.8 /home/vitaliy/promo
+# app на 2.6 (дефолт)
+./deploy-to-server.sh
+# или только файлы:
+./sync-to-server.sh
+
+# edge на 2.8 (прокси + guest-ssl)
+./deploy-to-server.sh --edge
 ```
 
-На сервере (первый раз):
+В `.env` на **2.6**: `GUEST_SSL_ENSURE_URL=http://192.168.2.8:9299`.  
+В `.env` на **2.8**: `GUEST_SSL_BIND=192.168.2.8` (агент только в LAN).  
+Локальный `.env` на сервер **не** заливается — секреты правятся на хосте.
+
+На сервере edge (первый раз, если сертификатов ещё нет):
 
 ```bash
 cd /home/vitaliy/promo
 [ -f .env ] || cp .env.example .env
-# в .env: DOMAIN=2wel.ru, GUEST_BASE_DOMAIN=2wel.ru, PUBLIC_ORIGIN=https://2wel.ru
-#         ENSURE_GUEST_SSL=1, LETSENCRYPT_EMAIL=…
 chmod +x init-letsencrypt.sh deploy.sh nginx-router-update.sh
 sudo ./nginx-router-update.sh
 ./init-letsencrypt.sh <email> 2wel.ru
 sudo ./nginx-router-update.sh
-./deploy.sh
 ```
 
 Обновление после правок кода:
 
 ```bash
-./deploy-to-server.sh vitaliy@192.168.2.8 /home/vitaliy/promo
+./deploy-to-server.sh              # app → 2.6
+./deploy-to-server.sh --edge       # edge → 2.8 (если меняли guest-ssl / proxy)
 ```
 
 Только залить файлы, без пересборки контейнеров:
 
 ```bash
-./sync-to-server.sh vitaliy@192.168.2.8 /home/vitaliy/promo
+./sync-to-server.sh                # → 2.6
+./sync-to-server.sh --edge         # → 2.8
 ```
 
 | Скрипт | Назначение |
@@ -52,8 +74,8 @@ sudo ./nginx-router-update.sh
 | `sync-to-server.sh` | rsync проекта на сервер |
 | `deploy-to-server.sh` | rsync + `./deploy.sh` на сервере по тому же SSH |
 | `init-letsencrypt.sh` | выпуск SSL в Docker volumes `certbot-data` / `certbot-www` |
-| `nginx-router-update.sh` | `/etc/nginx/conf.d/promo-router.conf` → `:8086` |
-| `deploy.sh` | `docker compose build && up` + health-check |
+| `nginx-router-update.sh` | `/etc/nginx/conf.d/promo-router.conf` → `:8086` (или `PROMO_UPSTREAM`) |
+| `deploy.sh` | монолитный `docker compose build && up` + health-check |
 
 Сертификаты обновляет контейнер `promo-certbot` (`certbot renew` каждые 12 ч). ACME challenge отдаёт host nginx из volume `certbot-www`.
 
@@ -96,6 +118,17 @@ cd web && npm install && npm run dev
 
 Медиа проекта: `/media/projects/{code}/` (фото, TTS, музыка).
 
+## GigaAM (локальная транскрибация)
+
+Сервис STT живёт отдельно от 2wel: каталог [`gigaam-transcribe/`](gigaam-transcribe/), сейчас `192.168.2.6:3200`.
+
+```bash
+./deploy-gigaam-transcribe.sh                    # дефолт: vitaliy@192.168.2.6
+./deploy-gigaam-transcribe.sh user@HOST /path    # перенос на другой сервер
+```
+
+В `.env` 2wel: `GIGAAM_TRANSCRIBE_URL` / `GIGAAM_TRANSCRIBE_SECRET`. Подробности — [`gigaam-transcribe/README.md`](gigaam-transcribe/README.md).
+
 ## Озвучка
 
 Раздел кабинета «Озвучка» (`/app/projects/{code}/voice`) задаёт, кто читает титры. Выбор хранится у объекта (`projects.tts_provider`, `projects.tts_voice`) и применяется ко всем новым генерациям.
@@ -130,6 +163,6 @@ cd web && npm install && npm run dev
 ## Секреты
 
 - Боевые пароли и ключи — только в `.env` (и `*/.env` на VDS), никогда в `.env.example`.
-- `sync-to-server.sh` копирует корневой `.env` на сервер 2wel, но **не** копирует `gemini-transcribe/.env` и `elevenlabs-proxy/.env` (ключи API остаются на VDS).
+- `sync-to-server.sh` копирует корневой `.env` на сервер 2wel, но **не** копирует `elevenlabs-proxy/.env` (ключ ElevenLabs остаётся на VDS).
 - API не стартует, если `SMTP_PASS` из списка ранее утёкших (был в example). После смены пароля в SpaceWeb обновите `.env` и перезапустите.
 - VDS-прокси слушают HTTP: на VDS задайте `*_ALLOW_IPS` под IP сервера 2wel и длинный общий `*_SECRET`.

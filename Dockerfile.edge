@@ -1,0 +1,17 @@
+# Тонкий образ guest-ssl для edge (2.8). Без ffmpeg/sharp/pg и остального API.
+FROM node:22-alpine
+
+RUN apk add --no-cache docker-cli openssl util-linux
+
+WORKDIR /app
+
+COPY edge/package.json ./
+RUN npm install --omit=dev
+
+ARG EDGE_CACHEBUST=1
+COPY api/guestSslAgent.mjs api/guestSsl.mjs api/publicUrl.mjs api/env.ts api/auth.ts ./
+
+ENV GUEST_SSL_PORT=9299
+EXPOSE 9299
+
+CMD ["node", "--import", "tsx", "guestSslAgent.mjs"]

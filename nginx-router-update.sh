@@ -21,6 +21,8 @@ fi
 
 DOMAIN="${DOMAIN:-2wel.ru}"
 PROMO_PORT="${PROMO_PORT:-8086}"
+# App может жить на другом хосте (services11). По умолчанию — localhost.
+PROMO_UPSTREAM="${PROMO_UPSTREAM:-127.0.0.1:${PROMO_PORT}}"
 # Кабинет на apex, гости на {code}.2wel.ru (wildcard).
 SERVER_NAMES="${DOMAIN} *.${DOMAIN}"
 
@@ -55,7 +57,7 @@ server {
     }
 
     location / {
-        proxy_pass http://127.0.0.1:${PROMO_PORT};
+        proxy_pass http://${PROMO_UPSTREAM};
 
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -126,7 +128,7 @@ server {
     add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 
     location / {
-        proxy_pass http://127.0.0.1:${PROMO_PORT};
+        proxy_pass http://${PROMO_UPSTREAM};
 
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -178,7 +180,7 @@ echo "Перезагружаю nginx..."
 systemctl reload nginx || nginx -s reload
 
 if [ "$HTTPS" = "1" ]; then
-  echo "Готово. https://${DOMAIN} → http://127.0.0.1:${PROMO_PORT} (promo-web)."
+  echo "Готово. https://${DOMAIN} → http://${PROMO_UPSTREAM} (promo-web)."
 else
   echo "Готово (пока HTTP). После сертификатов повторите: sudo ./nginx-router-update.sh"
 fi

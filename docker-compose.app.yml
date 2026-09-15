@@ -1,5 +1,14 @@
-# Продакшен: HTTPS через host nginx (2wel.ru → :8086).
-# Перед первым запуском: ./init-letsencrypt.sh <email> 2wel.ru
+# App-стек 2wel на отдельном хосте (services11 (192.168.2.6)).
+# TLS и ACME остаются на edge (192.168.2.8): host nginx → этот web:8086.
+#
+# Запуск:
+#   docker compose -f docker-compose.app.yml up -d --build
+#
+# В .env обязательно:
+#   GUEST_SSL_ENSURE_URL=http://192.168.2.8:9299
+#   ENSURE_GUEST_SSL=1
+#   (тот же AUTH_SECRET, что на edge guest-ssl)
+
 services:
   db:
     image: postgres:16-alpine
@@ -36,9 +45,9 @@ services:
       PORT: 3000
       PUBLIC_DIR: /data/public
       DATABASE_URL: postgres://${POSTGRES_USER:-promo}:${POSTGRES_PASSWORD:-changeme}@db:5432/${POSTGRES_DB:-promo}
-      # Single-host: guest-ssl в той же сети. Split: задайте GUEST_SSL_ENSURE_URL в .env (2.8:9299).
-      GUEST_SSL_ENSURE_URL: ${GUEST_SSL_ENSURE_URL:-http://guest-ssl:9299}
-      ENSURE_GUEST_SSL: ${ENSURE_GUEST_SSL:-0}
+      # Edge guest-ssl на 2.8 (сертификаты + reload host nginx).
+      GUEST_SSL_ENSURE_URL: ${GUEST_SSL_ENSURE_URL:-http://192.168.2.8:9299}
+      ENSURE_GUEST_SSL: ${ENSURE_GUEST_SSL:-1}
     volumes:
       - ./web/public:/data/public
     depends_on:
@@ -53,29 +62,6 @@ services:
     networks:
       - promo-net
 
-  guest-ssl:
-    build:
-      context: .
-      dockerfile: api/Dockerfile
-      args:
-        API_CACHEBUST: ${API_CACHEBUST:-1}
-    container_name: promo-guest-ssl
-    command: ["node", "--import", "tsx", "guestSslAgent.mjs"]
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      GUEST_SSL_PORT: 9299
-    # Нужны для certbot через docker.sock и nginx reload через nsenter на PID 1 хоста.
-    # Порт 9299 наружу НЕ публикуем — только promo-net (api → guest-ssl).
-    pid: host
-    privileged: true
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - certbot-data:/etc/letsencrypt:ro
-    networks:
-      - promo-net
-    # Не добавляйте ports: — агент не должен быть доступен с хоста/интернета.
   web:
     build:
       context: .
@@ -85,38 +71,19 @@ services:
     environment:
       - YOUR_DOMAIN=${DOMAIN:-2wel.ru}
     ports:
-      # Host nginx терминирует TLS и проксирует HTTP сюда (см. nginx-router-update.sh).
       - "${PROMO_PORT:-8086}:80"
     depends_on:
       api:
         condition: service_healthy
-      certbot:
-        condition: service_started
     volumes:
       - ./web/public/media:/usr/share/nginx/html/media
       - ./web/public/properties:/usr/share/nginx/html/properties
       - ./web/public/s:/usr/share/nginx/html/s
-      - certbot-data:/etc/letsencrypt
-      - certbot-www:/var/www/certbot
-    networks:
-      - promo-net
-
-  certbot:
-    image: certbot/certbot:latest
-    container_name: promo-certbot
-    volumes:
-      - certbot-data:/etc/letsencrypt
-      - certbot-www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     networks:
       - promo-net
 
 volumes:
   postgres-data:
-  certbot-data:
-    external: true
-  certbot-www:
-    external: true
 
 networks:
   promo-net:

@@ -1,0 +1,67 @@
+# Edge на 192.168.2.8 (публичный IP + сертификаты).
+# Host nginx → :8086 (этот proxy) → app на 192.168.2.6.
+# + guest-ssl / certbot для поддоменов.
+#
+#   docker compose -f docker-compose.edge.yml up -d --build
+
+services:
+  edge-proxy:
+    image: nginx:alpine
+    container_name: promo-edge-proxy
+    restart: unless-stopped
+    ports:
+      - "${PROMO_PORT:-8086}:80"
+    volumes:
+      - ./edge-nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - promo-edge-net
+
+  guest-ssl:
+    build:
+      context: .
+      dockerfile: Dockerfile.edge
+      args:
+        EDGE_CACHEBUST: ${EDGE_CACHEBUST:-1}
+    container_name: promo-guest-ssl
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      GUEST_SSL_PORT: 9299
+    pid: host
+    privileged: true
+    ports:
+      - "${GUEST_SSL_BIND:-192.168.2.8}:9299:9299"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - certbot-data:/etc/letsencrypt:ro
+    networks:
+      - promo-edge-net
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: promo-certbot
+    restart: unless-stopped
+    volumes:
+      - certbot-data:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - promo-edge-net
+
+volumes:
+  certbot-data:
+    external: true
+  certbot-www:
+    external: true
+
+networks:
+  promo-edge-net:
+    driver: bridge
+    name: promo-edge-net
