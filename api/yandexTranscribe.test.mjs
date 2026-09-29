@@ -39,19 +39,19 @@ describe('mergeYandexStereoTurns', () => {
         { channel: 'right', text: 'чем помочь' },
         { channel: 'left', text: 'Хочу бронь' },
       ],
-      ['Клиент', 'Оператор'],
+      ['Гость', 'Оператор'],
     )
     assert.equal(
       text,
-      ['Клиент: Алло', 'Оператор: Здравствуйте чем помочь', 'Клиент: Хочу бронь'].join('\n'),
+      ['Гость: Алло', 'Оператор: Здравствуйте чем помочь', 'Гость: Хочу бронь'].join('\n'),
     )
   })
 })
 
 describe('mergeYandexStereoTranscript', () => {
-  it('по умолчанию L=Клиент R=Оператор', () => {
+  it('по умолчанию L=Гость R=Оператор', () => {
     const text = mergeYandexStereoTranscript([{ a: 'привет', b: 'слушаю' }])
-    assert.equal(text, 'Клиент: привет\nОператор: слушаю')
+    assert.equal(text, 'Гость: привет\nОператор: слушаю')
   })
 })
 
@@ -129,7 +129,7 @@ describe('prepareYandexSyncAudio', () => {
     const prepared = await prepareYandexSyncAudio(gen.stdout, 'audio/mpeg')
     assert.equal(prepared.ok, true, prepared.error || 'prepare failed')
     assert.equal(prepared.stereo, true)
-    assert.deepEqual(prepared.labels, ['Клиент', 'Оператор'])
+    assert.deepEqual(prepared.labels, ['Гость', 'Оператор'])
     if (prepared.mode === 'turns') {
       assert.ok(prepared.turns.length >= 2, `expected turns, got ${prepared.turns.length}`)
       const channels = prepared.turns.map((t) => t.channel)

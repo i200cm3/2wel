@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
+  buildPipelineStatusIndex,
+  enrichCallWithPipelineNames,
   guestFirstNameFromContact,
   leadSnapshotFromAmo,
   normalizeAmoDomain,
   pickPresentationLinkField,
+  resolvePipelineStatusNames,
   signAmoState,
   verifyAmoState,
 } from './amoAuth.mjs'
@@ -68,7 +71,14 @@ describe('leadSnapshotFromAmo', () => {
         { status_id: 142, pipeline_id: 771 },
         { first_name: 'Иван', name: 'Иван Петров' },
       ),
-      { name: 'Иван', statusId: '142', pipelineId: '771', contactId: '', phones: [] },
+      {
+        name: 'Иван',
+        statusId: '142',
+        pipelineId: '771',
+        contactId: '',
+        phones: [],
+        updatedAt: '',
+      },
     )
   })
 
@@ -79,6 +89,60 @@ describe('leadSnapshotFromAmo', () => {
       pipelineId: '',
       contactId: '',
       phones: [],
+      updatedAt: '',
+    })
+  })
+})
+
+describe('resolvePipelineStatusNames', () => {
+  const pipelines = [
+    {
+      id: '10',
+      name: 'Продажи',
+      statuses: [
+        { id: '100', name: 'Новая', type: 0 },
+        { id: '101', name: 'Бронь', type: 0 },
+        { id: '102', name: 'Успешно реализовано', type: 1 },
+      ],
+    },
+    {
+      id: '20',
+      name: 'Сервис',
+      statuses: [{ id: '200', name: 'Обращение', type: 0 }],
+    },
+  ]
+
+  it('резолвит имена воронки и стадии', () => {
+    const index = buildPipelineStatusIndex(pipelines)
+    assert.deepEqual(resolvePipelineStatusNames(index, '10', '101'), {
+      pipelineName: 'Продажи',
+      statusName: 'Бронь',
+      statusType: 0,
+    })
+  })
+
+  it('передаёт тип успешной стадии', () => {
+    const index = buildPipelineStatusIndex(pipelines)
+    assert.equal(resolvePipelineStatusNames(index, '10', '102').statusType, 1)
+  })
+
+  it('обогащает звонок именами', () => {
+    const index = buildPipelineStatusIndex(pipelines)
+    const call = enrichCallWithPipelineNames(
+      { id: '1', pipelineId: '20', statusId: '200' },
+      index,
+    )
+    assert.equal(call.pipelineName, 'Сервис')
+    assert.equal(call.statusName, 'Обращение')
+    assert.equal(call.statusType, 0)
+  })
+
+  it('без совпадения — null', () => {
+    const index = buildPipelineStatusIndex(pipelines)
+    assert.deepEqual(resolvePipelineStatusNames(index, '99', '999'), {
+      pipelineName: null,
+      statusName: null,
+      statusType: null,
     })
   })
 })

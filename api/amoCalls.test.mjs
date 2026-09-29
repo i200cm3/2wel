@@ -6,6 +6,7 @@ import {
   entityIdsFromAmoNotes,
   inspectCallNoteFromAmo,
   isAmoCallSourceRef,
+  isAcceptedAmoCallNote,
   isUnansweredAmoCallNote,
   leadIdsFromAmoLinks,
   leadIdsFromEmbeddedLeads,
@@ -111,8 +112,62 @@ describe('note timestamps', () => {
   })
 })
 
-describe('isUnansweredAmoCallNote', () => {
-  it('ломает недозвон Sipuni без link', () => {
+describe('isUnansweredAmoCallNote / isAcceptedAmoCallNote', () => {
+  it('пропущенный с записью — не принят (Sipuni)', () => {
+    assert.equal(
+      isUnansweredAmoCallNote({
+        note_type: 'call_in',
+        params: {
+          duration: 112,
+          link: 'https://sipuni.com/record.mp3',
+          call_result: 'Пропущенный звонок',
+          call_status: 2,
+        },
+      }),
+      true,
+    )
+    assert.equal(
+      isAcceptedAmoCallNote({
+        note_type: 'call_in',
+        params: {
+          duration: 112,
+          link: 'https://sipuni.com/record.mp3',
+          call_result: 'Пропущенный звонок',
+          call_status: 2,
+        },
+      }),
+      false,
+    )
+  })
+
+  it('принятый Sipuni — обрабатываем', () => {
+    assert.equal(
+      isAcceptedAmoCallNote({
+        note_type: 'call_in',
+        params: {
+          duration: 124,
+          link: 'https://sipuni.com/record.mp3',
+          call_result: 'Принят',
+          call_status: 4,
+        },
+      }),
+      true,
+    )
+    assert.equal(
+      isUnansweredAmoCallNote({
+        note_type: 'call_in',
+        params: {
+          duration: 124,
+          link: 'https://sipuni.com/record.mp3',
+          call_result: 'Принят',
+          call_status: 4,
+        },
+      }),
+      false,
+    )
+  })
+
+  it('недозвон без link', () => {
     assert.equal(
       isUnansweredAmoCallNote({
         note_type: 'call_out',

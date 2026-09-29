@@ -1618,7 +1618,7 @@ export async function handleCabinetApi(req, res, url, userId, json, extras = {})
 
   if (url.includes('/calls')) {
     const { handleCallsCabinet } = await import('./callsCabinet.mjs')
-    if (await handleCallsCabinet(req, res, url, method, json, userId)) return true
+    if (await handleCallsCabinet(req, res, url, method, json, userId, extras)) return true
   }
 
   const publishMatch = url.match(/^\/api\/projects\/([^/]+)\/templates\/([^/]+)\/publish\/?$/)

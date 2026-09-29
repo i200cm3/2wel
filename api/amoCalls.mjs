@@ -275,19 +275,40 @@ export function callParamsMetaFromAmoNote(note) {
   }
 }
 
+/** amo: 4 = «разговор состоялся». Sipuni пишет call_result «Принят». */
+const ACCEPTED_AMO_CALL_STATUS = 4
+/** amo: 5 неверный номер, 6 не дозвонился, 7 занят. */
+const UNANSWERED_AMO_CALL_STATUSES = new Set([5, 6, 7])
+
 /**
- * Недозвон / без разговора — записи не будет, ретраи бесполезны.
- * Sipuni: duration=0, call_result «Не дозвонились», call_status 6.
+ * Принятый / отвеченный звонок (транскрибируем и анализируем только такие).
+ * Sipuni: call_result «Принят», call_status 4.
+ */
+export function isAcceptedAmoCallNote(note) {
+  const meta = callParamsMetaFromAmoNote(note)
+  if (meta.callStatus === ACCEPTED_AMO_CALL_STATUS) return true
+  if (/принят|ответил|разговор\s*состоял/i.test(meta.callResult)) return true
+  return false
+}
+
+/**
+ * Не принят / пропущен / недозвон — STT/анализ не нужны.
+ * У Sipuni у «Пропущенный звонок» часто есть link и duration (гудки/IVR),
+ * поэтому наличие recordingUrl само по себе не значит «принят».
  */
 export function isUnansweredAmoCallNote(note) {
+  if (isAcceptedAmoCallNote(note)) return false
+
   const meta = callParamsMetaFromAmoNote(note)
-  if (meta.recordingUrl) return false
-  if (meta.durationSec === 0) return true
-  if (/не\s*дозвон|нет\s*ответ|не\s*ответил|no\s*answer|busy|занят/i.test(meta.callResult)) {
+  if (/пропущен|не\s*дозвон|нет\s*ответ|не\s*ответил|no\s*answer|busy|занят/i.test(meta.callResult)) {
     return true
   }
-  // 5/6 — типичные статусы недозвона в Sipuni→amo
-  if (meta.callStatus === 5 || meta.callStatus === 6) return true
+  if (meta.callStatus != null && UNANSWERED_AMO_CALL_STATUSES.has(meta.callStatus)) return true
+  // Есть явный результат/статус, но не «Принят» (например call_status 2).
+  if (meta.callStatus != null || meta.callResult) return true
+
+  // Disposition ещё нет — только пустой звонок без записи.
+  if (!meta.recordingUrl && meta.durationSec === 0) return true
   return false
 }
 

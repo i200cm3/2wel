@@ -54,7 +54,16 @@ export function AppSidebar({
         { title: "Аналитика", url: base, icon: <LayoutDashboardIcon /> },
         { title: "Шаблоны", url: `${base}/templates`, icon: <ClapperboardIcon /> },
         { title: "Ссылки", url: `${base}/links`, icon: <LinkIcon /> },
-        { title: "Звонки", url: `${base}/calls`, icon: <PhoneIcon /> },
+        {
+          title: "Звонки",
+          url: `${base}/calls`,
+          icon: <PhoneIcon />,
+          items: [
+            { title: "Список звонков", url: `${base}/calls`, exact: true },
+            { title: "Дожать", url: `${base}/calls/follow-up`, exact: true },
+            { title: "Аналитика", url: `${base}/calls/analytics`, exact: true },
+          ],
+        },
       ]
     : []
 

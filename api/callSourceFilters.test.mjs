@@ -48,7 +48,7 @@ describe('selectCallsForPresentationPipeline', () => {
       {
         id: 'done',
         title: 'Входящий · 0:45',
-        body: 'Клиент: хочу номер на двоих, с 19 сентября',
+        body: 'Гость: хочу номер на двоих, с 19 сентября',
         meta: { durationSec: 45, transcribedAt: '2026-09-02T12:00:00Z', recordingUrl: 'https://rec.example/d.mp3' },
       },
       {

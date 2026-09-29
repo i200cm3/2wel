@@ -4,13 +4,21 @@
  * Ограничение (опционально): AMO_CALL_SUMMARY_PIPELINE_IDS / AMO_CALL_SUMMARY_STATUS_IDS.
  */
 
-import { amoApi, fetchAmoLeadSnapshot } from './amoAuth.mjs'
 import {
+  buildWarmRepeatSignal,
+  countDoneCallsForLead,
   claimAmoCallSummary,
   listAmoCallSummariesNeedingRecordingRetry,
   markAmoCallSummaryRunning,
   patchAmoCallSummary,
 } from './amoCallSummaries.mjs'
+import {
+  amoApi,
+  buildPipelineStatusIndex,
+  fetchAmoLeadSnapshot,
+  fetchAmoPipelinesCached,
+  resolvePipelineStatusNames,
+} from './amoAuth.mjs'
 import {
   callDirectionFromNoteType,
   callParamsMetaFromAmoNote,
@@ -33,7 +41,7 @@ import {
   shouldSyncCallsFromNoteEvents,
 } from './amoWebhook.mjs'
 import { NON_TARGET_CALL_MAX_SEC } from './callSourceFilters.mjs'
-import { extractCallSummaryFromTranscript } from './callSummaryExtract.mjs'
+import { extractCallSummaryFromTranscript, extractCallInsightsFromTranscript } from './callSummaryExtract.mjs'
 import { transcribeAudioFromUrl } from './gigaamTranscribe.mjs'
 import { findLinksForAmoCall } from './links.mjs'
 import { isTranscribeConfigured } from './platformIntegrations.mjs'
@@ -83,6 +91,29 @@ export function isCallSummaryAllowed(pipelineId, statusId) {
   return true
 }
 
+/** Этапы «после брони», где разбор «упущена бронь» не нужен. Дополнительно: AMO_CALL_REVIEW_SKIP_STATUS_IDS. */
+const POST_BOOKING_STAGE_NAME_RE =
+  /забронир|брон\w*\s+(?:подтвержд|оформлен)|жд[её]м\s+оплат|оплачен|успешно|заселен|прожива|заезд/i
+
+export function isPostBookingStage({ statusId = '', statusName = '' } = {}) {
+  const id = String(statusId ?? '').trim()
+  if (id === '142') return true
+  if (id && parseIdSet(process.env.AMO_CALL_REVIEW_SKIP_STATUS_IDS).has(id)) return true
+  return POST_BOOKING_STAGE_NAME_RE.test(String(statusName ?? ''))
+}
+
+async function resolveLeadStatusName(connection, redirectUri, pipelineId, statusId) {
+  if (!statusId) return ''
+  try {
+    const pipelines = await fetchAmoPipelinesCached(connection, redirectUri)
+    const index = buildPipelineStatusIndex(pipelines)
+    return resolvePipelineStatusNames(index, pipelineId, statusId).statusName || ''
+  } catch (err) {
+    amoWarn('call_summary.pipelines', { error: err?.message || String(err) })
+    return ''
+  }
+}
+
 export function isCallSummaryFeatureConfigured() {
   return true
 }
@@ -100,11 +131,56 @@ function formatRuCallWhen(iso) {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return ''
   return d.toLocaleString('ru-RU', {
+    timeZone: process.env.AMO_CALL_TIMEZONE || 'Europe/Moscow',
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
   })
+}
+
+const FACT_SOURCE_LABELS = {
+  referral: 'по рекомендации',
+  site: 'сайт',
+  tour: 'туроператор',
+  other: 'другое',
+}
+
+export function hasInsightsFacts(facts) {
+  if (!facts || typeof facts !== 'object') return false
+  return (
+    Boolean(facts.checkIn) ||
+    Boolean(facts.checkOut) ||
+    facts.guests != null ||
+    Boolean(facts.roomCategory) ||
+    Boolean(facts.treatment) ||
+    facts.budgetMax != null ||
+    Boolean(facts.source)
+  )
+}
+
+/** Строки фактов для CRM-заметки (без выдумок — только переданные поля). */
+export function formatInsightsFactsBlock(facts) {
+  if (!hasInsightsFacts(facts)) return ''
+  const lines = []
+  if (facts.checkIn || facts.checkOut) {
+    lines.push(
+      `Даты: ${[facts.checkIn, facts.checkOut].filter(Boolean).join(' → ')}`,
+    )
+  }
+  if (facts.guests != null) lines.push(`Гостей: ${facts.guests}`)
+  if (facts.roomCategory) lines.push(`Номер: ${facts.roomCategory}`)
+  if (facts.treatment) lines.push(`Лечение: ${facts.treatment}`)
+  if (facts.budgetMax != null) {
+    const n = Number(facts.budgetMax)
+    lines.push(
+      `Бюджет до: ${Number.isFinite(n) ? n.toLocaleString('ru-RU') : facts.budgetMax} ₽`,
+    )
+  }
+  if (facts.source) {
+    lines.push(`Канал: ${FACT_SOURCE_LABELS[facts.source] || facts.source}`)
+  }
+  return lines.length ? `Факты:\n${lines.join('\n')}` : ''
 }
 
 export function formatCallSummaryNoteText({
@@ -113,6 +189,8 @@ export function formatCallSummaryNoteText({
   durationSec = null,
   outcome = '',
   nextStep = '',
+  facts = null,
+  warmRepeatSignal = null,
 } = {}) {
   const dir =
     direction === 'in' ? 'Входящий' : direction === 'out' ? 'Исходящий' : 'Звонок'
@@ -121,7 +199,12 @@ export function formatCallSummaryNoteText({
   const head = [dir, when, dur].filter(Boolean).join(' · ')
   const outcomeLine = String(outcome ?? '').trim() || 'Итог неясен'
   const nextLine = String(nextStep ?? '').trim() || 'Уточнить интерес при следующем контакте'
-  return `${head}\n\nИтог: ${outcomeLine}\n\nСледующий шаг: ${nextLine}`
+  const parts = [`${head}\n\nИтог: ${outcomeLine}\n\nСледующий шаг: ${nextLine}`]
+  const factsBlock = formatInsightsFactsBlock(facts)
+  if (factsBlock) parts.push(factsBlock)
+  const signal = String(warmRepeatSignal ?? '').trim()
+  if (signal) parts.push(`⚠ Повторный контакт: ${signal}`)
+  return parts.join('\n\n')
 }
 
 /**
@@ -187,7 +270,7 @@ function durationSecFromParsed(parsed) {
  * Sipuni часто пишет звонок на контакт с десятками сделок — тогда:
  * 1) явный lead из webhook/заметки
  * 2) уже выданные ссылки презентации (findLinksForAmoCall)
- * 3) сделки контакта на allowlist-этапе (Тест)
+ * 3) сделки контакта: открытая > успешная > неизвестная > закрытая-отказ; затем свежее updated_at
  */
 export async function resolveCallSummaryLeadId({
   connection,
@@ -215,28 +298,87 @@ export async function resolveCallSummaryLeadId({
   ]
   if (!candidates.length) return ''
 
-  const allowed = []
+  let statusIndex = null
+  try {
+    const pipelines = await fetchAmoPipelinesCached(connection, redirectUri)
+    statusIndex = buildPipelineStatusIndex(pipelines)
+  } catch (err) {
+    amoWarn('call_summary.pipelines', { error: err?.message || String(err) })
+  }
+
+  const linkSet = new Set(fromLinks)
+  /** @type {Array<{ leadId: string, hasLink: boolean, statusType: number | null, updatedAtMs: number }>} */
+  const scored = []
   const probeLimit = Math.min(candidates.length, 40)
   for (const leadId of candidates.slice(0, probeLimit)) {
     try {
       const snap = await fetchAmoLeadSnapshot(connection, leadId, redirectUri)
-      if (isCallSummaryAllowed(snap.pipelineId, snap.statusId)) allowed.push(leadId)
+      if (!isCallSummaryAllowed(snap.pipelineId, snap.statusId)) continue
+      const fromPipe = statusIndex
+        ? resolvePipelineStatusNames(statusIndex, snap.pipelineId, snap.statusId).statusType
+        : null
+      scored.push({
+        leadId,
+        hasLink: linkSet.has(leadId),
+        statusType: inferAmoStatusType(snap.statusId, fromPipe),
+        updatedAtMs: snap.updatedAt ? Date.parse(snap.updatedAt) || 0 : 0,
+      })
     } catch (err) {
       amoWarn('call_summary.lead_probe', { leadId, error: err?.message || String(err) })
     }
   }
 
-  if (!allowed.length) return ''
+  if (!scored.length) return ''
 
-  // Предпочитаем сделку, у которой уже есть ссылка презентации.
-  const linkSet = new Set(fromLinks)
-  const preferredAllowed = allowed.find((id) => linkSet.has(id))
-  if (preferredAllowed) return preferredAllowed
-
-  if (allowed.length > 1) {
-    amoWarn('call_summary.multi_lead', { allowed: allowed.slice(0, 5), picked: allowed[0] })
+  const picked = pickCallSummaryLeadCandidate(scored)
+  if (scored.length > 1) {
+    amoWarn('call_summary.multi_lead', {
+      allowed: scored.slice(0, 5).map((row) => ({
+        id: row.leadId,
+        type: row.statusType,
+        link: row.hasLink,
+      })),
+      picked: picked?.leadId || null,
+    })
   }
-  return allowed[0]
+  return picked?.leadId || ''
+}
+
+/** amo: 0 открытая, 1 успех, 2 отказ. 142/143 — системные fallback. */
+export function inferAmoStatusType(statusId, pipelineStatusType = null) {
+  if (pipelineStatusType === 0 || pipelineStatusType === 1 || pipelineStatusType === 2) {
+    return pipelineStatusType
+  }
+  const id = String(statusId ?? '').trim()
+  if (id === '142') return 1
+  if (id === '143') return 2
+  return null
+}
+
+/**
+ * Среди кандидатов: ссылка > открытая > успешная > неизвестная > отказ; затем новее.
+ * @param {Array<{ leadId: string, hasLink?: boolean, statusType?: number | null, updatedAtMs?: number }>} rows
+ */
+export function pickCallSummaryLeadCandidate(rows) {
+  const list = Array.isArray(rows) ? [...rows] : []
+  if (!list.length) return null
+  const typeRank = (t) => {
+    if (t === 0) return 0
+    if (t === 1) return 1
+    if (t == null || !Number.isFinite(Number(t))) return 2
+    if (t === 2) return 3
+    return 2
+  }
+  list.sort((a, b) => {
+    const la = Boolean(a.hasLink)
+    const lb = Boolean(b.hasLink)
+    if (la !== lb) return la ? -1 : 1
+    const ra = typeRank(a.statusType)
+    const rb = typeRank(b.statusType)
+    if (ra !== rb) return ra - rb
+    return (Number(b.updatedAtMs) || 0) - (Number(a.updatedAtMs) || 0)
+  })
+  return list[0] || null
 }
 
 /** Собрать кандидатов leadId: ссылки + сделки контакта (даже shared >25). */
@@ -542,15 +684,92 @@ async function processOneCallSummary({
     const transcript = String(stt.text).trim()
     await patchAmoCallSummary(projectId, callNoteId, { transcript })
 
-    amoLog('call_summary.extract.start', { ...ctx, chars: transcript.length })
-    const extracted = await extractCallSummaryFromTranscript(transcript)
+    const statusName = await resolveLeadStatusName(connection, redirectUri, pipelineId, statusId)
+    const skipOperatorReview = isPostBookingStage({ statusId, statusName })
+    amoLog('call_summary.extract.start', {
+      ...ctx,
+      chars: transcript.length,
+      statusId: statusId || null,
+      statusName: statusName || null,
+      skipOperatorReview,
+    })
+    let extracted = await extractCallSummaryFromTranscript(transcript, { skipOperatorReview })
     if (!extracted.ok) {
+      const delay = CALL_SUMMARY_RETRY_MS[retryIndex]
+      const err = extracted.error || 'extract_failed'
+      const parseFail =
+        /^extract_|^extract_failed$/i.test(String(err)) ||
+        /json|разобрать|wrong_language|язык/i.test(String(err))
+      const transientLlm =
+        extracted.retryable === true ||
+        /недоступн|timeout|fetch failed|502|503|429|ECONN|ETIMEDOUT/i.test(String(err)) ||
+        /недоступн|timeout|fetch failed|ECONN|ETIMEDOUT/i.test(String(extracted.detail || ''))
+      if (delay != null && (parseFail || transientLlm)) {
+        await patchAmoCallSummary(projectId, callNoteId, { status: 'pending', error: err })
+        scheduleRetry(
+          () =>
+            processOneCallSummary({
+              projectId,
+              projectCode,
+              connection,
+              redirectUri,
+              leadId,
+              note: liveNote,
+              retryIndex: retryIndex + 1,
+            }),
+          delay,
+        )
+        return { ok: false, reason: 'extract_retry', retry: true }
+      }
       await patchAmoCallSummary(projectId, callNoteId, {
         status: 'failed',
-        error: extracted.error || 'extract_failed',
+        error: err,
       })
-      amoError('call_summary.extract', new Error(extracted.error || 'extract_failed'), ctx)
+      amoError('call_summary.extract', new Error(err), ctx)
       return { ok: false, reason: 'extract_failed' }
+    }
+
+    let insights = null
+    let insightsModel = null
+    try {
+      amoLog('call_summary.insights.start', ctx)
+      const insightsRes = await extractCallInsightsFromTranscript(transcript, {
+        outcome: extracted.outcome,
+        nextStep: extracted.nextStep,
+      })
+      if (insightsRes.ok) {
+        insights = insightsRes.insights
+        insightsModel = insightsRes.model || null
+      } else {
+        amoWarn('call_summary.insights', {
+          ...ctx,
+          error: insightsRes.error || 'insights_failed',
+        })
+      }
+    } catch (insightsErr) {
+      amoWarn('call_summary.insights', {
+        ...ctx,
+        error: insightsErr?.message || String(insightsErr),
+      })
+    }
+
+    let warmRepeatSignal = null
+    try {
+      const priorDone = await countDoneCallsForLead(projectId, leadId, {
+        excludeCallNoteId: callNoteId,
+      })
+      const callCount = priorDone + 1
+      warmRepeatSignal = buildWarmRepeatSignal({
+        callCount,
+        intent: insights?.intent || null,
+        declineReason: insights?.declineReason || null,
+        needsFollowUp: Boolean(insights?.needsFollowUp),
+      })
+    } catch (warmErr) {
+      amoWarn('call_summary.warm_repeat', {
+        ...ctx,
+        error: warmErr?.message || String(warmErr),
+      })
     }
 
     const noteText = formatCallSummaryNoteText({
@@ -559,6 +778,8 @@ async function processOneCallSummary({
       durationSec,
       outcome: extracted.outcome,
       nextStep: extracted.nextStep,
+      facts: insights?.facts || null,
+      warmRepeatSignal,
     })
 
     const written = await writeAmoLeadCommonNote(connection, leadId, noteText, redirectUri)
@@ -570,6 +791,7 @@ async function processOneCallSummary({
         summaryNextStep: extracted.nextStep,
         operatorReviewMiss: extracted.operatorReview?.miss || null,
         operatorReviewDetail: extracted.operatorReview?.detail || null,
+        ...(insights ? { insights } : {}),
       })
       return { ok: false, reason: 'amo_note_failed' }
     }
@@ -618,6 +840,7 @@ async function processOneCallSummary({
       operatorReviewMiss: review?.miss || null,
       operatorReviewDetail: review?.detail || null,
       operatorReviewNoteId,
+      ...(insights ? { insights } : {}),
       error: null,
       skipReason: null,
     })
@@ -630,19 +853,53 @@ async function processOneCallSummary({
       reviewPass: extracted.reviewPass || null,
       model: extracted.model || null,
       reviewModel: extracted.reviewModel || null,
+      insightsIntent: insights?.intent || null,
+      insightsModel,
+      warmRepeat: Boolean(warmRepeatSignal),
       sttModel: stt.model || null,
     })
     return {
       ok: true,
       summaryNoteId: written.noteId,
       operatorReviewNoteId,
+      insights,
     }
   } catch (err) {
     amoError('call_summary', err, ctx)
+    const msg = err?.message || String(err)
+    const delay = CALL_SUMMARY_RETRY_MS[retryIndex]
+    const transient =
+      /fetch failed|ECONNRESET|ECONNREFUSED|ETIMEDOUT|ENOTFOUND|socket|network|aborted/i.test(
+        String(msg),
+      )
+    if (delay != null && transient) {
+      try {
+        await patchAmoCallSummary(projectId, callNoteId, {
+          status: 'pending',
+          error: msg,
+        })
+      } catch {
+        /* ignore */
+      }
+      scheduleRetry(
+        () =>
+          processOneCallSummary({
+            projectId,
+            projectCode,
+            connection,
+            redirectUri,
+            leadId,
+            note,
+            retryIndex: retryIndex + 1,
+          }),
+        delay,
+      )
+      return { ok: false, reason: 'exception_retry', retry: true }
+    }
     try {
       await patchAmoCallSummary(projectId, callNoteId, {
         status: 'failed',
-        error: err?.message || String(err),
+        error: msg,
       })
     } catch {
       /* ignore */
@@ -734,6 +991,17 @@ export async function scheduleCallSummariesFromNoteWebhook(
     if (!callNoteId) continue
     const noteType = String(note?.note_type ?? '').toLowerCase()
     if (!isCallLikeNoteType(noteType) && !parseCallNoteFromAmo(note)) continue
+    if (isUnansweredAmoCallNote(note)) {
+      const meta = callParamsMetaFromAmoNote(note)
+      amoLog('call_summary.skip', {
+        project: key.project.code,
+        callNoteId,
+        reason: 'unanswered',
+        callResult: meta.callResult || null,
+        callStatus: meta.callStatus,
+      })
+      continue
+    }
 
     const preferredLeadId = leadHintByNote.get(callNoteId) || ''
     const leadId = await resolveCallSummaryLeadId({

@@ -1,6 +1,6 @@
 # GigaAM transcribe (локальный STT)
 
-Транскрибация звонков на CPU, без облака. Стерео АТС: **L=Клиент, R=Оператор**.
+Транскрибация звонков на CPU, без облака. Стерео АТС: **L=Гость, R=Оператор**.
 
 Контракт для 2wel: `POST /v1/transcribe` → `{ text, model, mimeType, bytes, stereo, durationSec }`.
 

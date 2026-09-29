@@ -1435,7 +1435,7 @@ export function LinksPage() {
                     {detail.guestSummary ? (
                       <div className="space-y-3 border-t pt-6">
                         <div>
-                          <p className="text-sm font-medium">Кратко по клиенту</p>
+                          <p className="text-sm font-medium">Кратко по гостю</p>
                           <p className="text-muted-foreground text-sm">
                             Текущая сводка, по которой собрана презентация.
                           </p>

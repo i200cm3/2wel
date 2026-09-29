@@ -10,7 +10,7 @@ describe('collectDialogBodies', () => {
   it('skips empty bodies and recording URLs', () => {
     const items = collectDialogBodies([
       { id: '1', kind: 'call_transcript', title: 'Звонок', body: 'https://sipuni.example/rec.mp3' },
-      { id: '2', kind: 'call_transcript', title: 'Звонок 2', body: 'Клиент: хочу с 19 сентября' },
+      { id: '2', kind: 'call_transcript', title: 'Звонок 2', body: 'Гость: хочу с 19 сентября' },
       { id: '3', kind: 'chat', title: '', body: '   ' },
       { id: '4', kind: 'note', title: 'Заметка', body: 'Одноместный' },
       {

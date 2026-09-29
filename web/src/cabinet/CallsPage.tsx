@@ -1,10 +1,27 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ExternalLinkIcon, PhoneIcon, RefreshCwIcon, Trash2Icon } from 'lucide-react'
-import { useParams } from 'react-router-dom'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ArrowUpDownIcon,
+  Columns3Icon,
+  ExternalLinkIcon,
+  PhoneIcon,
+  RefreshCwIcon,
+  Trash2Icon,
+} from 'lucide-react'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import {
   Pagination,
   PaginationContent,
@@ -31,33 +48,116 @@ import {
 } from '@/components/ui/table'
 import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import {
+  declineLabel,
+  INTENT_LABELS,
+  intentLabel,
+  sourceLabel,
+  TOPIC_LABELS,
+} from '@/cabinet/callInsightsLabels'
+import { friendlyCallErrorLabel } from '@/cabinet/callErrorLabels'
+import {
+  CallFollowChip,
+  CallIntentChip,
+  CrmStageBadge,
+  crmStageLabel,
+} from '@/cabinet/CrmStageBadge'
+import {
   deleteProjectCall,
   fetchProjectCall,
   fetchProjectCalls,
   reprocessProjectCall,
+  type AmoPipeline,
   type ProjectCallDetail,
   type ProjectCallListItem,
   type ProjectCallStatus,
 } from '@/lib/api'
 import { amoLeadUrl } from '@/lib/amo'
+import { cn } from '@/lib/utils'
 
 function canReprocessCall(status: ProjectCallStatus) {
-  return status === 'failed' || status === 'skipped'
+  return status !== 'pending' && status !== 'running'
 }
+
+type CallColumnId = 'date' | 'duration' | 'lead' | 'stage' | 'type' | 'summary' | 'actions'
+
+const CALL_TABLE_COLUMNS: Array<{
+  id: CallColumnId
+  label: string
+  sortKey?: string
+  hideable?: boolean
+}> = [
+  { id: 'date', label: 'Дата', sortKey: 'created_at' },
+  { id: 'duration', label: 'Длительность', sortKey: 'duration_sec' },
+  { id: 'lead', label: 'Сделка', sortKey: 'lead_id' },
+  { id: 'stage', label: 'Стадия', sortKey: 'status_id' },
+  { id: 'type', label: 'Тип', sortKey: 'insights_intent' },
+  { id: 'summary', label: 'Саммари', sortKey: 'summary_outcome' },
+  { id: 'actions', label: 'Действия', hideable: false },
+]
+
+const COLUMNS_STORAGE_KEY = 'calls-table-columns-v1'
+
+type ColumnVisibility = Record<CallColumnId, boolean>
+
+const DEFAULT_COLUMN_VISIBILITY: ColumnVisibility = {
+  date: true,
+  duration: true,
+  lead: true,
+  stage: true,
+  type: true,
+  summary: true,
+  actions: true,
+}
+
+function loadColumnVisibility(): ColumnVisibility {
+  try {
+    const raw = localStorage.getItem(COLUMNS_STORAGE_KEY)
+    if (!raw) return { ...DEFAULT_COLUMN_VISIBILITY }
+    const parsed = JSON.parse(raw) as Partial<ColumnVisibility>
+    return { ...DEFAULT_COLUMN_VISIBILITY, ...parsed, actions: true }
+  } catch {
+    return { ...DEFAULT_COLUMN_VISIBILITY }
+  }
+}
+
+function SortableHead({
+  label,
+  active,
+  dir,
+  onSort,
+  className,
+}: {
+  label: string
+  active: boolean
+  dir: 'asc' | 'desc'
+  onSort?: () => void
+  className?: string
+}) {
+  if (!onSort) {
+    return <TableHead className={className}>{label}</TableHead>
+  }
+  const Icon = !active ? ArrowUpDownIcon : dir === 'asc' ? ArrowUpIcon : ArrowDownIcon
+  return (
+    <TableHead className={className}>
+      <button
+        type="button"
+        className={cn(
+          'hover:text-foreground inline-flex items-center gap-1.5 font-medium',
+          active ? 'text-foreground' : 'text-muted-foreground',
+        )}
+        onClick={onSort}
+      >
+        {label}
+        <Icon className="size-3.5 opacity-70" />
+      </button>
+    </TableHead>
+  )
+}
+
 
 function applyCallPatch(
   prev: ProjectCallListItem,
-  next: Pick<
-    ProjectCallDetail,
-    | 'status'
-    | 'skipReason'
-    | 'error'
-    | 'summaryOutcome'
-    | 'summaryNextStep'
-    | 'operatorReviewMiss'
-    | 'operatorReviewDetail'
-    | 'updatedAt'
-  >,
+  next: ProjectCallDetail | ProjectCallListItem,
 ): ProjectCallListItem {
   return {
     ...prev,
@@ -68,6 +168,17 @@ function applyCallPatch(
     summaryNextStep: next.summaryNextStep,
     operatorReviewMiss: next.operatorReviewMiss,
     operatorReviewDetail: next.operatorReviewDetail,
+    insightsIntent: next.insightsIntent,
+    insightsDeclineReason: next.insightsDeclineReason,
+    insightsTopics: next.insightsTopics,
+    insightsFacts: next.insightsFacts,
+    insightsNeedsFollowUp: next.insightsNeedsFollowUp,
+    insightsAt: next.insightsAt,
+    pipelineId: next.pipelineId,
+    statusId: next.statusId,
+    pipelineName: next.pipelineName,
+    statusName: next.statusName,
+    statusType: next.statusType,
     updatedAt: next.updatedAt,
   }
 }
@@ -115,7 +226,7 @@ function skipReasonLabel(reason: string | null | undefined) {
     case 'recording_unavailable':
       return 'Запись недоступна'
     case 'unanswered':
-      return 'Недозвон'
+      return 'Не принят'
     case 'short_call':
       return 'Короткий звонок'
     case 'no_lead':
@@ -167,12 +278,29 @@ function pageSizeFromHeight(height: number) {
 
 export function CallsPage() {
   const { code } = useParams()
+  const [searchParams] = useSearchParams()
   const projectCode = String(code ?? '').trim()
   const tableAreaRef = useRef<HTMLDivElement>(null)
   const [pageSize, setPageSize] = useState(PAGE_SIZE_DEFAULT)
   const [statusFilter, setStatusFilter] = useState('')
+  const [intentFilter, setIntentFilter] = useState(() => searchParams.get('intent') || '')
+  const [declineFilter, setDeclineFilter] = useState(() => searchParams.get('decline') || '')
+  const [followFilter, setFollowFilter] = useState(() => searchParams.get('follow') === '1')
+  const [reviewFilter, setReviewFilter] = useState(() => searchParams.get('review') === '1')
+  const [followUpFilter, setFollowUpFilter] = useState(() => {
+    const v = searchParams.get('followUp') || ''
+    return v === 'open' || v === 'done' ? v : ''
+  })
+  const [warmFilter, setWarmFilter] = useState(() => searchParams.get('warm') === '1')
+  const [daysFilter, setDaysFilter] = useState(() => {
+    const n = Number(searchParams.get('days') || 0)
+    return n > 0 ? n : 0
+  })
   const [leadIdInput, setLeadIdInput] = useState('')
   const [leadIdFilter, setLeadIdFilter] = useState('')
+  const [pipelineFilter, setPipelineFilter] = useState(() => searchParams.get('pipelineId') || '')
+  const [crmStatusFilter, setCrmStatusFilter] = useState(() => searchParams.get('statusId') || '')
+  const [pipelines, setPipelines] = useState<AmoPipeline[]>([])
   const [page, setPage] = useState(1)
   const [calls, setCalls] = useState<ProjectCallListItem[] | null>(null)
   const [total, setTotal] = useState(0)
@@ -185,6 +313,52 @@ export function CallsPage() {
   const [detailPending, setDetailPending] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [reprocessingId, setReprocessingId] = useState<string | null>(null)
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>(loadColumnVisibility)
+  const [sortBy, setSortBy] = useState<string>('created_at')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+
+  function toggleColumn(id: CallColumnId, next: boolean) {
+    setColumnVisibility((prev) => {
+      const updated = { ...prev, [id]: next, actions: true }
+      try {
+        localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(updated))
+      } catch {
+        /* ignore */
+      }
+      return updated
+    })
+  }
+
+  function toggleSort(sortKey: string) {
+    setPage(1)
+    if (sortBy === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+      return
+    }
+    setSortBy(sortKey)
+    setSortDir(sortKey === 'created_at' ? 'desc' : 'asc')
+  }
+
+  useEffect(() => {
+    setIntentFilter(searchParams.get('intent') || '')
+    setDeclineFilter(searchParams.get('decline') || '')
+    setFollowFilter(searchParams.get('follow') === '1')
+    setReviewFilter(searchParams.get('review') === '1')
+    const followUp = searchParams.get('followUp') || ''
+    setFollowUpFilter(followUp === 'open' || followUp === 'done' ? followUp : '')
+    setWarmFilter(searchParams.get('warm') === '1')
+    const days = Number(searchParams.get('days') || 0)
+    setDaysFilter(days > 0 ? days : 0)
+    const statusFromUrl = searchParams.get('status') || ''
+    if (statusFromUrl) setStatusFilter(statusFromUrl)
+    const leadFromUrl = searchParams.get('leadId') || ''
+    if (leadFromUrl) {
+      setLeadIdInput(leadFromUrl)
+      setLeadIdFilter(leadFromUrl)
+    }
+    setPipelineFilter(searchParams.get('pipelineId') || '')
+    setCrmStatusFilter(searchParams.get('statusId') || '')
+  }, [searchParams])
 
   useLayoutEffect(() => {
     const el = tableAreaRef.current
@@ -209,7 +383,49 @@ export function CallsPage() {
 
   useEffect(() => {
     setPage(1)
-  }, [statusFilter, leadIdFilter])
+  }, [
+    statusFilter,
+    leadIdFilter,
+    intentFilter,
+    declineFilter,
+    followFilter,
+    reviewFilter,
+    followUpFilter,
+    warmFilter,
+    daysFilter,
+    pipelineFilter,
+    crmStatusFilter,
+  ])
+
+  useEffect(() => {
+    // При смене воронки сбрасываем стадию, если она не из этой воронки.
+    if (!crmStatusFilter || !pipelineFilter) return
+    const pipe = pipelines.find((p) => p.id === pipelineFilter)
+    if (!pipe) return
+    if (!pipe.statuses.some((st) => st.id === crmStatusFilter)) {
+      setCrmStatusFilter('')
+    }
+  }, [pipelineFilter, pipelines, crmStatusFilter])
+
+  const statusOptions = useMemo(() => {
+    if (pipelineFilter) {
+      const pipe = pipelines.find((p) => p.id === pipelineFilter)
+      return (pipe?.statuses || []).map((st) => ({
+        id: st.id,
+        label: st.name,
+      }))
+    }
+    const out: Array<{ id: string; label: string }> = []
+    for (const pipe of pipelines) {
+      for (const st of pipe.statuses) {
+        out.push({
+          id: st.id,
+          label: pipelines.length > 1 ? `${pipe.name} · ${st.name}` : st.name,
+        })
+      }
+    }
+    return out
+  }, [pipelines, pipelineFilter])
 
   useEffect(() => {
     const maxPage = Math.max(1, Math.ceil(total / pageSize) || 1)
@@ -225,12 +441,24 @@ export function CallsPage() {
       offset: (page - 1) * pageSize,
       status: statusFilter || undefined,
       leadId: leadIdFilter || undefined,
+      intent: intentFilter || undefined,
+      declineReason: declineFilter || undefined,
+      needsFollowUp: followFilter ? '1' : undefined,
+      hasOperatorReview: reviewFilter ? '1' : undefined,
+      followUpStatus: followUpFilter || undefined,
+      warmLeads: warmFilter ? '1' : undefined,
+      days: daysFilter > 0 ? daysFilter : undefined,
+      pipelineId: pipelineFilter || undefined,
+      statusId: crmStatusFilter || undefined,
+      orderBy: sortBy || undefined,
+      orderDir: sortDir,
     })
       .then((data) => {
         if (cancelled) return
         setCalls(data.calls)
         setTotal(data.total)
         setAmoBaseDomain(data.amoBaseDomain)
+        if (data.pipelines?.length) setPipelines(data.pipelines)
         setError(null)
       })
       .catch((err) => {
@@ -245,7 +473,24 @@ export function CallsPage() {
     return () => {
       cancelled = true
     }
-  }, [projectCode, statusFilter, leadIdFilter, page, pageSize])
+  }, [
+    projectCode,
+    statusFilter,
+    leadIdFilter,
+    intentFilter,
+    declineFilter,
+    followFilter,
+    reviewFilter,
+    followUpFilter,
+    warmFilter,
+    daysFilter,
+    pipelineFilter,
+    crmStatusFilter,
+    sortBy,
+    sortDir,
+    page,
+    pageSize,
+  ])
 
   useEffect(() => {
     if (!projectCode || !selectedId) {
@@ -294,6 +539,13 @@ export function CallsPage() {
 
   async function handleReprocess(callId: string) {
     if (!projectCode) return
+    if (
+      !window.confirm(
+        'Пересобрать транскрипт и саммари заново? Старые итог и разметка будут заменены.',
+      )
+    ) {
+      return
+    }
     setReprocessingId(callId)
     try {
       const data = await reprocessProjectCall(projectCode, callId)
@@ -305,7 +557,7 @@ export function CallsPage() {
       if (selectedId === callId) {
         setDetail((prev) => (prev && prev.id === callId ? { ...prev, ...data.call } : prev))
       }
-      toast.success('Анализ запущен')
+      toast.success('Пересборка запущена')
 
       // Подтянуть финальный статус после фоновой обработки.
       void (async () => {
@@ -340,46 +592,186 @@ export function CallsPage() {
   const leadHref = detail ? amoLeadUrl(amoBaseDomain, detail.leadId) : null
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const showPagination = total > pageSize
-  const hasFilters = Boolean(statusFilter || leadIdFilter)
+  const hasFilters = Boolean(
+    statusFilter ||
+      leadIdFilter ||
+      intentFilter ||
+      declineFilter ||
+      followFilter ||
+      reviewFilter ||
+      followUpFilter ||
+      warmFilter ||
+      daysFilter ||
+      pipelineFilter ||
+      crmStatusFilter,
+  )
   const emptyFilterMessage = leadIdFilter
     ? `Нет звонков по сделке ${leadIdFilter}`
-    : statusFilter
-      ? 'Нет звонков с таким статусом'
+    : hasFilters
+      ? 'Нет звонков по выбранным фильтрам'
       : 'Пока нет обработанных звонков. Они появятся после звонка с записью.'
+
+  const thenStage = detail ? crmStageLabel(detail.statusName) : null
+  const nowStage = detail ? crmStageLabel(detail.currentStatusName) : null
+  const stageChanged =
+    Boolean(thenStage && nowStage) &&
+    (detail?.pipelineId !== detail?.currentPipelineId ||
+      detail?.statusId !== detail?.currentStatusId)
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4 md:p-6">
-      <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex shrink-0 flex-col gap-3">
         <div className="flex flex-col gap-1">
-          <h2 className="font-sans text-lg font-semibold">Звонки</h2>
+          <h2 className="font-sans text-lg font-semibold">Список звонков</h2>
           <p className="text-muted-foreground text-sm">
-            Авто-саммари и транскрипты из Amo. Нажмите строку, чтобы открыть детали.
+            Саммари, разбор и разметка. Нажмите строку, чтобы открыть детали.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-0.5">
           <Input
             type="search"
             inputMode="numeric"
             placeholder="Номер сделки"
             value={leadIdInput}
             onChange={(event) => setLeadIdInput(event.target.value)}
-            className="w-[160px]"
+            className="w-[160px] shrink-0"
             aria-label="Фильтр по номеру сделки"
           />
           <NativeSelect
+            value={reviewFilter ? 'review' : intentFilter}
+            onChange={(event) => {
+              const value = event.target.value
+              if (value === 'review') {
+                setReviewFilter(true)
+                setIntentFilter('')
+                setPage(1)
+                return
+              }
+              setReviewFilter(false)
+              setIntentFilter(value)
+              setPage(1)
+            }}
+            className="w-[150px] shrink-0"
+          >
+            <NativeSelectOption value="">Все типы</NativeSelectOption>
+            {Object.entries(INTENT_LABELS).map(([value, label]) => (
+              <NativeSelectOption key={value} value={value}>
+                {label}
+              </NativeSelectOption>
+            ))}
+            <NativeSelectOption value="review">С разбором</NativeSelectOption>
+          </NativeSelect>
+          {pipelines.length > 0 ? (
+            <>
+              <NativeSelect
+                value={pipelineFilter}
+                onChange={(event) => setPipelineFilter(event.target.value)}
+                className="w-[170px] shrink-0"
+              >
+                <NativeSelectOption value="">Все воронки</NativeSelectOption>
+                {pipelines.map((pipe) => (
+                  <NativeSelectOption key={pipe.id} value={pipe.id}>
+                    {pipe.name}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+              <NativeSelect
+                value={crmStatusFilter}
+                onChange={(event) => setCrmStatusFilter(event.target.value)}
+                className="w-[180px] shrink-0"
+              >
+                <NativeSelectOption value="">Все стадии</NativeSelectOption>
+                {statusOptions.map((opt) => (
+                  <NativeSelectOption key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </>
+          ) : null}
+          <NativeSelect
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            className="w-[160px]"
+            className="w-[160px] shrink-0"
           >
-            <NativeSelectOption value="">Все статусы</NativeSelectOption>
+            <NativeSelectOption value="">Все (без очереди)</NativeSelectOption>
             <NativeSelectOption value="done">Готово</NativeSelectOption>
             <NativeSelectOption value="pending">В очереди</NativeSelectOption>
             <NativeSelectOption value="running">Обработка</NativeSelectOption>
             <NativeSelectOption value="skipped">Пропущен</NativeSelectOption>
             <NativeSelectOption value="failed">Ошибка</NativeSelectOption>
           </NativeSelect>
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button type="button" variant="outline" size="sm" className="shrink-0 gap-1.5" />
+              }
+            >
+              <Columns3Icon className="size-4" />
+              Колонки
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Показать колонки</DropdownMenuLabel>
+                {CALL_TABLE_COLUMNS.filter((col) => col.hideable !== false).map((col) => (
+                  <DropdownMenuCheckboxItem
+                    key={col.id}
+                    checked={columnVisibility[col.id]}
+                    onCheckedChange={(checked) => toggleColumn(col.id, Boolean(checked))}
+                  >
+                    {col.label}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
+
+      {hasFilters ? (
+        <div className="text-muted-foreground flex shrink-0 flex-wrap items-center gap-2 text-xs">
+          {intentFilter ? <span>Тип: {intentLabel(intentFilter)}</span> : null}
+          {pipelineFilter ? (
+            <span>
+              Воронка:{' '}
+              {pipelines.find((p) => p.id === pipelineFilter)?.name || pipelineFilter}
+            </span>
+          ) : null}
+          {crmStatusFilter ? (
+            <span>
+              Стадия:{' '}
+              {statusOptions.find((s) => s.id === crmStatusFilter)?.label || crmStatusFilter}
+            </span>
+          ) : null}
+          {declineFilter ? <span>Отказ: {declineLabel(declineFilter)}</span> : null}
+          {followFilter ? <span>Нужен контакт</span> : null}
+          {followUpFilter === 'open' ? <span>Дожать: открыто</span> : null}
+          {followUpFilter === 'done' ? <span>Дожать: сделано</span> : null}
+          {reviewFilter ? <span>С разбором</span> : null}
+          {warmFilter ? <span>Звонки тёплых сделок</span> : null}
+          {daysFilter > 0 ? <span>Период: {daysFilter} дн.</span> : null}
+          <button
+            type="button"
+            className="underline-offset-4 hover:underline"
+            onClick={() => {
+              setIntentFilter('')
+              setDeclineFilter('')
+              setFollowFilter(false)
+              setFollowUpFilter('')
+              setReviewFilter(false)
+              setWarmFilter(false)
+              setDaysFilter(0)
+              setStatusFilter('')
+              setLeadIdInput('')
+              setLeadIdFilter('')
+              setPipelineFilter('')
+              setCrmStatusFilter('')
+            }}
+          >
+            Сбросить
+          </button>
+        </div>
+      ) : null}
 
       {error ? <p className="text-destructive shrink-0 text-sm">{error}</p> : null}
 
@@ -405,18 +797,64 @@ export function CallsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Дата</TableHead>
-                  <TableHead>Длительность</TableHead>
-                  <TableHead>Сделка</TableHead>
-                  <TableHead>Статус</TableHead>
-                  <TableHead className="min-w-[220px]">Саммари</TableHead>
-                  <TableHead className="w-20" />
+                  {columnVisibility.date ? (
+                    <SortableHead
+                      label="Дата"
+                      active={sortBy === 'created_at'}
+                      dir={sortDir}
+                      onSort={() => toggleSort('created_at')}
+                    />
+                  ) : null}
+                  {columnVisibility.duration ? (
+                    <SortableHead
+                      label="Длительность"
+                      active={sortBy === 'duration_sec'}
+                      dir={sortDir}
+                      onSort={() => toggleSort('duration_sec')}
+                    />
+                  ) : null}
+                  {columnVisibility.lead ? (
+                    <SortableHead
+                      label="Сделка"
+                      active={sortBy === 'lead_id'}
+                      dir={sortDir}
+                      onSort={() => toggleSort('lead_id')}
+                    />
+                  ) : null}
+                  {columnVisibility.stage ? (
+                    <SortableHead
+                      label="Стадия"
+                      active={sortBy === 'status_id'}
+                      dir={sortDir}
+                      onSort={() => toggleSort('status_id')}
+                    />
+                  ) : null}
+                  {columnVisibility.type ? (
+                    <SortableHead
+                      label="Тип"
+                      active={sortBy === 'insights_intent'}
+                      dir={sortDir}
+                      onSort={() => toggleSort('insights_intent')}
+                    />
+                  ) : null}
+                  {columnVisibility.summary ? (
+                    <SortableHead
+                      label="Саммари"
+                      active={sortBy === 'summary_outcome'}
+                      dir={sortDir}
+                      onSort={() => toggleSort('summary_outcome')}
+                      className="min-w-[220px]"
+                    />
+                  ) : null}
+                  {columnVisibility.actions ? <TableHead className="w-20" /> : null}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {calls.map((call) => {
                   const href = amoLeadUrl(amoBaseDomain, call.leadId)
                   const needsReview = Boolean(call.operatorReviewMiss || call.operatorReviewDetail)
+                  const intent = intentLabel(call.insightsIntent)
+                  const decline = declineLabel(call.insightsDeclineReason)
                   return (
                     <TableRow
                       key={call.id}
@@ -427,88 +865,126 @@ export function CallsPage() {
                       }
                       onClick={() => setSelectedId(call.id)}
                     >
-                      <TableCell className="whitespace-nowrap">{formatDt(call.createdAt)}</TableCell>
-                      <TableCell>{formatDuration(call.durationSec)}</TableCell>
-                      <TableCell>
-                        {href ? (
-                          <a
-                            href={href}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-primary inline-flex items-center gap-1 hover:underline"
-                            onClick={(event) => event.stopPropagation()}
-                          >
-                            {call.leadId}
-                            <ExternalLinkIcon className="size-3.5 opacity-70" />
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">{call.leadId || '—'}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <Badge variant={statusVariant(call.status)}>{statusLabel(call.status)}</Badge>
-                          {needsReview ? (
-                            <Badge variant="destructive">Разбор</Badge>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell className="max-w-md whitespace-normal">
-                        <div className="space-y-1">
-                          <span className="line-clamp-2 text-sm">
-                            {call.summaryOutcome ||
-                              (call.status === 'failed'
-                                ? call.error || 'Ошибка'
-                                : call.status === 'skipped'
-                                  ? skipReasonLabel(call.skipReason)
-                                  : call.status === 'pending'
-                                    ? 'Ждём запись / в очереди'
-                                    : '—')}
-                          </span>
-                          {needsReview ? (
-                            <span className="text-destructive line-clamp-2 text-xs font-medium">
-                              {call.operatorReviewMiss || call.operatorReviewDetail}
+                      {columnVisibility.date ? (
+                        <TableCell className="whitespace-nowrap">{formatDt(call.createdAt)}</TableCell>
+                      ) : null}
+                      {columnVisibility.duration ? (
+                        <TableCell>{formatDuration(call.durationSec)}</TableCell>
+                      ) : null}
+                      {columnVisibility.lead ? (
+                        <TableCell>
+                          {call.leadId && call.leadId !== '0' ? (
+                            <div className="flex flex-col gap-0.5">
+                              <Link
+                                to={`/app/projects/${projectCode}/calls/leads/${encodeURIComponent(call.leadId)}`}
+                                className="text-primary inline-flex items-center gap-1 hover:underline"
+                                onClick={(event) => event.stopPropagation()}
+                              >
+                                {call.leadId}
+                              </Link>
+                              {href ? (
+                                <a
+                                  href={href}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-muted-foreground inline-flex items-center gap-1 text-xs hover:underline"
+                                  onClick={(event) => event.stopPropagation()}
+                                >
+                                  Amo
+                                  <ExternalLinkIcon className="size-3 opacity-70" />
+                                </a>
+                              ) : null}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                      ) : null}
+                      {columnVisibility.stage ? (
+                        <TableCell className="max-w-[200px] whitespace-normal">
+                          <CrmStageBadge
+                            statusName={call.statusName}
+                            statusType={call.statusType}
+                            statusId={call.statusId}
+                          />
+                        </TableCell>
+                      ) : null}
+                      {columnVisibility.type ? (
+                        <TableCell>
+                          <div className="flex flex-col gap-1">
+                            {intent ? (
+                              <CallIntentChip>{intent}</CallIntentChip>
+                            ) : (
+                              <span className="text-muted-foreground text-xs">—</span>
+                            )}
+                            {decline ? (
+                              <span className="text-muted-foreground text-xs">{decline}</span>
+                            ) : null}
+                            {call.insightsNeedsFollowUp ? <CallFollowChip /> : null}
+                            {needsReview ? <Badge variant="destructive">Разбор</Badge> : null}
+                          </div>
+                        </TableCell>
+                      ) : null}
+                      {columnVisibility.summary ? (
+                        <TableCell className="max-w-md whitespace-normal">
+                          <div className="space-y-1">
+                            <span className="line-clamp-2 text-sm">
+                              {call.summaryOutcome ||
+                                (call.status === 'failed'
+                                  ? friendlyCallErrorLabel(call.error)
+                                  : call.status === 'skipped'
+                                    ? skipReasonLabel(call.skipReason)
+                                    : call.status === 'pending'
+                                      ? 'Ждём запись / в очереди'
+                                      : '—')}
                             </span>
-                          ) : null}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="inline-flex items-center justify-end gap-0.5">
-                          {canReprocessCall(call.status) ? (
+                            {needsReview ? (
+                              <span className="text-destructive line-clamp-2 text-xs font-medium">
+                                {call.operatorReviewMiss || call.operatorReviewDetail}
+                              </span>
+                            ) : null}
+                          </div>
+                        </TableCell>
+                      ) : null}
+                      {columnVisibility.actions ? (
+                        <TableCell className="text-right">
+                          <div className="inline-flex items-center justify-end gap-0.5">
+                            {canReprocessCall(call.status) ? (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                className="text-muted-foreground"
+                                disabled={reprocessingId === call.id || deletingId === call.id}
+                                title="Пересобрать транскрипт и саммари"
+                                aria-label="Пересобрать транскрипт и саммари"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  void handleReprocess(call.id)
+                                }}
+                              >
+                                <RefreshCwIcon
+                                  className={reprocessingId === call.id ? 'animate-spin' : undefined}
+                                />
+                              </Button>
+                            ) : null}
                             <Button
                               type="button"
                               variant="ghost"
                               size="icon-sm"
-                              className="text-muted-foreground"
-                              disabled={reprocessingId === call.id || deletingId === call.id}
-                              title="Запустить анализ"
-                              aria-label="Запустить анализ"
+                              className="text-muted-foreground hover:text-destructive"
+                              disabled={deletingId === call.id || reprocessingId === call.id}
+                              aria-label="Удалить"
                               onClick={(event) => {
                                 event.stopPropagation()
-                                void handleReprocess(call.id)
+                                void handleDelete(call.id)
                               }}
                             >
-                              <RefreshCwIcon
-                                className={reprocessingId === call.id ? 'animate-spin' : undefined}
-                              />
+                              <Trash2Icon />
                             </Button>
-                          ) : null}
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            className="text-muted-foreground hover:text-destructive"
-                            disabled={deletingId === call.id || reprocessingId === call.id}
-                            aria-label="Удалить"
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              void handleDelete(call.id)
-                            }}
-                          >
-                            <Trash2Icon />
-                          </Button>
-                        </div>
-                      </TableCell>
+                          </div>
+                        </TableCell>
+                      ) : null}
                     </TableRow>
                   )
                 })}
@@ -574,6 +1050,15 @@ export function CallsPage() {
               <>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant={statusVariant(detail.status)}>{statusLabel(detail.status)}</Badge>
+                  {intentLabel(detail.insightsIntent) ? (
+                    <CallIntentChip>{intentLabel(detail.insightsIntent)}</CallIntentChip>
+                  ) : null}
+                  {declineLabel(detail.insightsDeclineReason) ? (
+                    <span className="text-muted-foreground text-xs">
+                      {declineLabel(detail.insightsDeclineReason)}
+                    </span>
+                  ) : null}
+                  {detail.insightsNeedsFollowUp ? <CallFollowChip /> : null}
                   {leadHref ? (
                     <Button variant="outline" size="sm" render={<a href={leadHref} target="_blank" rel="noreferrer" />}>
                       Открыть в Amo
@@ -600,7 +1085,7 @@ export function CallsPage() {
                       <RefreshCwIcon
                         className={reprocessingId === detail.id ? 'animate-spin' : undefined}
                       />
-                      Анализ
+                      Саммари заново
                     </Button>
                   ) : null}
                   <Button
@@ -616,6 +1101,65 @@ export function CallsPage() {
                   </Button>
                 </div>
 
+                {(thenStage || nowStage || detail.leadId) && (
+                  <section className="space-y-2">
+                    <h3 className="font-sans text-sm font-medium">Сделка в amo</h3>
+                    <div className="bg-muted/40 space-y-2 rounded-lg border p-3 text-sm leading-relaxed">
+                      {detail.leadId && detail.leadId !== '0' ? (
+                        <p>
+                          <span className="text-muted-foreground">ID: </span>
+                          <Link
+                            to={`/app/projects/${projectCode}/calls/leads/${encodeURIComponent(detail.leadId)}`}
+                            className="text-primary hover:underline"
+                          >
+                            {detail.leadId}
+                          </Link>
+                          {leadHref ? (
+                            <>
+                              {' · '}
+                              <a
+                                href={leadHref}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-muted-foreground hover:text-foreground text-xs hover:underline"
+                              >
+                                Amo
+                              </a>
+                            </>
+                          ) : null}
+                        </p>
+                      ) : null}
+                      <p className="flex flex-wrap items-center gap-2">
+                        <span className="text-muted-foreground">На момент звонка: </span>
+                        {thenStage ? (
+                          <CrmStageBadge
+                            statusName={detail.statusName}
+                            statusType={detail.statusType}
+                            statusId={detail.statusId}
+                          />
+                        ) : (
+                          '—'
+                        )}
+                      </p>
+                      <p className="flex flex-wrap items-center gap-2">
+                        <span className="text-muted-foreground">Сейчас: </span>
+                        {nowStage ? (
+                          <CrmStageBadge
+                            statusName={detail.currentStatusName}
+                            statusType={detail.currentStatusType}
+                            statusId={detail.currentStatusId}
+                          />
+                        ) : (
+                          '—'
+                        )}
+                        {stageChanged ? (
+                          <span className="text-muted-foreground text-xs">(изменилась)</span>
+                        ) : null}
+                      </p>
+                    </div>
+                  </section>
+                )}
+
                 {(detail.summaryOutcome || detail.summaryNextStep) && (
                   <section className="space-y-2">
                     <h3 className="font-sans text-sm font-medium">Саммари</h3>
@@ -630,6 +1174,89 @@ export function CallsPage() {
                         <p>
                           <span className="text-muted-foreground">Следующий шаг: </span>
                           {detail.summaryNextStep}
+                        </p>
+                      ) : null}
+                    </div>
+                  </section>
+                )}
+
+                {(detail.insightsIntent ||
+                  detail.insightsDeclineReason ||
+                  detail.insightsNeedsFollowUp ||
+                  (detail.insightsFacts &&
+                    Object.values(detail.insightsFacts).some((v) => v != null && v !== '')) ||
+                  (detail.insightsTopics && detail.insightsTopics.length > 0)) && (
+                  <section className="space-y-2">
+                    <h3 className="font-sans text-sm font-medium">Разметка</h3>
+                    <div className="bg-muted/40 space-y-2 rounded-lg border p-3 text-sm leading-relaxed">
+                      {detail.insightsIntent ? (
+                        <p>
+                          <span className="text-muted-foreground">Тип: </span>
+                          {intentLabel(detail.insightsIntent)}
+                        </p>
+                      ) : null}
+                      {detail.insightsDeclineReason ? (
+                        <p>
+                          <span className="text-muted-foreground">Отказ: </span>
+                          {declineLabel(detail.insightsDeclineReason)}
+                        </p>
+                      ) : null}
+                      {detail.insightsNeedsFollowUp ? (
+                        <p>
+                          <span className="text-muted-foreground">Дожать: </span>
+                          да
+                        </p>
+                      ) : null}
+                      {detail.insightsFacts?.checkIn || detail.insightsFacts?.checkOut ? (
+                        <p>
+                          <span className="text-muted-foreground">Даты: </span>
+                          {[detail.insightsFacts.checkIn, detail.insightsFacts.checkOut]
+                            .filter(Boolean)
+                            .join(' → ')}
+                        </p>
+                      ) : null}
+                      {detail.insightsFacts?.guests != null ? (
+                        <p>
+                          <span className="text-muted-foreground">Гостей: </span>
+                          {detail.insightsFacts.guests}
+                        </p>
+                      ) : null}
+                      {detail.insightsFacts?.roomCategory ? (
+                        <p>
+                          <span className="text-muted-foreground">Номер: </span>
+                          {detail.insightsFacts.roomCategory}
+                        </p>
+                      ) : null}
+                      {detail.insightsFacts?.treatment ? (
+                        <p>
+                          <span className="text-muted-foreground">Лечение: </span>
+                          {detail.insightsFacts.treatment}
+                        </p>
+                      ) : null}
+                      {detail.insightsFacts?.budgetMax != null ? (
+                        <p>
+                          <span className="text-muted-foreground">Бюджет до: </span>
+                          {detail.insightsFacts.budgetMax.toLocaleString('ru-RU')} ₽
+                        </p>
+                      ) : null}
+                      {detail.insightsFacts?.source ? (
+                        <p>
+                          <span className="text-muted-foreground">Канал: </span>
+                          {sourceLabel(detail.insightsFacts.source) ||
+                            detail.insightsFacts.source}
+                        </p>
+                      ) : null}
+                      {detail.insightsTopics && detail.insightsTopics.length > 0 ? (
+                        <p>
+                          <span className="text-muted-foreground">Темы: </span>
+                          {detail.insightsTopics
+                            .map((item) => {
+                              const name = TOPIC_LABELS[item.topic] || item.topic
+                              const detailLabel = item.label ? `: ${item.label}` : ''
+                              const closed = item.addressed ? '' : ' (не закрыто)'
+                              return `${name}${detailLabel}${closed}`
+                            })
+                            .join(', ')}
                         </p>
                       ) : null}
                     </div>
@@ -653,7 +1280,7 @@ export function CallsPage() {
                 )}
 
                 {detail.status === 'failed' && detail.error ? (
-                  <p className="text-destructive text-sm">{detail.error}</p>
+                  <p className="text-destructive text-sm">{friendlyCallErrorLabel(detail.error)}</p>
                 ) : null}
                 {detail.status === 'skipped' && detail.skipReason ? (
                   <p className="text-muted-foreground text-sm">

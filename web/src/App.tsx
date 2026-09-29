@@ -1,6 +1,9 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { CallsPage } from '@/cabinet/CallsPage'
+import { CallsAnalyticsPage } from '@/cabinet/CallsAnalyticsPage'
+import { CallsFollowUpPage } from '@/cabinet/CallsFollowUpPage'
+import { CallsLeadPage } from '@/cabinet/CallsLeadPage'
 import { IntegrationsPage } from '@/cabinet/IntegrationsPage'
 import { CabinetLayout, RequireAuth } from '@/cabinet/CabinetLayout'
 import { EditorPage } from '@/cabinet/EditorPage'
@@ -114,6 +117,9 @@ export default function App() {
           <Route path="projects/:code/templates/:templateCode/edit" element={<EditorPage />} />
           <Route path="projects/:code/templates/:templateCode/edit-v2" element={<EditorPageV2 />} />
           <Route path="projects/:code/links" element={<LinksPage />} />
+          <Route path="projects/:code/calls/analytics" element={<CallsAnalyticsPage />} />
+          <Route path="projects/:code/calls/follow-up" element={<CallsFollowUpPage />} />
+          <Route path="projects/:code/calls/leads/:leadId" element={<CallsLeadPage />} />
           <Route path="projects/:code/calls" element={<CallsPage />} />
           <Route path="projects/:code/api" element={<ApiToIntegrations />} />
           <Route path="projects/:code/integrations" element={<IntegrationsPage />} />

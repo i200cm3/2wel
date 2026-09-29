@@ -779,7 +779,7 @@ export type AmoStatusMap = {
 export type AmoPipeline = {
   id: string
   name: string
-  statuses: { id: string; name: string }[]
+  statuses: { id: string; name: string; type?: number }[]
 }
 
 export type AmoConnection = {
@@ -830,11 +830,34 @@ export type ProjectCallListItem = {
   operatorReviewMiss: string | null
   operatorReviewDetail: string | null
   operatorReviewNoteId: string | null
+  insightsIntent: string | null
+  insightsDeclineReason: string | null
+  insightsTopics: Array<{ topic: string; addressed: boolean; label?: string | null }> | null
+  insightsFacts: {
+    checkIn: string | null
+    checkOut: string | null
+    guests: number | null
+    roomCategory: string | null
+    treatment: string | null
+    budgetMax: number | null
+    source: string | null
+  } | null
+  insightsNeedsFollowUp: boolean | null
+  insightsAt: string | null
+  followUpStatus: 'open' | 'done' | null
+  followUpDueAt: string | null
+  followUpDoneAt: string | null
   status: ProjectCallStatus
   skipReason: string | null
   error: string | null
   pipelineId: string | null
   statusId: string | null
+  /** Имя воронки amo на момент звонка (из справочника). */
+  pipelineName?: string | null
+  /** Имя стадии amo на момент звонка. */
+  statusName?: string | null
+  /** Тип стадии amo: 0 обычная, 1 успех, 2 отказ. */
+  statusType?: number | null
   durationSec: number | null
   createdAt: string
   updatedAt: string
@@ -844,24 +867,125 @@ export type ProjectCallListItem = {
 
 export type ProjectCallDetail = Omit<ProjectCallListItem, 'hasTranscript' | 'transcriptPreview'> & {
   transcript: string | null
+  /** Текущая воронка/стадия сделки в amo (live). */
+  currentPipelineId?: string | null
+  currentStatusId?: string | null
+  currentPipelineName?: string | null
+  currentStatusName?: string | null
+  currentStatusType?: number | null
 }
 
 export function fetchProjectCalls(
   projectCode: string,
-  opts: { limit?: number; offset?: number; status?: string; leadId?: string } = {},
+  opts: {
+    limit?: number
+    offset?: number
+    status?: string
+    leadId?: string
+    intent?: string
+    declineReason?: string
+    needsFollowUp?: string
+    hasOperatorReview?: string
+    followUpStatus?: string
+    warmLeads?: string
+    days?: number | string
+    orderBy?: string
+    orderDir?: 'asc' | 'desc'
+    pipelineId?: string
+    statusId?: string
+  } = {},
 ) {
   const params = new URLSearchParams()
   if (opts.limit != null) params.set('limit', String(opts.limit))
   if (opts.offset != null) params.set('offset', String(opts.offset))
   if (opts.status) params.set('status', opts.status)
   if (opts.leadId) params.set('leadId', opts.leadId)
+  if (opts.intent) params.set('intent', opts.intent)
+  if (opts.declineReason) params.set('declineReason', opts.declineReason)
+  if (opts.needsFollowUp) params.set('needsFollowUp', opts.needsFollowUp)
+  if (opts.hasOperatorReview) params.set('hasOperatorReview', opts.hasOperatorReview)
+  if (opts.followUpStatus) params.set('followUpStatus', opts.followUpStatus)
+  if (opts.warmLeads) params.set('warmLeads', opts.warmLeads)
+  if (opts.days != null && opts.days !== '') params.set('days', String(opts.days))
+  if (opts.orderBy) params.set('orderBy', opts.orderBy)
+  if (opts.orderDir) params.set('orderDir', opts.orderDir)
+  if (opts.pipelineId) params.set('pipelineId', opts.pipelineId)
+  if (opts.statusId) params.set('statusId', opts.statusId)
   const qs = params.toString()
   return apiGet<{
     ok: true
     total: number
     calls: ProjectCallListItem[]
+    pipelines?: AmoPipeline[]
     amoBaseDomain: string | null
   }>(`/api/projects/${encodeURIComponent(projectCode)}/calls${qs ? `?${qs}` : ''}`)
+}
+
+export type ProjectCallInsightsTopicStat = {
+  topic: string
+  count: number
+  addressed: number
+  addressedRate: number
+}
+
+export type ProjectCallInsightsOtherTopicLabel = {
+  label: string
+  count: number
+  addressed: number
+  addressedRate: number
+}
+
+export type ProjectCallInsightsDeclineWeek = {
+  weekStart: string
+  total: number
+  byReason: Record<string, number>
+}
+
+export type ProjectCallWarmLead = {
+  leadId: string
+  callCount: number
+  lastAt: string
+  lastIntent: string | null
+  lastDecline: string | null
+  openFollowUp: boolean
+  signal: string | null
+}
+
+export type ProjectCallInsightsStats = {
+  days: number
+  total: number
+  withInsights: number
+  withReview: number
+  needsFollowUp: number
+  followUpOpen: number
+  followUpOverdue: number
+  byIntent: Record<string, number>
+  byDecline: Record<string, number>
+  byTopic: ProjectCallInsightsTopicStat[]
+  otherTopicLabels: ProjectCallInsightsOtherTopicLabel[]
+  declinesByWeek: ProjectCallInsightsDeclineWeek[]
+  warmLeads: ProjectCallWarmLead[]
+}
+
+export function fetchProjectCallStats(projectCode: string, opts: { days?: number } = {}) {
+  const params = new URLSearchParams()
+  if (opts.days != null) params.set('days', String(opts.days))
+  const qs = params.toString()
+  return apiGet<{ ok: true; stats: ProjectCallInsightsStats; amoBaseDomain: string | null }>(
+    `/api/projects/${encodeURIComponent(projectCode)}/calls/stats${qs ? `?${qs}` : ''}`,
+  )
+}
+
+export function updateProjectCallFollowUp(
+  projectCode: string,
+  callId: string,
+  payload: { status: 'open' | 'done'; dueAt?: string },
+) {
+  return apiSend<{ ok: true; call: ProjectCallDetail }>(
+    `/api/projects/${encodeURIComponent(projectCode)}/calls/${encodeURIComponent(callId)}/follow-up`,
+    'POST',
+    payload,
+  )
 }
 
 export function fetchProjectCall(projectCode: string, callId: string) {
@@ -871,6 +995,29 @@ export function fetchProjectCall(projectCode: string, callId: string) {
     amoBaseDomain: string | null
   }>(
     `/api/projects/${encodeURIComponent(projectCode)}/calls/${encodeURIComponent(callId)}`,
+  )
+}
+
+export type ProjectCallLeadPage = {
+  leadId: string
+  name: string | null
+  currentPipelineId: string | null
+  currentStatusId: string | null
+  currentPipelineName: string | null
+  currentStatusName: string | null
+  currentStatusType: number | null
+  updatedAt: string | null
+}
+
+export function fetchProjectCallLead(projectCode: string, leadId: string) {
+  return apiGet<{
+    ok: true
+    lead: ProjectCallLeadPage
+    total: number
+    calls: ProjectCallListItem[]
+    amoBaseDomain: string | null
+  }>(
+    `/api/projects/${encodeURIComponent(projectCode)}/calls/leads/${encodeURIComponent(leadId)}`,
   )
 }
 

@@ -424,16 +424,16 @@ async function oggChunksFromFile(oggPath, dir, prefix, durationSec, options = {}
 
 /**
  * Подписи стереоканалов: left,right.
- * По умолчанию L=Клиент, R=Оператор (типичная раскладка Sipuni/АТС).
+ * По умолчанию L=Гость, R=Оператор (типичная раскладка Sipuni/АТС).
  */
 function yandexSpeakerLabels() {
-  const raw = env('YANDEX_SPEECHKIT_SPEAKER_LABELS', 'Клиент,Оператор')
+  const raw = env('YANDEX_SPEECHKIT_SPEAKER_LABELS', 'Гость,Оператор')
   const parts = raw
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean)
   if (parts.length >= 2) return [parts[0], parts[1]]
-  return ['Клиент', 'Оператор']
+  return ['Гость', 'Оператор']
 }
 
 /** Fallback: склейка по фиксированным окнам (L затем R внутри окна). */

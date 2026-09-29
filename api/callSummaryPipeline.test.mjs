@@ -2,11 +2,46 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   formatCallSummaryNoteText,
+  formatInsightsFactsBlock,
   formatOperatorReviewNoteText,
+  inferAmoStatusType,
   isCallSummaryAllowed,
   isCallSummaryFeatureConfigured,
+  isPostBookingStage,
+  pickCallSummaryLeadCandidate,
 } from './callSummaryPipeline.mjs'
 import { normalizeOperatorReview, parseCallSummaryResponse } from './callSummaryExtract.mjs'
+
+describe('isPostBookingStage', () => {
+  it('этапы после брони — без разбора оператора', () => {
+    assert.equal(isPostBookingStage({ statusId: '36751288', statusName: 'Забронировано' }), true)
+    assert.equal(isPostBookingStage({ statusId: '36750040', statusName: 'Ждём оплату' }), true)
+    assert.equal(isPostBookingStage({ statusId: '142', statusName: '' }), true)
+  })
+
+  it('воронка продаж и отказ — разбор разрешён', () => {
+    assert.equal(isPostBookingStage({ statusId: '36750031', statusName: 'Обращение' }), false)
+    assert.equal(
+      isPostBookingStage({ statusId: '36750037', statusName: 'Предложение сделано' }),
+      false,
+    )
+    assert.equal(
+      isPostBookingStage({ statusId: '143', statusName: 'Закрыто и не реализовано' }),
+      false,
+    )
+  })
+
+  it('доп. этапы из AMO_CALL_REVIEW_SKIP_STATUS_IDS', () => {
+    const prev = process.env.AMO_CALL_REVIEW_SKIP_STATUS_IDS
+    process.env.AMO_CALL_REVIEW_SKIP_STATUS_IDS = '111, 222'
+    try {
+      assert.equal(isPostBookingStage({ statusId: '222', statusName: 'Прочее' }), true)
+    } finally {
+      if (prev == null) delete process.env.AMO_CALL_REVIEW_SKIP_STATUS_IDS
+      else process.env.AMO_CALL_REVIEW_SKIP_STATUS_IDS = prev
+    }
+  })
+})
 
 describe('isCallSummaryAllowed', () => {
   it('без allowlist пускает все воронки', () => {
@@ -56,10 +91,57 @@ describe('formatCallSummaryNoteText', () => {
       outcome: 'Интересует номер с видом с 19 сентября.',
       nextStep: 'Отправить расчёт до пятницы.',
     })
-    assert.match(text, /^Входящий · /)
-    assert.match(text, /4:18/)
+    assert.match(text, /^Входящий · 15\.09, 14:32 · 4:18/)
     assert.match(text, /Итог: Интересует номер с видом с 19 сентября\./)
     assert.match(text, /Следующий шаг: Отправить расчёт до пятницы\./)
+  })
+
+  it('добавляет факты и сигнал повторного контакта', () => {
+    const text = formatCallSummaryNoteText({
+      direction: 'in',
+      outcome: 'Хочет dual',
+      nextStep: 'Перезвонить',
+      facts: {
+        checkIn: '19.09',
+        checkOut: '26.09',
+        guests: 2,
+        roomCategory: 'dual',
+        treatment: null,
+        budgetMax: 80000,
+        source: 'site',
+      },
+      warmRepeatSignal: 'гость звонил 3 раза, интерес тёплый, бронь не закрыта',
+    })
+    assert.match(text, /Факты:/)
+    assert.match(text, /Даты: 19\.09 → 26\.09/)
+    assert.match(text, /Бюджет до: 80\s?000 ₽/)
+    assert.match(text, /Канал: сайт/)
+    assert.match(text, /⚠ Повторный контакт: гость звонил 3 раза/)
+  })
+})
+
+describe('formatInsightsFactsBlock', () => {
+  it('пустой без фактов', () => {
+    assert.equal(formatInsightsFactsBlock(null), '')
+    assert.equal(formatInsightsFactsBlock({}), '')
+  })
+})
+
+describe('buildWarmRepeatSignal', () => {
+  it('срабатывает с 3 звонков и тёплым intent', async () => {
+    const { buildWarmRepeatSignal } = await import('./amoCallSummaries.mjs')
+    assert.equal(
+      buildWarmRepeatSignal({ callCount: 2, intent: 'booking' }),
+      null,
+    )
+    assert.match(
+      buildWarmRepeatSignal({ callCount: 3, intent: 'booking' }) || '',
+      /звонил 3 раза/,
+    )
+    assert.equal(
+      buildWarmRepeatSignal({ callCount: 3, intent: 'queue', declineReason: 'comparing' }),
+      null,
+    )
   })
 })
 
@@ -67,7 +149,7 @@ describe('formatOperatorReviewNoteText', () => {
   it('отдельная заметка с маркером разбора', () => {
     const text = formatOperatorReviewNoteText({
       miss: 'Не предложил зафиксировать бронь',
-      detail: 'Места были, клиент ушёл думать.',
+      detail: 'Места были, гость ушёл думать.',
     })
     assert.match(text, /^⚠ РАЗБОР ОПЕРАТОРА/)
     assert.match(text, /Не предложил зафиксировать бронь/)
@@ -100,7 +182,7 @@ describe('parseCallSummaryResponse', () => {
         nextStep: 'Перезвонить завтра',
         operatorReview: {
           miss: 'Не закрыл на бронь',
-          detail: 'Клиент готов был бронировать, оператор не предложил фиксацию.',
+          detail: 'Гость готов был бронировать, оператор не предложил фиксацию.',
         },
       }),
     )
@@ -114,6 +196,40 @@ describe('normalizeOperatorReview', () => {
     assert.equal(normalizeOperatorReview(null), null)
     assert.equal(normalizeOperatorReview('null'), null)
     assert.equal(normalizeOperatorReview({}), null)
+  })
+})
+
+describe('pickCallSummaryLeadCandidate', () => {
+  it('предпочитает открытую сделку закрытой (отказ)', () => {
+    const picked = pickCallSummaryLeadCandidate([
+      { leadId: '25518665', statusType: 2, updatedAtMs: 2000, hasLink: false },
+      { leadId: '31140898', statusType: 0, updatedAtMs: 1000, hasLink: false },
+    ])
+    assert.equal(picked.leadId, '31140898')
+  })
+
+  it('среди закрытых предпочитает успех отказу', () => {
+    const picked = pickCallSummaryLeadCandidate([
+      { leadId: 'lost', statusType: 2, updatedAtMs: 9000, hasLink: false },
+      { leadId: 'won', statusType: 1, updatedAtMs: 1000, hasLink: false },
+    ])
+    assert.equal(picked.leadId, 'won')
+  })
+
+  it('ссылка презентации важнее стадии', () => {
+    const picked = pickCallSummaryLeadCandidate([
+      { leadId: 'open', statusType: 0, updatedAtMs: 9000, hasLink: false },
+      { leadId: 'with-link', statusType: 2, updatedAtMs: 1000, hasLink: true },
+    ])
+    assert.equal(picked.leadId, 'with-link')
+  })
+})
+
+describe('inferAmoStatusType', () => {
+  it('берёт тип из воронки, иначе 142/143', () => {
+    assert.equal(inferAmoStatusType('999', 0), 0)
+    assert.equal(inferAmoStatusType('142', null), 1)
+    assert.equal(inferAmoStatusType('143', null), 2)
   })
 })
 

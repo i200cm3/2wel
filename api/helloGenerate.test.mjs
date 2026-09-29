@@ -44,7 +44,7 @@ describe('generateHelloFromDialog', () => {
   it('выключенная настройка даёт пустой hello', async () => {
     const result = await generateHelloFromDialog({
       enabled: false,
-      rawText: 'Клиент: можно с собакой?',
+      rawText: 'Гость: можно с собакой?',
       guestName: 'Сергей',
     })
     assert.equal(result.mode, 'off')

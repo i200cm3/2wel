@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Транскрибация аудио через локальный GigaAM-v3 (CPU).
 
-Стерео (АТС): L=Клиент, R=Оператор. Реплики выстраиваются по времени.
+Стерео (АТС): L=Гость, R=Оператор. Реплики выстраиваются по времени.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from pathlib import Path
 import gigaam
 
 MODEL_NAME = os.environ.get("GIGAAM_MODEL", "v3_e2e_rnnt").strip() or "v3_e2e_rnnt"
-LABEL_LEFT = "Клиент"
+LABEL_LEFT = "Гость"
 LABEL_RIGHT = "Оператор"
 MAX_SHORT_SEC = 24.0
 MAX_TURN_SEC = 22.0

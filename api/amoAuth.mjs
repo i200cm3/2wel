@@ -304,12 +304,19 @@ export function leadSnapshotFromAmo(lead, contact) {
   const pipelineRaw = lead?.pipeline_id ?? lead?.pipelineId
   const fromContact = guestFirstNameFromContact(contact)
   const fromLead = formatLeadGuestName(lead?.name)
+  const updatedRaw = lead?.updated_at ?? lead?.updatedAt
+  let updatedAt = ''
+  if (updatedRaw != null && updatedRaw !== '') {
+    const ms = typeof updatedRaw === 'number' ? updatedRaw * (updatedRaw < 1e12 ? 1000 : 1) : Date.parse(String(updatedRaw))
+    if (Number.isFinite(ms)) updatedAt = new Date(ms).toISOString()
+  }
   return {
     name: fromContact || fromLead,
     statusId: statusRaw != null && statusRaw !== '' ? String(statusRaw) : '',
     pipelineId: pipelineRaw != null && pipelineRaw !== '' ? String(pipelineRaw) : '',
     contactId: contact?.id != null ? String(contact.id) : '',
     phones: phonesFromAmoContact(contact),
+    updatedAt,
   }
 }
 
@@ -326,7 +333,7 @@ export function formatLeadGuestName(value) {
 
 export async function fetchAmoLeadSnapshot(connection, leadId, redirectUri) {
   const id = String(leadId ?? '').trim()
-  if (!id) return { name: '', statusId: '', pipelineId: '', contactId: '', phones: [] }
+  if (!id) return { name: '', statusId: '', pipelineId: '', contactId: '', phones: [], updatedAt: '' }
   const lead = await amoApi(connection, `/api/v4/leads/${encodeURIComponent(id)}?with=contacts`, {
     redirectUri,
   })
@@ -343,7 +350,9 @@ export async function fetchAmoLeadSnapshot(connection, leadId, redirectUri) {
   return leadSnapshotFromAmo(lead, contact)
 }
 
-/** Воронки и статусы для UI маппинга шаблонов. */
+/** Воронки и статусы для UI маппинга шаблонов.
+ * type: 0 обычный, 1 успешно, 2 не реализовано (amoCRM).
+ */
 export async function fetchAmoPipelines(connection, redirectUri) {
   const body = await amoApi(connection, '/api/v4/leads/pipelines', { redirectUri })
   const raw = body?._embedded?.pipelines
@@ -354,13 +363,95 @@ export async function fetchAmoPipelines(connection, redirectUri) {
       id: pipe?.id != null ? String(pipe.id) : '',
       name: String(pipe?.name ?? '').trim() || 'Воронка',
       statuses: statuses
-        .map((st) => ({
-          id: st?.id != null ? String(st.id) : '',
-          name: String(st?.name ?? '').trim() || 'Статус',
-        }))
+        .map((st) => {
+          const typeNum = Number(st?.type)
+          return {
+            id: st?.id != null ? String(st.id) : '',
+            name: String(st?.name ?? '').trim() || 'Статус',
+            type: Number.isFinite(typeNum) ? typeNum : 0,
+          }
+        })
         .filter((st) => st.id),
     }
   }).filter((pipe) => pipe.id)
+}
+
+const PIPELINES_CACHE_TTL_MS = 5 * 60 * 1000
+/** @type {Map<string, { at: number, pipelines: Array<{ id: string, name: string, statuses: Array<{ id: string, name: string }> }> }>} */
+const pipelinesCache = new Map()
+
+/** Кэш воронок на короткое время — список звонков часто перезапрашивает. */
+export async function fetchAmoPipelinesCached(connection, redirectUri) {
+  const key = String(connection?.projectId || connection?.baseDomain || '')
+  if (key) {
+    const hit = pipelinesCache.get(key)
+    if (hit && Date.now() - hit.at < PIPELINES_CACHE_TTL_MS) return hit.pipelines
+  }
+  const pipelines = await fetchAmoPipelines(connection, redirectUri)
+  if (key) pipelinesCache.set(key, { at: Date.now(), pipelines })
+  return pipelines
+}
+
+/** Индекс id → имена для обогащения звонков. */
+export function buildPipelineStatusIndex(pipelines) {
+  /** @type {Map<string, { id: string, name: string, statuses: Array<{ id: string, name: string, type?: number }> }>} */
+  const byPipeline = new Map()
+  /** @type {Map<string, { pipelineId: string, pipelineName: string, statusName: string, statusType: number }>} */
+  const byStatus = new Map()
+  for (const pipe of Array.isArray(pipelines) ? pipelines : []) {
+    if (!pipe?.id) continue
+    byPipeline.set(String(pipe.id), pipe)
+    for (const st of pipe.statuses || []) {
+      if (!st?.id) continue
+      const typeNum = Number(st.type)
+      byStatus.set(String(st.id), {
+        pipelineId: String(pipe.id),
+        pipelineName: pipe.name,
+        statusName: st.name,
+        statusType: Number.isFinite(typeNum) ? typeNum : 0,
+      })
+    }
+  }
+  return { byPipeline, byStatus }
+}
+
+export function resolvePipelineStatusNames(index, pipelineId, statusId) {
+  const pipeId = String(pipelineId ?? '').trim()
+  const stId = String(statusId ?? '').trim()
+  const pipe = pipeId ? index.byPipeline.get(pipeId) : null
+  let statusName = null
+  let statusType = null
+  if (stId) {
+    const hit = index.byStatus.get(stId)
+    if (hit && (!pipeId || hit.pipelineId === pipeId)) {
+      statusName = hit.statusName
+      statusType = hit.statusType
+    } else if (pipe) {
+      const local = (pipe.statuses || []).find((st) => st.id === stId)
+      statusName = local?.name || null
+      const typeNum = Number(local?.type)
+      statusType = Number.isFinite(typeNum) ? typeNum : null
+    } else if (hit) {
+      statusName = hit.statusName
+      statusType = hit.statusType
+    }
+  }
+  return {
+    pipelineName: pipe?.name || (stId ? index.byStatus.get(stId)?.pipelineName : null) || null,
+    statusName,
+    statusType,
+  }
+}
+
+export function enrichCallWithPipelineNames(call, index) {
+  if (!call) return call
+  const names = resolvePipelineStatusNames(index, call.pipelineId, call.statusId)
+  return {
+    ...call,
+    pipelineName: names.pipelineName,
+    statusName: names.statusName,
+    statusType: names.statusType,
+  }
 }
 
 export async function fetchAmoGuestName(connection, leadId, redirectUri) {

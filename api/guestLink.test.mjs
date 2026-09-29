@@ -86,7 +86,7 @@ describe('parseGuestLinkBody', () => {
   it('читает rawText / amoSnapshot / summaryMeta', () => {
     const parsed = parseGuestLinkBody({
       name: 'Иван',
-      rawText: 'клиент спросил про номер',
+      rawText: 'гость спросил про номер',
       amoSnapshot: { statusId: '142' },
       summaryMeta: { source: 'manual' },
       rawSources: [{ kind: 'chat', body: 'привет' }],
@@ -96,7 +96,7 @@ describe('parseGuestLinkBody', () => {
     assert.equal(parsed.rawSources.length, 2)
     assert.equal(parsed.rawSources[0].body, 'привет')
     assert.equal(parsed.rawSources[1].kind, 'manual')
-    assert.equal(parsed.rawSources[1].body, 'клиент спросил про номер')
+    assert.equal(parsed.rawSources[1].body, 'гость спросил про номер')
   })
 })
 

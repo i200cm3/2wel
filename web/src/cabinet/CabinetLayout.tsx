@@ -126,6 +126,10 @@ export function CabinetLayout() {
   const segment = location.pathname.split('/').filter(Boolean).at(-1) ?? ''
   const isUsersSection = location.pathname.startsWith('/app/users')
   const isAnalyticsSection = location.pathname.startsWith('/app/analytics')
+  const isCallsAnalytics = /\/projects\/[^/]+\/calls\/analytics\/?$/.test(location.pathname)
+  const isCallsFollowUp = /\/projects\/[^/]+\/calls\/follow-up\/?$/.test(location.pathname)
+  const isCallsLead = /\/projects\/[^/]+\/calls\/leads\/[^/]+\/?$/.test(location.pathname)
+  const isCallsList = /\/projects\/[^/]+\/calls\/?$/.test(location.pathname) && !isCallsLead
   const isProjectsList =
     location.pathname === '/app/projects' || location.pathname === '/app/projects/'
   const isTtsUsageSection = location.pathname.startsWith('/app/tts-usage')
@@ -159,7 +163,15 @@ export function CabinetLayout() {
               : isApiSection
                 ? 'API'
                 : 'Объект'
-    : (TITLES[segment] ?? (segment === code ? 'Аналитика' : project?.name ?? 'Кабинет'))
+    : isCallsAnalytics
+      ? 'Аналитика звонков'
+      : isCallsFollowUp
+        ? 'Дожать'
+        : isCallsLead
+          ? 'Сделка'
+          : isCallsList
+            ? 'Список звонков'
+            : (TITLES[segment] ?? (segment === code ? 'Аналитика' : project?.name ?? 'Кабинет'))
 
   const supportAsAdmin = Boolean(code && project?.role === 'admin')
 
